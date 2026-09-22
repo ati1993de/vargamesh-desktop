@@ -62,12 +62,6 @@ class CoreManager {
     this.child = spawn(exe, [
       `-datadir=${this.dataDir}`,
       `-conf=${this.configFile}`,
-      "-server=1",
-      "-listen=1",
-      "-bind=0.0.0.0:29666",
-      "-rpcbind=127.0.0.1",
-      "-rpcallowip=127.0.0.1",
-      "-rpcport=29667",
       "-printtoconsole=0"
     ], {
       cwd: this.coreDir,
