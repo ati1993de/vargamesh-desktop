@@ -20,7 +20,7 @@ not reimplement wallet cryptography in JavaScript.
 - send VMESH with an explicit irreversible-transaction confirmation
 - wallet backup through Core `backupwallet`
 - Node RPC bound to localhost only
-- installer and installation-free portable Windows builds
+- installer and installation-free portable ZIP Windows builds
 - no telemetry and no cloud wallet service
 
 ## Security architecture
@@ -74,8 +74,8 @@ The app will also use `resources/core/` when `VARGAMESH_CORE_DIR` is not set.
 `v0.1.0` Windows package, validates its SHA256 checksum, verifies both Core
 executables, installs Electron dependencies and produces:
 
-- `VargaMesh-Desktop-v0.1.0-Windows-x64-Setup.exe`
-- `VargaMesh-Desktop-v0.1.0-Windows-x64-Portable.exe`
+- `VargaMesh-Desktop-v0.1.1-Windows-x64-Setup.exe`
+- `VargaMesh-Desktop-v0.1.1-Windows-x64-Portable.zip`
 - `SHA256SUMS`
 
 A pushed `v*` tag creates a GitHub pre-release automatically. Manual workflow
@@ -90,7 +90,7 @@ following setting automatically when the Core config does not yet exist:
 bind=0.0.0.0:29666
 ```
 
-RPC remains local-only on `127.0.0.1:29667`. Desktop also passes the safe P2P/RPC bind settings on the Core command line so an older or incomplete config cannot silently expose RPC.
+RPC remains local-only on `127.0.0.1:29667`. The generated config is authoritative for P2P/RPC binding; Desktop launches Core only with the data directory, config path and console-output setting so binding options are never duplicated.
 
 ## Data location
 
@@ -100,8 +100,8 @@ normal Windows user profile:
 `%LOCALAPPDATA%\VargaMesh`
 
 This avoids accidentally carrying a live wallet around next to a portable EXE.
-The portable build means “no installation required”, not “wallet stored beside
-the executable”.
+The portable ZIP must be extracted before launching `VargaMesh Desktop.exe`.
+It means “no installation required”, not “wallet stored beside the executable”.
 
 ## Code signing
 

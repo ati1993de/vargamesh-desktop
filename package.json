@@ -1,6 +1,6 @@
 {
   "name": "vargamesh-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Secure Windows desktop wallet and full-node controller for VargaMesh",
   "productName": "VargaMesh Desktop",
   "main": "src/main.js",
@@ -10,9 +10,10 @@
   "scripts": {
     "start": "electron .",
     "check": "node --check src/main.js && node --check src/preload.js && node --check src/rpc.js && node --check src/core-manager.js && node --check src/settings.js && node --check src/renderer/app.js",
-    "dist:win": "electron-builder --win nsis portable --x64",
+    "dist:win": "electron-builder --win nsis zip --x64",
     "dist:installer": "electron-builder --win nsis --x64",
-    "dist:portable": "electron-builder --win portable --x64"
+    "dist:portable": "electron-builder --win zip --x64",
+    "check:packaged": "node scripts/verify-packaged.js"
   },
   "devDependencies": {
     "electron": "44.4.3",
@@ -21,7 +22,7 @@
   "build": {
     "appId": "net.vargatech.vargamesh.desktop",
     "productName": "VargaMesh Desktop",
-    "copyright": "Copyright © 2026 Varga-Tech",
+    "copyright": "Copyright \u00a9 2026 Varga-Tech",
     "asar": true,
     "directories": {
       "output": "dist",
@@ -38,17 +39,30 @@
       {
         "from": "resources/core",
         "to": "core",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        {"target": "nsis", "arch": ["x64"]},
-        {"target": "portable", "arch": ["x64"]}
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "requestedExecutionLevel": "asInvoker",
-      "verifyUpdateCodeSignature": false
+      "verifyUpdateCodeSignature": false,
+      "artifactName": "VargaMesh-Desktop-v${version}-Windows-x64-Portable.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -59,9 +73,6 @@
       "createStartMenuShortcut": true,
       "shortcutName": "VargaMesh Desktop",
       "artifactName": "VargaMesh-Desktop-v${version}-Windows-x64-Setup.${ext}"
-    },
-    "portable": {
-      "artifactName": "VargaMesh-Desktop-v${version}-Windows-x64-Portable.${ext}"
     }
   }
 }

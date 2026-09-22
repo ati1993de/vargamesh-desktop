@@ -1,12 +1,16 @@
 $ErrorActionPreference = "Stop"
-$Dist = Join-Path $PSScriptRoot "..\dist"
-$Setup = Get-ChildItem $Dist -Filter "VargaMesh-Desktop-v0.1.0-Windows-x64-Setup.exe" | Select-Object -First 1
-$Portable = Get-ChildItem $Dist -Filter "VargaMesh-Desktop-v0.1.0-Windows-x64-Portable.exe" | Select-Object -First 1
-if (!$Setup) { throw "Installer missing" }
-if (!$Portable) { throw "Portable executable missing" }
+$Root = Resolve-Path (Join-Path $PSScriptRoot "..")
+$Pkg = Get-Content (Join-Path $Root "package.json") -Raw | ConvertFrom-Json
+$Version = $Pkg.version
+$Dist = Join-Path $Root "dist"
+$SetupName = "VargaMesh-Desktop-v$Version-Windows-x64-Setup.exe"
+$PortableName = "VargaMesh-Desktop-v$Version-Windows-x64-Portable.zip"
+$Setup = Get-Item (Join-Path $Dist $SetupName) -ErrorAction Stop
+$Portable = Get-Item (Join-Path $Dist $PortableName) -ErrorAction Stop
+if ($Setup.Length -lt 20MB) { throw "Suspiciously small artifact: $($Setup.Name)" }
+if ($Portable.Length -lt 20MB) { throw "Suspiciously small artifact: $($Portable.Name)" }
 $Lines = @()
 foreach ($File in @($Setup,$Portable)) {
-  if ($File.Length -lt 20MB) { throw "Suspiciously small artifact: $($File.Name)" }
   $Hash = (Get-FileHash $File.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
   $Lines += "$Hash  $($File.Name)"
 }
