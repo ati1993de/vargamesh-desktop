@@ -1,0 +1,72 @@
+name: VargaMesh Desktop Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows x64 installer + portable
+    runs-on: windows-2025
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Download and verify VargaMesh Core v0.1.0
+        shell: pwsh
+        run: ./scripts/prepare-core.ps1
+
+      - name: Install dependencies
+        shell: pwsh
+        run: npm install --no-audit --no-fund
+
+      - name: Static checks
+        shell: pwsh
+        run: npm run check
+
+      - name: Build installer and portable executable
+        shell: pwsh
+        run: npm run dist:win
+
+      - name: Verify and checksum artifacts
+        shell: pwsh
+        run: ./scripts/verify-dist.ps1
+
+      - name: Upload Actions artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: VargaMesh-Desktop-Windows-x64
+          path: |
+            dist/VargaMesh-Desktop-v0.1.0-Windows-x64-Setup.exe
+            dist/VargaMesh-Desktop-v0.1.0-Windows-x64-Portable.exe
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Create GitHub pre-release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          gh release create "$env:GITHUB_REF_NAME" `
+            "dist/VargaMesh-Desktop-v0.1.0-Windows-x64-Setup.exe" `
+            "dist/VargaMesh-Desktop-v0.1.0-Windows-x64-Portable.exe" `
+            "dist/SHA256SUMS" `
+            --repo "$env:GITHUB_REPOSITORY" `
+            --verify-tag `
+            --title "VargaMesh Desktop v0.1.0" `
+            --notes-file RELEASE-NOTES.md `
+            --prerelease

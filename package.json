@@ -1,0 +1,67 @@
+{
+  "name": "vargamesh-desktop",
+  "version": "0.1.0",
+  "description": "Secure Windows desktop wallet and full-node controller for VargaMesh",
+  "productName": "VargaMesh Desktop",
+  "main": "src/main.js",
+  "author": "Varga-Tech",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/rpc.js && node --check src/core-manager.js && node --check src/settings.js && node --check src/renderer/app.js",
+    "dist:win": "electron-builder --win nsis portable --x64",
+    "dist:installer": "electron-builder --win nsis --x64",
+    "dist:portable": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.4.3",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "net.vargatech.vargamesh.desktop",
+    "productName": "VargaMesh Desktop",
+    "copyright": "Copyright © 2026 Varga-Tech",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json",
+      "LICENSE",
+      "NOTICE.md"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/core",
+        "to": "core",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {"target": "nsis", "arch": ["x64"]},
+        {"target": "portable", "arch": ["x64"]}
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VargaMesh Desktop",
+      "artifactName": "VargaMesh-Desktop-v${version}-Windows-x64-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "VargaMesh-Desktop-v${version}-Windows-x64-Portable.${ext}"
+    }
+  }
+}
