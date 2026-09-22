@@ -36,9 +36,19 @@ function coreDir() {
 }
 
 function paths() {
-  const local = app.getPath("localAppData");
+  const local = process.platform === "win32"
+    ? (
+        process.env.LOCALAPPDATA ||
+        path.join(app.getPath("home"), "AppData", "Local")
+      )
+    : app.getPath("appData");
+
   const dataDir = path.join(local, "VargaMesh");
-  return { dataDir, configFile: path.join(dataDir, "vargamesh.conf") };
+
+  return {
+    dataDir,
+    configFile: path.join(dataDir, "vargamesh.conf")
+  };
 }
 
 function createWindow() {
@@ -217,19 +227,63 @@ function registerIpc() {
 }
 
 app.whenReady().then(async () => {
-  session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
+  session.defaultSession.setPermissionRequestHandler(
+    (_wc, _permission, callback) => callback(false)
+  );
   session.defaultSession.setPermissionCheckHandler(() => false);
+
   const p = paths();
-  settings = new SettingsStore(path.join(app.getPath("userData"), "settings.json"));
+
+  settings = new SettingsStore(
+    path.join(app.getPath("userData"), "settings.json")
+  );
+
   if (!settings.getPublic().onboardingDone) {
-    const langs = app.getPreferredSystemLanguages().map(x => x.toLowerCase());
-    if (langs.some(x => x.startsWith("de"))) settings.setLanguage("de");
+    const langs = app
+      .getPreferredSystemLanguages()
+      .map(x => x.toLowerCase());
+
+    if (langs.some(x => x.startsWith("de"))) {
+      settings.setLanguage("de");
+    }
   }
-  core = new CoreManager({ dataDir: p.dataDir, configFile: p.configFile, coreDir: coreDir() });
+
+  core = new CoreManager({
+    dataDir: p.dataDir,
+    configFile: p.configFile,
+    coreDir: coreDir()
+  });
+
   core.ensureConfig();
+
   registerIpc();
   createWindow();
-  try { await core.start(); } catch (_) {}
+
+  try {
+    await core.start();
+  } catch (error) {
+    // The desktop UI must still start even if Core is not ready yet.
+    console.error(
+      "VargaMesh Core startup warning:",
+      error && error.stack ? error.stack : error
+    );
+  }
+}).catch(error => {
+  const message =
+    error && error.stack
+      ? error.stack
+      : String(error || "Unknown startup error");
+
+  console.error("VargaMesh Desktop startup failure:", message);
+
+  try {
+    dialog.showErrorBox(
+      "VargaMesh Desktop startup error",
+      message
+    );
+  } catch (_) {}
+
+  app.quit();
 });
 
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
