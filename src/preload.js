@@ -1,38 +1,39 @@
 "use strict";
+
 const { contextBridge, ipcRenderer } = require("electron");
 
-const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
+const call = (channel, payload = {}) => ipcRenderer.invoke(channel, payload);
 
 contextBridge.exposeInMainWorld("vmesh", Object.freeze({
-  app: Object.freeze({
-    info: () => invoke("app:info"),
-    settings: () => invoke("app:settings"),
-    setLanguage: language => invoke("app:setLanguage", { language }),
-    finishOnboarding: () => invoke("app:finishOnboarding"),
-    openDataDir: () => invoke("app:openDataDir"),
-    openConfig: () => invoke("app:openConfig"),
-    openWebsite: page => invoke("app:openWebsite", { page }),
-    copyText: text => invoke("app:copyText", { text })
-  }),
-  node: Object.freeze({
-    start: () => invoke("node:start"),
-    stop: () => invoke("node:stop"),
-    status: () => invoke("node:status")
-  }),
-  wallet: Object.freeze({
-    list: () => invoke("wallet:list"),
-    select: name => invoke("wallet:select", { name }),
-    load: name => invoke("wallet:load", { name }),
-    unload: name => invoke("wallet:unload", { name }),
-    create: (name, passphrase) => invoke("wallet:create", { name, passphrase }),
-    info: () => invoke("wallet:info"),
-    newAddress: label => invoke("wallet:newAddress", { label }),
-    transactions: () => invoke("wallet:transactions"),
-    validateAddress: address => invoke("wallet:validateAddress", { address }),
-    estimateFee: () => invoke("wallet:estimateFee"),
-    send: (address, amount, passphrase) => invoke("wallet:send", { address, amount, passphrase }),
-    backup: () => invoke("wallet:backup"),
-    restore: name => invoke("wallet:restore", { name }),
-    migrate: (name, passphrase) => invoke("wallet:migrate", { name, passphrase })
-  })
+  appInfo: () => call("app:info"),
+  getSettings: () => call("settings:get"),
+  updateSettings: patch => call("settings:update", patch),
+  startCore: () => call("core:start"),
+  stopCore: () => call("core:stop"),
+  coreStatus: () => call("core:status"),
+  mempool: () => call("core:mempool"),
+  mining: () => call("core:mining"),
+  peers: () => call("core:peers"),
+  listWallets: () => call("wallet:list"),
+  createWallet: data => call("wallet:create", data),
+  loadWallet: name => call("wallet:load", { name }),
+  unloadWallet: name => call("wallet:unload", { name }),
+  walletSummary: wallet => call("wallet:summary", { wallet }),
+  transactions: (wallet, count = 50, skip = 0) => call("wallet:transactions", { wallet, count, skip }),
+  unspent: wallet => call("wallet:unspent", { wallet }),
+  newAddress: (wallet, label = "") => call("wallet:newaddress", { wallet, label }),
+  validateAddress: address => call("wallet:validate", { address }),
+  estimateFee: (target = 6) => call("wallet:fee", { target }),
+  unlockWallet: (wallet, passphrase, seconds) => call("wallet:unlock", { wallet, passphrase, seconds }),
+  lockWallet: wallet => call("wallet:lock", { wallet }),
+  send: data => call("wallet:send", data),
+  backupWallet: wallet => call("wallet:backup", { wallet }),
+  restoreWallet: (wallet) => call("wallet:restore", { wallet }),
+  migrateWallet: (wallet, passphrase = "") => call("wallet:migrate", { wallet, passphrase }),
+  rescanWallet: wallet => call("wallet:rescan", { wallet }),
+  abandonTransaction: (wallet, txid) => call("wallet:abandon", { wallet, txid }),
+  copy: text => call("clipboard:write", { text }),
+  openExternal: url => call("external:open", { url }),
+  showDataDir: () => call("system:showDataDir"),
+  showDebugLog: () => call("system:showDebugLog")
 }));

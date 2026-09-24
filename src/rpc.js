@@ -1,64 +1,72 @@
 "use strict";
+
 const fs = require("node:fs");
 const http = require("node:http");
 
 class RpcError extends Error {
-  constructor(message, code = null, data = null) {
+  constructor(message, code = null, method = "") {
     super(message);
     this.name = "RpcError";
     this.code = code;
-    this.data = data;
+    this.method = method;
   }
 }
 
 class VargaRpc {
-  constructor({ cookieFile, port = 29667 }) {
+  constructor({ cookieFile, host = "127.0.0.1", port = 29667 }) {
     this.cookieFile = cookieFile;
+    this.host = host;
     this.port = port;
     this.counter = 0;
   }
 
   authHeader() {
     const cookie = fs.readFileSync(this.cookieFile, "utf8").trim();
-    if (!cookie.includes(":")) throw new RpcError("RPC cookie is invalid");
+    if (!cookie || !cookie.includes(":")) throw new RpcError("VargaMesh RPC cookie is not ready yet.");
     return `Basic ${Buffer.from(cookie, "utf8").toString("base64")}`;
   }
 
-  call(method, params = [], wallet = "", timeoutMs = 15000) {
+  call(method, params = [], wallet = "", timeout = 15_000) {
     return new Promise((resolve, reject) => {
-      let auth;
-      try { auth = this.authHeader(); } catch (e) { reject(e); return; }
-      const body = JSON.stringify({ jsonrpc: "2.0", id: ++this.counter, method, params });
-      const rpcPath = wallet ? `/wallet/${encodeURIComponent(wallet)}` : "/";
-      const req = http.request({
-        hostname: "127.0.0.1",
-        port: this.port,
-        path: rpcPath,
-        method: "POST",
-        headers: {
-          "Authorization": auth,
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(body)
-        },
-        timeout: timeoutMs
-      }, res => {
-        let raw = "";
-        res.setEncoding("utf8");
-        res.on("data", chunk => { raw += chunk; if (raw.length > 10_000_000) req.destroy(new Error("RPC response too large")); });
-        res.on("end", () => {
-          try {
-            const parsed = JSON.parse(raw || "{}");
-            if (parsed.error) reject(new RpcError(parsed.error.message || "RPC error", parsed.error.code, parsed.error.data));
-            else resolve(parsed.result);
-          } catch (e) {
-            reject(new RpcError(`Invalid RPC response (${res.statusCode || 0})`));
+      const body = JSON.stringify({ jsonrpc: "1.0", id: `desktop-${++this.counter}`, method, params });
+      const walletPath = wallet ? `/wallet/${encodeURIComponent(wallet)}` : "/";
+      let req;
+      try {
+        req = http.request({
+          host: this.host,
+          port: this.port,
+          path: walletPath,
+          method: "POST",
+          timeout,
+          headers: {
+            Authorization: this.authHeader(),
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(body)
           }
+        }, res => {
+          let raw = "";
+          res.setEncoding("utf8");
+          res.on("data", chunk => {
+            raw += chunk;
+            if (raw.length > 10 * 1024 * 1024) req.destroy(new Error("RPC response exceeded safety limit."));
+          });
+          res.on("end", () => {
+            let parsed;
+            try { parsed = JSON.parse(raw); }
+            catch (_) { return reject(new RpcError(`Invalid RPC response for ${method}.`, null, method)); }
+            if (parsed && parsed.error) {
+              return reject(new RpcError(parsed.error.message || `RPC ${method} failed.`, parsed.error.code, method));
+            }
+            resolve(parsed ? parsed.result : null);
+          });
         });
-      });
-      req.on("timeout", () => req.destroy(new RpcError("RPC request timed out")));
-      req.on("error", reject);
-      req.write(body);
-      req.end();
+      } catch (err) {
+        reject(new RpcError(err.message, null, method));
+        return;
+      }
+      req.on("timeout", () => req.destroy(new Error(`RPC timeout: ${method}`)));
+      req.on("error", err => reject(new RpcError(err.message, null, method)));
+      req.end(body);
     });
   }
 }

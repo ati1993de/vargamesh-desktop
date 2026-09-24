@@ -1,72 +1,216 @@
 "use strict";
-const T = {
-  en: {
-    "nav.dashboard":"Dashboard","nav.wallet":"Wallet","nav.send":"Send","nav.receive":"Receive","nav.transactions":"Transactions","nav.network":"Network","nav.backup":"Backup","nav.settings":"Settings",
-    "subtitle.dashboard":"Your local VMESH wallet and full node.","subtitle.wallet":"Create, restore and manage Core wallets.","subtitle.send":"Review every payment before Core signs it.","subtitle.receive":"Generate local receive addresses and QR codes.","subtitle.transactions":"Recent wallet activity from VargaMesh Core.","subtitle.network":"Full-node synchronization and peer connectivity.","subtitle.backup":"Core-native wallet backups and recovery.","subtitle.settings":"Language, local files and application information.",
-    "node.offline":"Node offline","node.online":"Node online","metric.sync":"Synchronization","metric.peers":"Peers","metric.pending":"Pending","metric.immature":"Immature",
-    "quick.title":"Quick actions","quick.receive":"Receive VMESH","quick.send":"Send VMESH","quick.backup":"Back up wallet","quick.refresh":"Refresh",
-    "security.title":"Security model","security.body":"Private keys and transaction signing stay inside VargaMesh Core. RPC is local-only and the Electron renderer never receives the RPC cookie.",
-    "wallet.create":"Create wallet","wallet.name":"Wallet name","wallet.pass":"Passphrase (recommended)","wallet.passhint":"The passphrase is sent only to local VargaMesh Core and is never stored by Desktop.","wallet.createbtn":"Create wallet","wallet.restore":"Restore existing wallet","wallet.restorebody":"Restore a Core wallet backup without exposing private keys to Electron.","wallet.restorename":"New wallet name","wallet.restorebtn":"Choose backup…","wallet.available":"Wallet directory",
-    "send.title":"Send VMESH","send.address":"Recipient address","send.amount":"Amount (VMESH)","send.pass":"Wallet passphrase (only if encrypted)","send.review":"Review transaction","send.confirmTitle":"Confirm irreversible transaction","send.confirmBody":"Transactions cannot be reversed. Verify the recipient and amount carefully.","send.sent":"Transaction broadcast successfully",
-    "receive.title":"Receive VMESH","receive.label":"Address label (optional)","receive.generate":"Generate address","receive.qr":"QR code is generated locally. No address is sent to a third party.",
-    "tx.title":"Recent transactions","tx.time":"Time","tx.type":"Type","tx.amount":"Amount","tx.confirmations":"Confirmations",
-    "network.status":"Node status","network.start":"Start node","network.stop":"Stop node","network.security":"Network / RPC security","network.body":"P2P listens on TCP 29666. RPC is explicitly bound to 127.0.0.1:29667 and should never be forwarded to the Internet.","network.explorer":"Open explorer ↗",
-    "backup.title":"Back up selected wallet","backup.body":"Uses Core's backupwallet RPC so the database is copied in a consistent state.","backup.button":"Create wallet backup…","backup.warning":"Critical","backup.warningbody":"Keep multiple offline backups. Never upload a wallet backup or passphrase to a website, chat, issue tracker or cloud service you do not fully trust.",
-    "settings.language":"Language","settings.files":"Local files","settings.data":"Open data directory","settings.config":"Open config","settings.about":"About","settings.aboutbody":"Open-source desktop interface for the VargaMesh full node and wallet.",
-    "common.copy":"Copy","common.refresh":"Refresh","common.cancel":"Cancel","common.confirm":"Confirm","common.load":"Load","common.unload":"Unload","common.migrate":"Migrate legacy","common.select":"Select",
-    "onboard.title":"Your local VMESH node and wallet","onboard.body":"VargaMesh Desktop runs the real Core daemon locally. Wallet keys remain in Core and RPC never leaves localhost.","onboard.continue":"Continue",
-    "msg.noWallet":"Create, restore or load a wallet first.","msg.backup":"Wallet backup created.","msg.restore":"Wallet restored successfully.","msg.created":"Wallet created successfully.","msg.migrated":"Legacy wallet migrated. Core created a legacy backup automatically.","msg.copied":"Copied to clipboard."
-  },
+
+const $ = id => document.getElementById(id);
+const $$ = selector => [...document.querySelectorAll(selector)];
+const api = window.vmesh;
+
+const I18N = {
   de: {
-    "nav.dashboard":"Übersicht","nav.wallet":"Wallet","nav.send":"Senden","nav.receive":"Empfangen","nav.transactions":"Transaktionen","nav.network":"Netzwerk","nav.backup":"Sicherung","nav.settings":"Einstellungen",
-    "subtitle.dashboard":"Deine lokale VMESH-Wallet und Full Node.","subtitle.wallet":"Core-Wallets erstellen, wiederherstellen und verwalten.","subtitle.send":"Jede Zahlung prüfen, bevor Core sie signiert.","subtitle.receive":"Lokale Empfangsadressen und QR-Codes erzeugen.","subtitle.transactions":"Aktuelle Wallet-Aktivität aus VargaMesh Core.","subtitle.network":"Full-Node-Synchronisierung und Peer-Verbindungen.","subtitle.backup":"Core-native Wallet-Sicherungen und Wiederherstellung.","subtitle.settings":"Sprache, lokale Dateien und App-Informationen.",
-    "node.offline":"Node offline","node.online":"Node online","metric.sync":"Synchronisierung","metric.peers":"Peers","metric.pending":"Ausstehend","metric.immature":"Unreif",
-    "quick.title":"Schnellaktionen","quick.receive":"VMESH empfangen","quick.send":"VMESH senden","quick.backup":"Wallet sichern","quick.refresh":"Aktualisieren",
-    "security.title":"Sicherheitsmodell","security.body":"Private Schlüssel und Transaktionssignaturen bleiben in VargaMesh Core. RPC läuft nur lokal und der Electron-Renderer erhält niemals das RPC-Cookie.",
-    "wallet.create":"Wallet erstellen","wallet.name":"Wallet-Name","wallet.pass":"Passphrase (empfohlen)","wallet.passhint":"Die Passphrase wird nur an den lokalen VargaMesh Core übergeben und von Desktop niemals gespeichert.","wallet.createbtn":"Wallet erstellen","wallet.restore":"Bestehende Wallet wiederherstellen","wallet.restorebody":"Core-Wallet-Backup wiederherstellen, ohne private Schlüssel Electron auszusetzen.","wallet.restorename":"Neuer Wallet-Name","wallet.restorebtn":"Backup auswählen…","wallet.available":"Wallet-Verzeichnis",
-    "send.title":"VMESH senden","send.address":"Empfängeradresse","send.amount":"Betrag (VMESH)","send.pass":"Wallet-Passphrase (nur bei verschlüsselter Wallet)","send.review":"Transaktion prüfen","send.confirmTitle":"Unwiderrufliche Transaktion bestätigen","send.confirmBody":"Transaktionen können nicht rückgängig gemacht werden. Empfänger und Betrag sorgfältig prüfen.","send.sent":"Transaktion erfolgreich gesendet",
-    "receive.title":"VMESH empfangen","receive.label":"Adressbezeichnung (optional)","receive.generate":"Adresse erzeugen","receive.qr":"Der QR-Code wird lokal erzeugt. Die Adresse wird an keinen Drittanbieter gesendet.",
-    "tx.title":"Letzte Transaktionen","tx.time":"Zeit","tx.type":"Typ","tx.amount":"Betrag","tx.confirmations":"Bestätigungen",
-    "network.status":"Node-Status","network.start":"Node starten","network.stop":"Node stoppen","network.security":"Netzwerk-/RPC-Sicherheit","network.body":"P2P lauscht auf TCP 29666. RPC ist ausdrücklich an 127.0.0.1:29667 gebunden und darf niemals ins Internet weitergeleitet werden.","network.explorer":"Explorer öffnen ↗",
-    "backup.title":"Ausgewählte Wallet sichern","backup.body":"Verwendet Cores backupwallet-RPC, damit die Datenbank in konsistentem Zustand kopiert wird.","backup.button":"Wallet-Backup erstellen…","backup.warning":"Wichtig","backup.warningbody":"Mehrere Offline-Backups aufbewahren. Wallet-Backup oder Passphrase niemals in Webseiten, Chats, Issue-Tracker oder nicht vollständig vertrauenswürdige Cloud-Dienste hochladen.",
-    "settings.language":"Sprache","settings.files":"Lokale Dateien","settings.data":"Datenordner öffnen","settings.config":"Konfiguration öffnen","settings.about":"Über","settings.aboutbody":"Open-Source-Desktopoberfläche für VargaMesh Full Node und Wallet.",
-    "common.copy":"Kopieren","common.refresh":"Aktualisieren","common.cancel":"Abbrechen","common.confirm":"Bestätigen","common.load":"Laden","common.unload":"Entladen","common.migrate":"Legacy migrieren","common.select":"Auswählen",
-    "onboard.title":"Deine lokale VMESH-Node und Wallet","onboard.body":"VargaMesh Desktop betreibt den echten Core-Daemon lokal. Wallet-Schlüssel bleiben in Core und RPC verlässt niemals localhost.","onboard.continue":"Weiter",
-    "msg.noWallet":"Zuerst eine Wallet erstellen, wiederherstellen oder laden.","msg.backup":"Wallet-Backup wurde erstellt.","msg.restore":"Wallet erfolgreich wiederhergestellt.","msg.created":"Wallet erfolgreich erstellt.","msg.migrated":"Legacy-Wallet migriert. Core hat automatisch ein Legacy-Backup erstellt.","msg.copied":"In die Zwischenablage kopiert."
+    nav_dashboard:"Übersicht",nav_wallet:"Wallet",nav_send:"Senden",nav_receive:"Empfangen",nav_transactions:"Transaktionen",nav_node:"Node",nav_settings:"Einstellungen",
+    network_label:"VARGAMESH MAINNET",new_wallet:"Neue Wallet",starting_core:"VargaMesh Core wird gestartet",starting_core_hint:"Lokaler Full Node und Wallet-RPC werden vorbereitet.",
+    fullnode_wallet:"FULL NODE WALLET",hero_title:"Deine VMESH. Dein Node. Deine Schlüssel.",hero_text:"VargaMesh Desktop verbindet die grafische Wallet direkt mit deinem lokalen VargaMesh Core. Keine Cloud-Wallet, kein Custody-Dienst.",receive_vmesh:"VMESH empfangen",send_vmesh:"VMESH senden",
+    balance:"Guthaben",block_height:"Blockhöhe",sync:"Synchronisation",peers:"Peers",wallet_activity:"WALLET-AKTIVITÄT",latest_transactions:"Letzte Transaktionen",show_all:"Alle anzeigen",no_transactions:"Noch keine Transaktionen geladen.",network_health:"NETZWERK",node_health:"Node-Status",core_version:"Core",difficulty:"Difficulty",disk:"Chain-Daten",best_block:"Best Block",
+    wallet_management:"Wallet-Verwaltung",wallet_management_hint:"Wallets werden durch VargaMesh Core gespeichert und signiert.",load_wallet:"Wallet laden",active_wallet:"Aktive Wallet",available_balance:"Verfügbar",backup_wallet:"Wallet sichern",backup_hint:"Core-Backup als .dat erstellen",restore_wallet:"Backup wiederherstellen",restore_hint:"Vorhandenes Core-Wallet-Backup laden",lock_wallet:"Wallet sperren",lock_hint:"Entsperrte Wallet sofort sperren",rescan_wallet:"Blockchain neu scannen",rescan_hint:"Wallet-Transaktionen erneut suchen",migrate_wallet:"Legacy-Wallet migrieren",migrate_hint:"Core-Migration für ältere Wallets",restore_notice:"Wähle anschließend eine vertrauenswürdige VargaMesh-Core-Wallet-Sicherungsdatei aus.",migrate_notice:"Erstelle vor der Migration ein unabhängiges Backup. Falls die Legacy-Wallet verschlüsselt ist, gib ihre Passphrase ein.",passphrase_optional:"Passphrase (falls erforderlich)",unload_wallet:"Wallet entladen",unload_hint:"Wallet aus dem laufenden Core entfernen",unspent_outputs:"Nicht ausgegebene Outputs",refresh:"Aktualisieren",amount:"Betrag",confirmations:"Bestätigungen",address:"Adresse",
+    send_warning:"Transaktionen sind nach Bestätigung durch das Netzwerk nicht rückgängig zu machen.",destination:"Empfängeradresse",amount_vmesh:"Betrag (VMESH)",fee_target:"Gebührenschätzung",comment_optional:"Notiz (optional, lokal)",subtract_fee:"Gebühr vom Betrag abziehen",estimated_fee:"Geschätzte Fee-Rate",from_wallet:"Von Wallet",review_transaction:"Transaktion prüfen",
+    receive_hint:"Erzeuge eine neue Bech32-Adresse direkt in deiner aktiven Core-Wallet.",copy:"Kopieren",label_optional:"Label (optional)",generate_address:"Neue Adresse erzeugen",qr_local:"QR-Code wird vollständig lokal erzeugt.",transactions:"Transaktionen",date:"Datum",type:"Typ",
+    node_network:"Node & Netzwerk",node_hint:"Status deines lokalen VargaMesh Core und der verbundenen Peers.",open_data_dir:"Datenordner",mempool:"Mempool",network_hash:"Netzwerk-Hashrate",connected_peers:"Verbundene Peers",direction:"Richtung",client:"Client",synced_block:"Sync Block",
+    settings:"Einstellungen",appearance:"Darstellung",language:"Sprache",theme:"Theme",theme_system:"System",theme_light:"Hell",theme_dark:"Dunkel",hide_balances:"Guthaben standardmäßig ausblenden",security:"Sicherheit",unlock_time:"Wallet-Entsperrdauer",always_confirm_send:"Senden immer bestätigen",security_note:"Passwörter werden nicht in Desktop-Einstellungen gespeichert.",about_text:"Lokale Full-Node-Wallet für Windows x64. Private Schlüssel und Signaturen bleiben in VargaMesh Core.",
+    create_wallet:"Wallet erstellen",wallet_name:"Wallet-Name",passphrase_recommended:"Passphrase (empfohlen)",repeat_passphrase:"Passphrase wiederholen",passphrase_warning:"Ohne Backup und Passphrase kann der Zugriff auf Coins dauerhaft verloren gehen.",unlock_wallet:"Wallet entsperren",passphrase:"Passphrase",confirm_transaction:"Transaktion bestätigen",irreversible_warning:"Prüfe Adresse und Betrag sorgfältig. Netzwerktransaktionen sind endgültig.",send_now:"Jetzt senden"
+  },
+  en: {
+    nav_dashboard:"Dashboard",nav_wallet:"Wallet",nav_send:"Send",nav_receive:"Receive",nav_transactions:"Transactions",nav_node:"Node",nav_settings:"Settings",
+    network_label:"VARGAMESH MAINNET",new_wallet:"New wallet",starting_core:"Starting VargaMesh Core",starting_core_hint:"Preparing the local full node and wallet RPC.",
+    fullnode_wallet:"FULL NODE WALLET",hero_title:"Your VMESH. Your node. Your keys.",hero_text:"VargaMesh Desktop connects the graphical wallet directly to your local VargaMesh Core. No cloud wallet and no custodial service.",receive_vmesh:"Receive VMESH",send_vmesh:"Send VMESH",
+    balance:"Balance",block_height:"Block height",sync:"Synchronization",peers:"Peers",wallet_activity:"WALLET ACTIVITY",latest_transactions:"Latest transactions",show_all:"Show all",no_transactions:"No transactions loaded yet.",network_health:"NETWORK",node_health:"Node health",core_version:"Core",difficulty:"Difficulty",disk:"Chain data",best_block:"Best block",
+    wallet_management:"Wallet management",wallet_management_hint:"Wallets are stored and signed by VargaMesh Core.",load_wallet:"Load wallet",active_wallet:"Active wallet",available_balance:"Available",backup_wallet:"Backup wallet",backup_hint:"Create a Core .dat backup",restore_wallet:"Restore backup",restore_hint:"Load an existing Core wallet backup",lock_wallet:"Lock wallet",lock_hint:"Immediately lock an unlocked wallet",rescan_wallet:"Rescan blockchain",rescan_hint:"Search for wallet transactions again",migrate_wallet:"Migrate legacy wallet",migrate_hint:"Run Core migration for older wallets",restore_notice:"Next, select a trusted VargaMesh Core wallet backup file.",migrate_notice:"Create an independent backup before migration. If the legacy wallet is encrypted, enter its passphrase.",passphrase_optional:"Passphrase (if required)",unload_wallet:"Unload wallet",unload_hint:"Remove wallet from the running Core",unspent_outputs:"Unspent outputs",refresh:"Refresh",amount:"Amount",confirmations:"Confirmations",address:"Address",
+    send_warning:"Transactions cannot be reversed after confirmation by the network.",destination:"Destination address",amount_vmesh:"Amount (VMESH)",fee_target:"Fee estimate",comment_optional:"Note (optional, local)",subtract_fee:"Subtract fee from amount",estimated_fee:"Estimated fee rate",from_wallet:"From wallet",review_transaction:"Review transaction",
+    receive_hint:"Generate a new Bech32 address directly in your active Core wallet.",copy:"Copy",label_optional:"Label (optional)",generate_address:"Generate new address",qr_local:"QR code is generated entirely locally.",transactions:"Transactions",date:"Date",type:"Type",
+    node_network:"Node & network",node_hint:"Status of your local VargaMesh Core and connected peers.",open_data_dir:"Data folder",mempool:"Mempool",network_hash:"Network hashrate",connected_peers:"Connected peers",direction:"Direction",client:"Client",synced_block:"Sync block",
+    settings:"Settings",appearance:"Appearance",language:"Language",theme:"Theme",theme_system:"System",theme_light:"Light",theme_dark:"Dark",hide_balances:"Hide balances by default",security:"Security",unlock_time:"Wallet unlock duration",always_confirm_send:"Always confirm sending",security_note:"Passwords are never stored in Desktop settings.",about_text:"Local full-node wallet for Windows x64. Private keys and signatures stay in VargaMesh Core.",
+    create_wallet:"Create wallet",wallet_name:"Wallet name",passphrase_recommended:"Passphrase (recommended)",repeat_passphrase:"Repeat passphrase",passphrase_warning:"Without a backup and passphrase, access to coins may be permanently lost.",unlock_wallet:"Unlock wallet",passphrase:"Passphrase",confirm_transaction:"Confirm transaction",irreversible_warning:"Carefully verify the address and amount. Network transactions are final.",send_now:"Send now"
   }
 };
 
-let language="en", settings={}, appInfo={}, nodeState={running:false}, walletState=null, walletList=null, activeView="dashboard";
-const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
-const tr=k=>T[language][k]||T.en[k]||k;
-function unwrap(r){ if(!r||!r.ok) throw new Error((r&&r.error)||"Operation failed"); return r.data; }
-function fmt(n){ const x=Number(n||0); return Number.isFinite(x)?x.toFixed(8):"0.00000000"; }
-function toast(msg,error=false){const el=$("#toast");el.textContent=msg;el.className=`toast show${error?" error":""}`;clearTimeout(toast.t);toast.t=setTimeout(()=>el.className="toast",3600);}
-function applyI18n(){ document.documentElement.lang=language; $$('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;if(T[language][k])el.textContent=T[language][k];}); $("#langBtn").textContent=language==="de"?"EN":"DE"; updateTitle(); }
-function updateTitle(){const map={dashboard:"nav.dashboard",wallet:"nav.wallet",send:"nav.send",receive:"nav.receive",transactions:"nav.transactions",network:"nav.network",backup:"nav.backup",settings:"nav.settings"};$("#pageTitle").textContent=tr(map[activeView]);$("#pageSubtitle").textContent=tr(`subtitle.${activeView}`);}
-function showView(name){activeView=name;$$('.view').forEach(x=>x.classList.toggle('active',x.id===`view-${name}`));$$('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===name));updateTitle();if(name==='transactions')refreshTransactions();if(name==='wallet')refreshWallets();if(name==='settings')renderSettings();}
-function modal(title,html,confirm){$("#modalTitle").textContent=title;$("#modalBody").innerHTML=html;$("#modal").classList.remove("hidden");$("#modalConfirm").onclick=async()=>{try{await confirm();$("#modal").classList.add("hidden");}catch(e){toast(e.message,true);}};}
+const state = {
+  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, txPageSize:50 },
+  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null
+};
 
-async function refreshNode(){try{nodeState=unwrap(await window.vmesh.node.status());const pill=$("#nodePill");pill.classList.toggle("online",!!nodeState.running);pill.classList.toggle("offline",!nodeState.running);pill.querySelector("span").textContent=tr(nodeState.running?"node.online":"node.offline");if(nodeState.running){const pct=Math.max(0,Math.min(100,(nodeState.verificationprogress||0)*100));$("#syncPercent").textContent=`${pct.toFixed(2)}%`;$("#syncBar").style.width=`${pct}%`;$("#heightText").textContent=`${nodeState.blocks} / ${nodeState.headers} blocks`;$("#peerCount").textContent=nodeState.connections??0;$("#peerDetail").textContent=`${nodeState.connections_in||0} in · ${nodeState.connections_out||0} out`;renderNetwork();}}catch(e){nodeState={running:false};}}
-async function refreshWallets(){try{walletList=unwrap(await window.vmesh.wallet.list());const sel=$("#walletSelect");sel.innerHTML='<option value="">—</option>';for(const n of walletList.loaded){const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);}if(walletList.selected&&walletList.loaded.includes(walletList.selected))sel.value=walletList.selected;else if(walletList.loaded.length===1){await window.vmesh.wallet.select(walletList.loaded[0]);sel.value=walletList.loaded[0];}renderWalletDirectory();await refreshWalletInfo();}catch(e){walletState=null;renderWalletInfo();}}
-async function refreshWalletInfo(){try{walletState=unwrap(await window.vmesh.wallet.info());}catch(_){walletState=null;}renderWalletInfo();}
-function renderWalletInfo(){if(!walletState){$("#balanceMain").textContent="0.00000000";$("#pendingBalance").textContent="—";$("#immatureBalance").textContent="—";$("#walletNameLabel").textContent="—";return;}const mine=walletState.balances?.mine||{};$("#balanceMain").textContent=fmt(mine.trusted);$("#pendingBalance").textContent=fmt(mine.untrusted_pending);$("#immatureBalance").textContent=fmt(mine.immature);$("#walletNameLabel").textContent=walletState.wallet;}
-function renderWalletDirectory(){const box=$("#walletDirectory");box.innerHTML="";if(!walletList)return;for(const w of walletList.available){const loaded=walletList.loaded.includes(w.name);const legacy=(w.warnings||[]).some(x=>/legacy/i.test(x));const row=document.createElement('div');row.className='wallet-entry';const left=document.createElement('div');const strong=document.createElement('strong');strong.textContent=w.name;left.appendChild(strong);if(legacy){const small=document.createElement('small');small.textContent='Legacy wallet';left.appendChild(small);}const btns=document.createElement('div');btns.className='buttons';const select=document.createElement('button');select.textContent=tr('common.select');select.disabled=!loaded;select.onclick=async()=>{unwrap(await window.vmesh.wallet.select(w.name));await refreshWallets();};btns.appendChild(select);const load=document.createElement('button');load.textContent=tr(loaded?'common.unload':'common.load');load.onclick=async()=>{try{if(loaded)unwrap(await window.vmesh.wallet.unload(w.name));else unwrap(await window.vmesh.wallet.load(w.name));await refreshWallets();}catch(e){toast(e.message,true);}};btns.appendChild(load);if(legacy){const mig=document.createElement('button');mig.textContent=tr('common.migrate');mig.onclick=()=>{modal(tr('common.migrate'),`<p>${escapeHtml(w.name)}</p><label>Passphrase (if encrypted)</label><input id="migratePass" type="password" autocomplete="current-password">`,async()=>{unwrap(await window.vmesh.wallet.migrate(w.name,$('#migratePass').value));toast(tr('msg.migrated'));await refreshWallets();});};btns.appendChild(mig);}row.append(left,btns);box.appendChild(row);}}
-function renderNetwork(){const d=$("#networkStats");if(!nodeState.running){d.innerHTML='<dt>Status</dt><dd>Offline</dd>';return;}const rows=[["Chain",nodeState.chain],["Height",`${nodeState.blocks} / ${nodeState.headers}`],["Peers",nodeState.connections],["Version",nodeState.subversion],["Protocol",nodeState.protocolversion],["IBD",String(nodeState.initialblockdownload)]];d.innerHTML=rows.map(([a,b])=>`<dt>${escapeHtml(String(a))}</dt><dd>${escapeHtml(String(b))}</dd>`).join('');}
-async function refreshTransactions(){const body=$("#txBody");body.innerHTML='<tr><td colspan="5">…</td></tr>';try{const tx=unwrap(await window.vmesh.wallet.transactions());body.innerHTML="";for(const t of [...tx].reverse()){const trEl=document.createElement('tr');const time=t.time?new Date(t.time*1000).toLocaleString(language):'—';const amt=Number(t.amount||0);trEl.innerHTML=`<td>${escapeHtml(time)}</td><td>${escapeHtml(t.category||'')}</td><td class="${amt>=0?'positive':'negative'}">${fmt(amt)}</td><td>${Number(t.confirmations||0)}</td><td><code title="${escapeHtml(t.txid||'')}">${escapeHtml((t.txid||'').slice(0,14))}…</code></td>`;body.appendChild(trEl);}if(!tx.length)body.innerHTML='<tr><td colspan="5">—</td></tr>';}catch(e){body.innerHTML=`<tr><td colspan="5">${escapeHtml(e.message)}</td></tr>`;}}
-function renderSettings(){$("#pathInfo").textContent=appInfo.dataDir?`${appInfo.dataDir}\n${appInfo.configFile}`:'';$("#versionLabel").textContent=`v${appInfo.version||'0.1.0'}`;}
-function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function tr(key){ return I18N[state.settings.language]?.[key] || I18N.de[key] || key; }
+function unwrap(result){ if (!result?.ok) throw new Error(result?.error || "Operation failed"); return result.data; }
+function showToast(message, error=false){ const el=$("toast"); el.textContent=message; el.className=`toast show${error?" error":""}`; clearTimeout(showToast.t); showToast.t=setTimeout(()=>el.className="toast",3500); }
+function shortHash(value,n=12){ if(!value)return "—"; return value.length>n*2?`${value.slice(0,n)}…${value.slice(-n)}`:value; }
+function formatBytes(n){ n=Number(n)||0; const units=["B","KB","MB","GB","TB"]; let i=0; while(n>=1024&&i<units.length-1){n/=1024;i++;} return `${n.toFixed(i?1:0)} ${units[i]}`; }
+function formatNumber(n,max=2){ const v=Number(n); return Number.isFinite(v)?new Intl.NumberFormat(state.settings.language==="de"?"de-DE":"en-US",{maximumFractionDigits:max}).format(v):"—"; }
+function formatVMESH(n){ if(state.settings.hideBalances)return "•••••••• VMESH"; const v=Number(n); return Number.isFinite(v)?`${new Intl.NumberFormat(state.settings.language==="de"?"de-DE":"en-US",{minimumFractionDigits:2,maximumFractionDigits:8}).format(v)} VMESH`:"—"; }
+function formatDate(sec){ if(!sec)return "—"; return new Intl.DateTimeFormat(state.settings.language==="de"?"de-DE":"en-US",{dateStyle:"short",timeStyle:"short"}).format(new Date(sec*1000)); }
+function balanceValues(){ const b=state.wallet?.balances; if(b?.mine)return {trusted:Number(b.mine.trusted||0),pending:Number(b.mine.untrusted_pending||0),immature:Number(b.mine.immature||0)}; const i=state.wallet?.info||{}; return {trusted:Number(i.balance||0),pending:Number(i.unconfirmed_balance||0),immature:Number(i.immature_balance||0)}; }
 
-async function init(){try{appInfo=unwrap(await window.vmesh.app.info());settings=unwrap(await window.vmesh.app.settings());language=settings.language||'en';applyI18n();if(!settings.onboardingDone)$("#onboarding").classList.remove('hidden');await refreshNode();await refreshWallets();renderSettings();setInterval(refreshNode,3000);setInterval(refreshWalletInfo,7000);}catch(e){toast(e.message,true);}}
+function applyI18n(){
+  document.documentElement.lang=state.settings.language;
+  $$('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(I18N[state.settings.language]?.[k]) el.textContent=tr(k); });
+  const active=document.querySelector('.nav-item.active'); if(active) $("pageTitle").textContent=active.querySelector("b")?.textContent || tr("nav_dashboard");
+}
+function applyTheme(){ document.documentElement.dataset.theme=state.settings.theme; }
 
-$$('#nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));$$('[data-go]').forEach(b=>b.onclick=()=>showView(b.dataset.go));$("#langBtn").onclick=async()=>{language=language==='de'?'en':'de';unwrap(await window.vmesh.app.setLanguage(language));applyI18n();};$$('[data-set-lang]').forEach(b=>b.onclick=async()=>{language=b.dataset.setLang;unwrap(await window.vmesh.app.setLanguage(language));applyI18n();});$$('[data-onboard-lang]').forEach(b=>b.onclick=async()=>{language=b.dataset.onboardLang;unwrap(await window.vmesh.app.setLanguage(language));applyI18n();});$("#onboardContinue").onclick=async()=>{unwrap(await window.vmesh.app.finishOnboarding());$("#onboarding").classList.add('hidden');};$("#modalCancel").onclick=()=>$("#modal").classList.add('hidden');
-$("#walletSelect").onchange=async e=>{if(e.target.value){unwrap(await window.vmesh.wallet.select(e.target.value));await refreshWalletInfo();}};
-$("#createWalletBtn").onclick=async()=>{try{const name=$("#createName").value.trim(),pass=$("#createPass").value;unwrap(await window.vmesh.wallet.create(name,pass));$("#createPass").value='';toast(tr('msg.created'));await refreshWallets();}catch(e){toast(e.message,true);}};
-$("#restoreWalletBtn").onclick=async()=>{try{const name=$("#restoreName").value.trim();const r=unwrap(await window.vmesh.wallet.restore(name));if(!r.canceled){toast(tr('msg.restore'));await refreshWallets();}}catch(e){toast(e.message,true);}};
-$("#newAddressBtn").onclick=async()=>{try{const address=unwrap(await window.vmesh.wallet.newAddress($("#receiveLabel").value.trim()));$("#receiveAddress").textContent=address;$("#receiveResult").classList.remove('hidden');window.VargaQR.draw($("#qrCanvas"),address,7);}catch(e){toast(e.message,true);}};
-$("#copyAddressBtn").onclick=async()=>{const a=$("#receiveAddress").textContent;if(a){unwrap(await window.vmesh.app.copyText(a));toast(tr('msg.copied'));}};
-$("#prepareSendBtn").onclick=async()=>{try{const address=$("#sendAddress").value.trim(),amount=$("#sendAmount").value,pass=$("#sendPass").value;const v=unwrap(await window.vmesh.wallet.validateAddress(address));if(!v.isvalid)throw new Error('Invalid address');let fee='';try{const f=unwrap(await window.vmesh.wallet.estimateFee());if(f&&f.feerate)fee=`<p>Estimated network fee rate: <strong>${escapeHtml(String(f.feerate))} VMESH/kvB</strong></p>`;}catch(_){}modal(tr('send.confirmTitle'),`<p>${tr('send.confirmBody')}</p><dl class="stats-list"><dt>Address</dt><dd><code>${escapeHtml(address)}</code></dd><dt>Amount</dt><dd><strong>${escapeHtml(String(amount))} VMESH</strong></dd></dl>${fee}`,async()=>{const txid=unwrap(await window.vmesh.wallet.send(address,amount,pass));$("#sendPass").value='';toast(`${tr('send.sent')}: ${txid}`);await refreshWalletInfo();showView('transactions');});}catch(e){toast(e.message,true);}};
-$("#backupBtn").onclick=async()=>{try{const r=unwrap(await window.vmesh.wallet.backup());if(!r.canceled)toast(tr('msg.backup'));}catch(e){toast(e.message,true);}};
-$("#refreshBtn").onclick=async()=>{await refreshNode();await refreshWallets();};$("#txRefreshBtn").onclick=refreshTransactions;$("#startNodeBtn").onclick=async()=>{try{unwrap(await window.vmesh.node.start());await refreshNode();}catch(e){toast(e.message,true);}};$("#stopNodeBtn").onclick=async()=>{try{const r=unwrap(await window.vmesh.node.stop());if(r.external)toast('External node was not stopped.');await refreshNode();}catch(e){toast(e.message,true);}};
-$("#openDataBtn").onclick=()=>window.vmesh.app.openDataDir();$("#openConfigBtn").onclick=()=>window.vmesh.app.openConfig();$("#websiteBtn").onclick=()=>window.vmesh.app.openWebsite('website');$("#explorerBtn").onclick=()=>window.vmesh.app.openWebsite('explorer');$("#githubBtn").onclick=()=>window.vmesh.app.openWebsite('github');
-init();
+function setView(name){
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
+  $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+  const btn=document.querySelector(`.nav-item[data-view="${name}"]`); $("pageTitle").textContent=btn?.querySelector('b')?.textContent||name;
+  if(name==='transactions') loadTransactions(true);
+  if(name==='node') loadNodeExtras();
+  if(name==='wallet') loadUtxos();
+}
+
+async function refreshCore(){
+  try{
+    state.core=unwrap(await api.coreStatus());
+    const online=!!state.core.running;
+    $("coreDot").className=`dot ${online?'online':''}`;
+    $("coreText").textContent=online?`Core ${state.core.blocks ?? 'online'}`:(state.settings.language==='de'?'Core offline':'Core offline');
+    $("startupBanner").classList.toggle('hidden',online);
+    renderCore();
+    if(online) await refreshWallets(false);
+  }catch(err){ $("coreDot").className='dot error'; $("coreText").textContent='Core error'; }
+}
+
+function renderCore(){
+  const c=state.core||{}; const progress=Math.max(0,Math.min(1,Number(c.verificationprogress||0)));
+  $("dashBlocks").textContent=c.running?formatNumber(c.blocks,0):'—'; $("dashHeaders").textContent=c.running?`${formatNumber(c.headers,0)} headers`:'—';
+  $("dashSync").textContent=c.running?`${(progress*100).toFixed(progress>.9999?2:1)} %`:'—'; $("syncBar").style.width=`${progress*100}%`;
+  $("dashPeers").textContent=c.running?formatNumber(c.connections,0):'—'; $("dashConnections").textContent=c.running?`${c.connections_in||0} in / ${c.connections_out||0} out`:'—';
+  $("healthCore").textContent=c.subversion||'—'; $("healthDifficulty").textContent=c.running?formatNumber(c.difficulty,4):'—'; $("healthDisk").textContent=c.running?formatBytes(c.size_on_disk):'—'; $("healthBestBlock").textContent=c.bestblockhash?shortHash(c.bestblockhash,8):'—';
+  $("nodeBlocks").textContent=c.running?formatNumber(c.blocks,0):'—'; $("nodeHeaders").textContent=c.running?`${formatNumber(c.headers,0)} headers`:'—'; $("nodePeers").textContent=c.running?formatNumber(c.connections,0):'—'; $("nodePeerSplit").textContent=c.running?`${c.connections_in||0} inbound · ${c.connections_out||0} outbound`:'—';
+}
+
+async function refreshWallets(force=true){
+  if(!state.core?.running)return;
+  try{
+    const data=unwrap(await api.listWallets()); state.wallets=data.wallets||[];
+    let active=state.activeWallet || state.settings.activeWallet;
+    if(!data.loaded.includes(active)) active=data.loaded[0]||'';
+    state.activeWallet=active;
+    renderWalletSelect(data.loaded);
+    if(active) await refreshWallet(); else { state.wallet=null; renderWallet(); }
+  }catch(err){ if(force) showToast(err.message,true); }
+}
+
+function renderWalletSelect(loaded){
+  const select=$("walletSelect"); select.innerHTML='';
+  if(!loaded.length){ const o=document.createElement('option'); o.textContent=state.settings.language==='de'?'Keine Wallet geladen':'No wallet loaded'; o.value=''; select.appendChild(o); return; }
+  loaded.forEach(name=>{ const o=document.createElement('option'); o.value=name;o.textContent=name;o.selected=name===state.activeWallet;select.appendChild(o); });
+}
+
+async function refreshWallet(){
+  if(!state.activeWallet){state.wallet=null;renderWallet();return;}
+  try{
+    state.wallet=unwrap(await api.walletSummary(state.activeWallet));
+    if(state.settings.activeWallet!==state.activeWallet){ state.settings=unwrap(await api.updateSettings({activeWallet:state.activeWallet})); }
+    renderWallet(); await loadTransactions(false);
+  }catch(err){ showToast(err.message,true); }
+}
+
+function renderWallet(){
+  const name=state.activeWallet||'—', info=state.wallet?.info||{}, b=balanceValues();
+  $("walletName").textContent=name; $("sendWalletName").textContent=name; $("walletBalance").textContent=formatVMESH(b.trusted); $("dashBalance").textContent=formatVMESH(b.trusted);
+  $("walletPending").textContent=`${formatVMESH(b.pending)} pending · ${formatVMESH(b.immature)} immature`; $("dashUnconfirmed").textContent=`${formatVMESH(b.pending)} pending`;
+  $("walletEncryption").textContent=info.unlocked_until!==undefined?(info.unlocked_until>Math.floor(Date.now()/1000)?'Unlocked':'Encrypted / locked'):'Wallet ready';
+  $("sendBtn").disabled=!state.activeWallet; $("newAddressBtn").disabled=!state.activeWallet;
+}
+
+function renderTransactions(target,rows){
+  target.innerHTML='';
+  if(!rows.length){ const trr=document.createElement('tr');trr.innerHTML='<td colspan="5" class="muted">—</td>';target.appendChild(trr);return; }
+  rows.forEach(tx=>{
+    const amount=Number(tx.amount||0), row=document.createElement('tr');
+    row.innerHTML=`<td>${formatDate(tx.time||tx.timereceived)}</td><td>${escapeHtml(tx.category||'—')}</td><td><code title="${escapeAttr(tx.txid||'')}">${shortHash(tx.txid||'',10)}</code></td><td class="${amount>=0?'tx-amount positive':'tx-amount negative'}">${formatVMESH(amount)}</td><td>${tx.confirmations??0}</td>`;
+    target.appendChild(row);
+  });
+}
+function renderRecent(rows){
+  const el=$("recentTransactions"); el.innerHTML='';
+  if(!rows.length){el.textContent=tr('no_transactions');el.className='transaction-list empty-state';return;} el.className='transaction-list';
+  rows.slice(0,5).forEach(tx=>{const amount=Number(tx.amount||0),d=document.createElement('div');d.className='tx-mini';d.innerHTML=`<div class="tx-icon">${amount>=0?'↙':'↗'}</div><div><b>${escapeHtml(tx.category||'transaction')}</b><small>${formatDate(tx.time||tx.timereceived)} · ${shortHash(tx.txid||'',7)}</small></div><div class="tx-amount ${amount>=0?'positive':'negative'}"><b>${formatVMESH(amount)}</b><small>${tx.confirmations??0} conf</small></div>`;el.appendChild(d);});
+}
+async function loadTransactions(showErrors=true){ if(!state.activeWallet)return; try{state.transactions=unwrap(await api.transactions(state.activeWallet,state.settings.txPageSize,0))||[];renderTransactions($("txBody"),state.transactions);renderRecent(state.transactions);}catch(err){if(showErrors)showToast(err.message,true);} }
+async function loadUtxos(){ if(!state.activeWallet)return; try{const rows=unwrap(await api.unspent(state.activeWallet))||[];const body=$("utxoBody");body.innerHTML='';if(!rows.length){body.innerHTML='<tr><td colspan="5" class="muted">—</td></tr>';return;}rows.slice(0,200).forEach(u=>{const r=document.createElement('tr');r.innerHTML=`<td><code title="${escapeAttr(u.txid||'')}">${shortHash(u.txid||'',9)}</code></td><td>${u.vout??'—'}</td><td>${formatVMESH(u.amount)}</td><td>${u.confirmations??0}</td><td><code>${escapeHtml(u.address||'—')}</code></td>`;body.appendChild(r);});}catch(err){showToast(err.message,true);} }
+
+async function loadNodeExtras(){
+  if(!state.core?.running)return;
+  const [mp,mi,pe]=await Promise.allSettled([api.mempool(),api.mining(),api.peers()]);
+  if(mp.status==='fulfilled'&&mp.value.ok){const v=mp.value.data||{};$("nodeMempool").textContent=formatNumber(v.size,0);$("nodeMempoolBytes").textContent=formatBytes(v.bytes||v.usage);}
+  if(mi.status==='fulfilled'&&mi.value.ok){const v=mi.value.data||{};$("nodeHashrate").textContent=formatHashrate(v.networkhashps);$("nodeDifficulty").textContent=`Diff ${formatNumber(v.difficulty,4)}`;}
+  if(pe.status==='fulfilled'&&pe.value.ok)renderPeers(pe.value.data||[]);
+}
+function renderPeers(peers){const body=$("peerBody");body.innerHTML='';if(!peers.length){body.innerHTML='<tr><td colspan="5" class="muted">—</td></tr>';return;}peers.forEach(p=>{const r=document.createElement('tr');r.innerHTML=`<td><code>${escapeHtml(p.addr||'—')}</code></td><td>${p.inbound?'in':'out'}</td><td>${escapeHtml(p.subver||'—')}</td><td>${p.pingtime?`${(p.pingtime*1000).toFixed(0)} ms`:'—'}</td><td>${p.synced_blocks??'—'}</td>`;body.appendChild(r);});}
+function formatHashrate(v){v=Number(v)||0;const units=['H/s','kH/s','MH/s','GH/s','TH/s','PH/s','EH/s'];let i=0;while(v>=1000&&i<units.length-1){v/=1000;i++;}return `${v.toFixed(v>=100?0:v>=10?1:2)} ${units[i]}`;}
+
+async function generateAddress(){ if(!state.activeWallet)return showToast('No active wallet',true); try{const addr=unwrap(await api.newAddress(state.activeWallet,$("receiveLabel").value.trim()));state.address=addr;$("receiveAddress").textContent=addr;window.VargaQR.draw($("qrCanvas"),`vargamesh:${addr}`,6);showToast(state.settings.language==='de'?'Neue Adresse erzeugt':'New address generated');}catch(err){showToast(err.message,true);} }
+async function validateSendAddress(){const val=$("sendAddress").value.trim(),note=$("addressValidation");if(!val){note.textContent='';note.className='field-note';return false;}try{const v=unwrap(await api.validateAddress(val));note.textContent=v?.isvalid?(state.settings.language==='de'?'✓ Gültige VargaMesh-Adresse':'✓ Valid VargaMesh address'):(state.settings.language==='de'?'✕ Ungültige Adresse':'✕ Invalid address');note.className=`field-note ${v?.isvalid?'ok':'bad'}`;return !!v?.isvalid;}catch(err){note.textContent=err.message;note.className='field-note bad';return false;}}
+async function estimateFee(){try{const f=unwrap(await api.estimateFee(Number($("feeTarget").value)));state.fee=f;$("estimatedFee").textContent=f?.feerate!==undefined?`${formatNumber(Number(f.feerate)*100000,2)} sat/vB`:(f?.errors?.[0]||'—');}catch{$("estimatedFee").textContent='—';}}
+
+async function reviewSend(){
+  if(!state.activeWallet)return showToast('No active wallet',true);
+  if(!(await validateSendAddress()))return;
+  const amount=Number($("sendAmount").value); if(!Number.isFinite(amount)||amount<=0)return showToast(state.settings.language==='de'?'Ungültiger Betrag':'Invalid amount',true);
+  state.pendingSend={wallet:state.activeWallet,address:$("sendAddress").value.trim(),amount,comment:$("sendComment").value.trim(),subtractFee:$("subtractFee").checked};
+  $("confirmAddress").textContent=state.pendingSend.address;$("confirmAmount").textContent=formatVMESH(amount);$("confirmWallet").textContent=state.activeWallet;if(state.settings.confirmSend)$("confirmDialog").showModal();else await sendNow();
+}
+async function sendNow(){
+  if(!state.pendingSend)return;
+  $("sendConfirmBtn").disabled=true;
+  try{
+    const result=await api.send(state.pendingSend);
+    if(!result.ok && /passphrase|wallet.*locked|unlock/i.test(result.error||'')){
+      $("confirmDialog").close(); $("unlockPass").value=''; $("unlockDialog").showModal(); return;
+    }
+    const txid=unwrap(result); $("confirmDialog").close(); showToast(`${state.settings.language==='de'?'Gesendet':'Sent'}: ${shortHash(txid,10)}`); $("sendAmount").value=''; $("sendComment").value=''; state.pendingSend=null; await refreshWallet();
+  }catch(err){showToast(err.message,true);}finally{$("sendConfirmBtn").disabled=false;}
+}
+async function unlockAndSend(){const pass=$("unlockPass").value;if(!pass)return;$("unlockConfirm").disabled=true;try{unwrap(await api.unlockWallet(state.activeWallet,pass,state.settings.autoLockSeconds));$("unlockPass").value='';$("unlockDialog").close();await sendNow();}catch(err){showToast(err.message,true);}finally{$("unlockConfirm").disabled=false;}}
+
+async function createWallet(){const name=$("createWalletName").value.trim(),p1=$("createWalletPass").value,p2=$("createWalletPass2").value;if(!name)return;if(p1!==p2)return showToast(state.settings.language==='de'?'Passphrasen stimmen nicht überein':'Passphrases do not match',true);$("createWalletConfirm").disabled=true;try{unwrap(await api.createWallet({name,passphrase:p1}));$("walletDialog").close();$("createWalletPass").value=$("createWalletPass2").value='';state.activeWallet=name;await refreshWallets();showToast(state.settings.language==='de'?'Wallet erstellt':'Wallet created');}catch(err){showToast(err.message,true);}finally{$("createWalletConfirm").disabled=false;}}
+async function openLoadDialog(){try{const data=unwrap(await api.listWallets()),box=$("availableWallets");box.innerHTML='';const unloaded=(data.wallets||[]).filter(w=>!w.loaded);if(!unloaded.length){box.innerHTML='<div class="muted">No unloaded wallets found.</div>';}unloaded.forEach(w=>{const d=document.createElement('div');d.className='wallet-option';const b=document.createElement('button');b.className='btn secondary';b.textContent=state.settings.language==='de'?'Laden':'Load';b.onclick=async()=>{try{unwrap(await api.loadWallet(w.name));$("loadDialog").close();state.activeWallet=w.name;await refreshWallets();}catch(err){showToast(err.message,true);}};d.innerHTML=`<b>${escapeHtml(w.name)}</b>`;d.appendChild(b);box.appendChild(d);});$("loadDialog").showModal();}catch(err){showToast(err.message,true);}}
+
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function escapeAttr(value){return escapeHtml(value);}
+
+async function saveSettings(patch){try{state.settings=unwrap(await api.updateSettings(patch));applyTheme();applyI18n();renderWallet();}catch(err){showToast(err.message,true);}}
+
+function bind(){
+  $$('.nav-item').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view))); $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
+  $("refreshBtn").onclick=async()=>{await refreshCore();await loadNodeExtras();showToast(tr('refresh'));};
+  $("newWalletBtn").onclick=$("walletCreateBtn").onclick=()=>$("walletDialog").showModal(); $("createWalletConfirm").onclick=createWallet; $("loadWalletBtn").onclick=openLoadDialog;
+  $("walletSelect").onchange=async e=>{state.activeWallet=e.target.value;await refreshWallet();};
+  $("reloadTxBtn").onclick=()=>loadTransactions(true); $("reloadUtxoBtn").onclick=loadUtxos; $("reloadPeersBtn").onclick=loadNodeExtras;
+  $("newAddressBtn").onclick=generateAddress; $("copyAddressBtn").onclick=async()=>{if(state.address){unwrap(await api.copy(state.address));showToast(tr('copy'));}};
+  $("sendAddress").addEventListener('blur',validateSendAddress); $("feeTarget").onchange=estimateFee; $("sendBtn").onclick=reviewSend; $("sendConfirmBtn").onclick=sendNow; $("unlockConfirm").onclick=unlockAndSend;
+  $("backupBtn").onclick=async()=>{if(!state.activeWallet)return;try{const r=unwrap(await api.backupWallet(state.activeWallet));if(!r.canceled)showToast(state.settings.language==='de'?'Backup erstellt':'Backup created');}catch(err){showToast(err.message,true);}};
+  $("restoreBtn").onclick=()=>{$("restoreWalletName").value='';$("restoreDialog").showModal();};
+  $("restoreConfirm").onclick=async()=>{const name=$("restoreWalletName").value.trim();if(!name)return;$("restoreConfirm").disabled=true;try{const r=unwrap(await api.restoreWallet(name));if(!r.canceled){state.activeWallet=name;$("restoreDialog").close();await refreshWallets();showToast(state.settings.language==='de'?'Wallet wiederhergestellt':'Wallet restored');}}catch(err){showToast(err.message,true);}finally{$("restoreConfirm").disabled=false;}};
+  $("lockBtn").onclick=async()=>{if(!state.activeWallet)return;try{unwrap(await api.lockWallet(state.activeWallet));showToast(state.settings.language==='de'?'Wallet gesperrt':'Wallet locked');await refreshWallet();}catch(err){showToast(err.message,true);}};
+  $("rescanBtn").onclick=async()=>{if(!state.activeWallet)return;if(!confirm(state.settings.language==='de'?'Blockchain-Rescan starten? Dies kann länger dauern.':'Start blockchain rescan? This may take some time.'))return;showToast(state.settings.language==='de'?'Rescan gestartet':'Rescan started');api.rescanWallet(state.activeWallet).then(r=>{if(!r.ok)showToast(r.error,true);}).catch(err=>showToast(err.message,true));};
+  $("migrateBtn").onclick=()=>{if(!state.activeWallet)return;$("migratePass").value='';$("migrateDialog").showModal();};
+  $("migrateConfirm").onclick=async()=>{if(!state.activeWallet)return;const passphrase=$("migratePass").value;$("migrateConfirm").disabled=true;try{unwrap(await api.migrateWallet(state.activeWallet,passphrase));$("migratePass").value='';$("migrateDialog").close();showToast(state.settings.language==='de'?'Migration abgeschlossen':'Migration completed');await refreshWallets();}catch(err){showToast(err.message,true);}finally{$("migrateConfirm").disabled=false;}};
+  $("unloadBtn").onclick=async()=>{if(!state.activeWallet)return;const name=state.activeWallet;try{unwrap(await api.unloadWallet(name));state.activeWallet='';await refreshWallets();showToast(state.settings.language==='de'?`Wallet ${name} entladen`:`Wallet ${name} unloaded`);}catch(err){showToast(err.message,true);}};
+  $("dataDirBtn").onclick=async()=>{try{unwrap(await api.showDataDir());}catch(err){showToast(err.message,true);}}; $("debugLogBtn").onclick=async()=>{try{unwrap(await api.showDebugLog());}catch(err){showToast(err.message,true);}};
+  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)});
+  $$('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
+}
+
+async function init(){
+  bind();
+  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);applyTheme();applyI18n();unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
+    showToast(err.message,true);
+    $("coreDot").className='dot error';
+    $("coreText").textContent='Core error';
+    const banner=$("startupBanner");
+    banner.classList.add('error');
+    const strong=banner.querySelector('strong');
+    const span=banner.querySelector('span');
+    if(strong)strong.textContent=state.settings.language==='de'?'VargaMesh Core konnte nicht gestartet werden':'VargaMesh Core could not start';
+    if(span)span.textContent=err.message;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',init);

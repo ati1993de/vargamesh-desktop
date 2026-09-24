@@ -1,26 +1,28 @@
 # Security Policy
 
-## Wallet security model
+VargaMesh Desktop is non-custodial desktop software. Private keys remain in VargaMesh Core wallet databases.
 
-VargaMesh Desktop does **not** implement private-key cryptography itself.
-Wallet creation, encryption, signing, backup, restore and migration are delegated
-to the bundled VargaMesh Core daemon through localhost JSON-RPC.
+## Never include in bug reports
 
-The renderer has no Node.js integration, no direct filesystem access, no direct
-RPC credentials and no arbitrary command execution. IPC is limited to an
-explicit allow-list in `preload.js` and `main.js`.
+- private keys or WIF strings
+- seed material
+- wallet.dat or wallet backups
+- wallet passphrases
+- `.cookie` RPC authentication contents
+- SSH private keys
+- npm/GitHub/API access tokens
 
-Wallet passphrases are never written to application settings or logs. They are
-held only long enough to perform the requested RPC operation. JavaScript strings
-cannot be guaranteed to be securely zeroed from process memory; users who need
-higher-assurance key isolation should use a dedicated signing setup rather than
-an Electron wallet UI.
+## Desktop security boundaries
 
-RPC is bound to `127.0.0.1:29667`. Never expose the RPC port to the public
-Internet.
+- Electron renderer sandbox enabled
+- `contextIsolation: true`
+- `nodeIntegration: false`
+- strict local Content Security Policy
+- external navigation denied
+- permission requests denied by default
+- renderer has only explicit preload methods
+- no arbitrary RPC method bridge
+- RPC cookie is never returned to the renderer
+- passphrases are sent only for the immediate Core operation and are not persisted by Desktop settings
 
-## Reporting
-
-Do not open public issues containing wallet backups, private keys, passphrases,
-RPC cookies or other secrets. Report security-sensitive findings privately to
-the project maintainer.
+Use independent backups and test new pre-release builds with small amounts first.

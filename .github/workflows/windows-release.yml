@@ -1,4 +1,4 @@
-name: VargaMesh Desktop Windows
+name: VargaMesh Desktop Windows x64
 
 on:
   workflow_dispatch:
@@ -10,85 +10,58 @@ permissions:
   contents: write
 
 jobs:
-  windows:
-    name: Windows x64 installer + portable ZIP
-    runs-on: windows-2025
+  build:
+    runs-on: windows-latest
     timeout-minutes: 90
     env:
-      GH_TOKEN: ${{ github.token }}
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js 24
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "24"
-
-      - name: Download and verify VargaMesh Core v0.1.0
+          node-version: "22"
+      - name: Download VargaMesh Core
         shell: pwsh
-        run: ./scripts/prepare-core.ps1
-
-      - name: Install dependencies
-        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force resources/core | Out-Null
+          gh release download v0.1.0 --repo ati1993de/vargamesh-core --pattern "VargaMesh-v0.1.0-windows-x86_64.zip" --dir "$env:RUNNER_TEMP"
+          Expand-Archive "$env:RUNNER_TEMP/VargaMesh-v0.1.0-windows-x86_64.zip" "$env:RUNNER_TEMP/vmesh-core" -Force
+          $daemon = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargameshd.exe | Select-Object -First 1
+          $cli = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargamesh-cli.exe | Select-Object -First 1
+          if (!$daemon -or !$cli) { throw "Core binaries missing" }
+          if ($daemon.DirectoryName -ne $cli.DirectoryName) { throw "Core daemon and CLI runtime directories differ" }
+          Remove-Item resources/core/* -Recurse -Force -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $daemon.DirectoryName '*') resources/core/ -Recurse -Force
+          if (!(Test-Path resources/core/vargameshd.exe) -or !(Test-Path resources/core/vargamesh-cli.exe)) { throw "Core runtime copy failed" }
+      - name: Install
         run: npm install --no-audit --no-fund
-
-      - name: Static checks
-        shell: pwsh
+      - name: Verify source
         run: npm run check
-
-      - name: Build installer and portable ZIP
-        shell: pwsh
+      - name: Build
         run: npm run dist:win
-
-      - name: Verify packaged runtime code
-        shell: pwsh
-        run: npm run check:packaged
-
-      - name: Verify and checksum artifacts
-        shell: pwsh
-        run: ./scripts/verify-dist.ps1
-
-      - name: Resolve package version
-        id: pkg
+      - name: SHA256
         shell: pwsh
         run: |
-          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-          "version=$($pkg.version)" >> $env:GITHUB_OUTPUT
-
-      - name: Upload Actions artifact
-        uses: actions/upload-artifact@v6
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $a = "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe"
+          $b = "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip"
+          if (!(Test-Path $a) -or !(Test-Path $b)) { throw "Artifacts missing" }
+          @(
+            "$( (Get-FileHash $a -Algorithm SHA256).Hash.ToLower() )  $(Split-Path $a -Leaf)",
+            "$( (Get-FileHash $b -Algorithm SHA256).Hash.ToLower() )  $(Split-Path $b -Leaf)"
+          ) | Set-Content dist/SHA256SUMS -Encoding ascii
+      - uses: actions/upload-artifact@v4
         with:
-          name: VargaMesh-Desktop-Windows-x64-v${{ steps.pkg.outputs.version }}
+          name: VargaMesh-Desktop-Windows-x64
           path: |
-            dist/VargaMesh-Desktop-v${{ steps.pkg.outputs.version }}-Windows-x64-Setup.exe
-            dist/VargaMesh-Desktop-v${{ steps.pkg.outputs.version }}-Windows-x64-Portable.zip
+            dist/*Setup.exe
+            dist/*Portable.zip
             dist/SHA256SUMS
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Validate tag matches package version
+      - name: Release tagged build
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
-          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-          if ($env:GITHUB_REF_NAME -ne "v$($pkg.version)") {
-            throw "Tag $env:GITHUB_REF_NAME does not match package version v$($pkg.version)"
-          }
-
-      - name: Create GitHub pre-release
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
-        run: |
-          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-          $version = $pkg.version
-          gh release create "$env:GITHUB_REF_NAME" `
-            "dist/VargaMesh-Desktop-v$version-Windows-x64-Setup.exe" `
-            "dist/VargaMesh-Desktop-v$version-Windows-x64-Portable.zip" `
-            "dist/SHA256SUMS" `
-            --repo "$env:GITHUB_REPOSITORY" `
-            --verify-tag `
-            --title "VargaMesh Desktop v$version" `
-            --notes-file RELEASE-NOTES.md `
-            --prerelease
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$v") { throw "Tag/version mismatch" }
+          gh release create "$env:GITHUB_REF_NAME" "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe" "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip" "dist/SHA256SUMS" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --prerelease

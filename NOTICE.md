@@ -1,11 +1,5 @@
-# Notices
+# Notice
 
-The VargaMesh Desktop application code is licensed under the MIT License.
+VargaMesh Desktop interfaces with VargaMesh Core. VargaMesh Core is derived from Bitcoin Core and retains its applicable upstream licensing, copyright and attribution notices in the Core repository/distribution.
 
-VargaMesh branding and artwork included in `assets/` and `build/` are project
-assets supplied by Varga-Tech and are not granted for unrelated branding use by
-the MIT software license.
-
-The bundled VargaMesh Core binaries are built from the separate
-`ati1993de/vargamesh-core` project and retain the notices and licenses of that
-project and its upstream components.
+VargaMesh branding assets included in this Desktop source package are existing VargaMesh project assets supplied for use with this project.

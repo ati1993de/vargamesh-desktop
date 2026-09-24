@@ -1,91 +1,168 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
   <title>VargaMesh Desktop</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="appShell">
-  <aside class="sidebar">
-    <div class="brand"><img src="../../assets/logo.png" alt="VargaMesh"><div><strong>VargaMesh</strong><span>Desktop</span></div></div>
-    <nav id="nav">
-      <button data-view="dashboard" class="active"><span>◈</span><b data-i18n="nav.dashboard">Dashboard</b></button>
-      <button data-view="wallet"><span>◉</span><b data-i18n="nav.wallet">Wallet</b></button>
-      <button data-view="send"><span>↗</span><b data-i18n="nav.send">Send</b></button>
-      <button data-view="receive"><span>↙</span><b data-i18n="nav.receive">Receive</b></button>
-      <button data-view="transactions"><span>≋</span><b data-i18n="nav.transactions">Transactions</b></button>
-      <button data-view="network"><span>⌘</span><b data-i18n="nav.network">Network</b></button>
-      <button data-view="backup"><span>▣</span><b data-i18n="nav.backup">Backup</b></button>
-      <button data-view="settings"><span>⚙</span><b data-i18n="nav.settings">Settings</b></button>
-    </nav>
-    <div class="side-footer">
-      <div id="nodePill" class="status-pill offline"><i></i><span data-i18n="node.offline">Node offline</span></div>
-      <button class="text-btn" id="websiteBtn">vargacoin.com ↗</button>
-    </div>
-  </aside>
-
-  <main class="main">
-    <header class="topbar">
-      <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle" data-i18n="subtitle.dashboard">Your local VMESH wallet and full node.</p></div>
-      <div class="top-actions">
-        <select id="walletSelect" aria-label="Wallet"><option value="">No wallet</option></select>
-        <button class="lang" id="langBtn">DE</button>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../../assets/vmesh_mark.png" alt="VargaMesh" class="brand-mark">
+        <div><strong>VargaMesh</strong><span>Desktop Wallet</span></div>
       </div>
-    </header>
 
-    <section id="view-dashboard" class="view active">
-      <div class="hero-card">
-        <div class="hero-copy"><span class="eyebrow">VARGAMESH MAINNET</span><h2><span id="balanceMain">0.00000000</span> <small>VMESH</small></h2><p id="walletNameLabel">—</p></div>
-        <img src="../../assets/vmesh-coin.png" alt="VMESH coin" class="hero-coin">
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard"><span>⌂</span><b data-i18n="nav_dashboard">Übersicht</b></button>
+        <button class="nav-item" data-view="wallet"><span>◫</span><b data-i18n="nav_wallet">Wallet</b></button>
+        <button class="nav-item" data-view="send"><span>↗</span><b data-i18n="nav_send">Senden</b></button>
+        <button class="nav-item" data-view="receive"><span>↙</span><b data-i18n="nav_receive">Empfangen</b></button>
+        <button class="nav-item" data-view="transactions"><span>≡</span><b data-i18n="nav_transactions">Transaktionen</b></button>
+        <button class="nav-item" data-view="node"><span>⧉</span><b data-i18n="nav_node">Node</b></button>
+        <button class="nav-item" data-view="settings"><span>⚙</span><b data-i18n="nav_settings">Einstellungen</b></button>
+      </nav>
+
+      <div class="sidebar-status">
+        <div class="status-row"><span class="dot" id="coreDot"></span><span id="coreText">Core startet…</span></div>
+        <div class="muted small" id="versionText">VargaMesh Desktop</div>
       </div>
-      <div class="grid metrics">
-        <article class="card"><span data-i18n="metric.sync">Synchronization</span><strong id="syncPercent">—</strong><div class="progress"><i id="syncBar"></i></div><small id="heightText">—</small></article>
-        <article class="card"><span data-i18n="metric.peers">Peers</span><strong id="peerCount">—</strong><small id="peerDetail">—</small></article>
-        <article class="card"><span data-i18n="metric.pending">Pending</span><strong id="pendingBalance">—</strong><small>VMESH</small></article>
-        <article class="card"><span data-i18n="metric.immature">Immature</span><strong id="immatureBalance">—</strong><small>VMESH</small></article>
-      </div>
-      <div class="grid two">
-        <article class="card"><div class="card-head"><h3 data-i18n="quick.title">Quick actions</h3></div><div class="action-grid"><button class="primary" data-go="receive" data-i18n="quick.receive">Receive VMESH</button><button data-go="send" data-i18n="quick.send">Send VMESH</button><button data-go="backup" data-i18n="quick.backup">Back up wallet</button><button id="refreshBtn" data-i18n="quick.refresh">Refresh</button></div></article>
-        <article class="card secure"><h3 data-i18n="security.title">Security model</h3><p data-i18n="security.body">Private keys and transaction signing stay inside VargaMesh Core. RPC is local-only and the Electron renderer never receives the RPC cookie.</p><span class="badge">LOCAL CORE RPC</span></article>
-      </div>
-    </section>
+    </aside>
 
-    <section id="view-wallet" class="view">
-      <div class="grid two">
-        <article class="card"><h3 data-i18n="wallet.create">Create wallet</h3><label data-i18n="wallet.name">Wallet name</label><input id="createName" maxlength="64" placeholder="main"><label data-i18n="wallet.pass">Passphrase (recommended)</label><input id="createPass" maxlength="1024" type="password" autocomplete="new-password"><p class="hint" data-i18n="wallet.passhint">The passphrase is sent only to local VargaMesh Core and is never stored by Desktop.</p><button id="createWalletBtn" class="primary" data-i18n="wallet.createbtn">Create wallet</button></article>
-        <article class="card"><h3 data-i18n="wallet.restore">Restore existing wallet</h3><p data-i18n="wallet.restorebody">Restore a Core wallet backup without exposing private keys to Electron.</p><label data-i18n="wallet.restorename">New wallet name</label><input id="restoreName" maxlength="64" placeholder="restored-wallet"><button id="restoreWalletBtn" data-i18n="wallet.restorebtn">Choose backup…</button><div class="divider"></div><h3 data-i18n="wallet.available">Wallet directory</h3><div id="walletDirectory" class="wallet-list"></div></article>
-      </div>
-    </section>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow" data-i18n="network_label">VARGAMESH MAINNET</div>
+          <h1 id="pageTitle">Übersicht</h1>
+        </div>
+        <div class="top-actions">
+          <select id="walletSelect" aria-label="Wallet"></select>
+          <button class="btn ghost" id="refreshBtn" title="Refresh">↻</button>
+          <button class="btn primary" id="newWalletBtn" data-i18n="new_wallet">Neue Wallet</button>
+        </div>
+      </header>
 
-    <section id="view-send" class="view">
-      <article class="card form-card"><h3 data-i18n="send.title">Send VMESH</h3><label data-i18n="send.address">Recipient address</label><input id="sendAddress" spellcheck="false" autocomplete="off" placeholder="vm1…"><label data-i18n="send.amount">Amount (VMESH)</label><input id="sendAmount" type="number" min="0" step="0.00000001" placeholder="0.00000000"><label data-i18n="send.pass">Wallet passphrase (only if encrypted)</label><input id="sendPass" type="password" maxlength="1024" autocomplete="current-password"><div id="feeHint" class="hint"></div><button id="prepareSendBtn" class="primary danger-soft" data-i18n="send.review">Review transaction</button></article>
-    </section>
+      <section class="banner" id="startupBanner">
+        <div class="spinner"></div>
+        <div><strong data-i18n="starting_core">VargaMesh Core wird gestartet</strong><span data-i18n="starting_core_hint">Lokaler Full Node und Wallet-RPC werden vorbereitet.</span></div>
+      </section>
 
-    <section id="view-receive" class="view">
-      <div class="grid two">
-        <article class="card form-card"><h3 data-i18n="receive.title">Receive VMESH</h3><label data-i18n="receive.label">Address label (optional)</label><input id="receiveLabel" maxlength="64"><button id="newAddressBtn" class="primary" data-i18n="receive.generate">Generate address</button><div id="receiveResult" class="address-box hidden"><code id="receiveAddress"></code><button id="copyAddressBtn" data-i18n="common.copy">Copy</button></div></article>
-        <article class="card qr-card"><canvas id="qrCanvas" width="280" height="280"></canvas><p data-i18n="receive.qr">QR code is generated locally. No address is sent to a third party.</p></article>
-      </div>
-    </section>
+      <section class="view active" id="view-dashboard">
+        <div class="hero-card">
+          <div class="hero-copy">
+            <div class="eyebrow" data-i18n="fullnode_wallet">FULL NODE WALLET</div>
+            <h2 data-i18n="hero_title">Deine VMESH. Dein Node. Deine Schlüssel.</h2>
+            <p data-i18n="hero_text">VargaMesh Desktop verbindet die grafische Wallet direkt mit deinem lokalen VargaMesh Core. Keine Cloud-Wallet, kein Custody-Dienst.</p>
+            <div class="hero-actions">
+              <button class="btn primary" data-goto="receive" data-i18n="receive_vmesh">VMESH empfangen</button>
+              <button class="btn secondary" data-goto="send" data-i18n="send_vmesh">VMESH senden</button>
+            </div>
+          </div>
+          <img src="../../assets/vmesh_coin.png" alt="VMESH coin" class="hero-coin">
+        </div>
 
-    <section id="view-transactions" class="view"><article class="card"><div class="card-head"><h3 data-i18n="tx.title">Recent transactions</h3><button id="txRefreshBtn" data-i18n="common.refresh">Refresh</button></div><div class="table-wrap"><table><thead><tr><th data-i18n="tx.time">Time</th><th data-i18n="tx.type">Type</th><th data-i18n="tx.amount">Amount</th><th data-i18n="tx.confirmations">Confirmations</th><th>TXID</th></tr></thead><tbody id="txBody"></tbody></table></div></article></section>
+        <div class="metric-grid">
+          <article class="metric-card"><span data-i18n="balance">Guthaben</span><strong id="dashBalance">—</strong><small id="dashUnconfirmed">—</small></article>
+          <article class="metric-card"><span data-i18n="block_height">Blockhöhe</span><strong id="dashBlocks">—</strong><small id="dashHeaders">—</small></article>
+          <article class="metric-card"><span data-i18n="sync">Synchronisation</span><strong id="dashSync">—</strong><div class="progress"><i id="syncBar"></i></div></article>
+          <article class="metric-card"><span data-i18n="peers">Peers</span><strong id="dashPeers">—</strong><small id="dashConnections">—</small></article>
+        </div>
 
-    <section id="view-network" class="view"><div class="grid two"><article class="card"><h3 data-i18n="network.status">Node status</h3><dl id="networkStats" class="stats-list"></dl><div class="action-row"><button id="startNodeBtn" class="primary" data-i18n="network.start">Start node</button><button id="stopNodeBtn" data-i18n="network.stop">Stop node</button></div></article><article class="card"><h3 data-i18n="network.security">Network / RPC security</h3><p data-i18n="network.body">P2P listens on TCP 29666. RPC is explicitly bound to 127.0.0.1:29667 and should never be forwarded to the Internet.</p><div class="known-nodes"><code>217.154.93.20:29666</code><code>212.132.80.39:29666</code><code>31.70.81.5:29666</code></div><button id="explorerBtn" data-i18n="network.explorer">Open explorer ↗</button></article></div></section>
+        <div class="two-col">
+          <section class="panel">
+            <div class="panel-head"><div><span class="eyebrow" data-i18n="wallet_activity">WALLET-AKTIVITÄT</span><h3 data-i18n="latest_transactions">Letzte Transaktionen</h3></div><button class="text-btn" data-goto="transactions" data-i18n="show_all">Alle anzeigen</button></div>
+            <div id="recentTransactions" class="transaction-list empty-state" data-i18n="no_transactions">Noch keine Transaktionen geladen.</div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><span class="eyebrow" data-i18n="network_health">NETZWERK</span><h3 data-i18n="node_health">Node-Status</h3></div></div>
+            <div class="health-grid">
+              <div><span data-i18n="core_version">Core</span><b id="healthCore">—</b></div>
+              <div><span data-i18n="difficulty">Difficulty</span><b id="healthDifficulty">—</b></div>
+              <div><span data-i18n="disk">Chain-Daten</span><b id="healthDisk">—</b></div>
+              <div><span data-i18n="best_block">Best Block</span><b class="mono clamp" id="healthBestBlock">—</b></div>
+            </div>
+          </section>
+        </div>
+      </section>
 
-    <section id="view-backup" class="view"><div class="grid two"><article class="card"><h3 data-i18n="backup.title">Back up selected wallet</h3><p data-i18n="backup.body">Uses Core's backupwallet RPC so the database is copied in a consistent state.</p><button id="backupBtn" class="primary" data-i18n="backup.button">Create wallet backup…</button></article><article class="card warning"><h3 data-i18n="backup.warning">Critical</h3><p data-i18n="backup.warningbody">Keep multiple offline backups. Never upload a wallet backup or passphrase to a website, chat, issue tracker or cloud service you do not fully trust.</p></article></div></section>
+      <section class="view" id="view-wallet">
+        <div class="section-head"><div><span class="eyebrow">WALLET</span><h2 data-i18n="wallet_management">Wallet-Verwaltung</h2><p data-i18n="wallet_management_hint">Wallets werden durch VargaMesh Core gespeichert und signiert.</p></div><div class="row"><button class="btn secondary" id="loadWalletBtn" data-i18n="load_wallet">Wallet laden</button><button class="btn primary" id="walletCreateBtn" data-i18n="new_wallet">Neue Wallet</button></div></div>
+        <div class="wallet-overview panel">
+          <div class="wallet-identity"><img src="../../assets/vmesh_mark.png" alt=""><div><span data-i18n="active_wallet">Aktive Wallet</span><h3 id="walletName">—</h3><small id="walletEncryption">—</small></div></div>
+          <div class="wallet-balance"><span data-i18n="available_balance">Verfügbar</span><strong id="walletBalance">—</strong><small id="walletPending">—</small></div>
+        </div>
+        <div class="action-grid">
+          <button class="action-card" id="backupBtn"><span>▣</span><b data-i18n="backup_wallet">Wallet sichern</b><small data-i18n="backup_hint">Core-Backup als .dat erstellen</small></button>
+          <button class="action-card" id="restoreBtn"><span>↶</span><b data-i18n="restore_wallet">Backup wiederherstellen</b><small data-i18n="restore_hint">Vorhandenes Core-Wallet-Backup laden</small></button>
+          <button class="action-card" id="lockBtn"><span>⌁</span><b data-i18n="lock_wallet">Wallet sperren</b><small data-i18n="lock_hint">Entsperrte Wallet sofort sperren</small></button>
+          <button class="action-card" id="rescanBtn"><span>⌕</span><b data-i18n="rescan_wallet">Blockchain neu scannen</b><small data-i18n="rescan_hint">Wallet-Transaktionen erneut suchen</small></button><button class="action-card" id="migrateBtn"><span>⇄</span><b data-i18n="migrate_wallet">Legacy-Wallet migrieren</b><small data-i18n="migrate_hint">Core-Migration für ältere Wallets</small></button><button class="action-card" id="unloadBtn"><span>⏏</span><b data-i18n="unload_wallet">Wallet entladen</b><small data-i18n="unload_hint">Wallet aus dem laufenden Core entfernen</small></button>
+        </div>
+        <section class="panel"><div class="panel-head"><div><span class="eyebrow">UTXO</span><h3 data-i18n="unspent_outputs">Nicht ausgegebene Outputs</h3></div><button class="text-btn" id="reloadUtxoBtn" data-i18n="refresh">Aktualisieren</button></div><div class="table-wrap"><table><thead><tr><th>TXID</th><th>Vout</th><th data-i18n="amount">Betrag</th><th data-i18n="confirmations">Bestätigungen</th><th data-i18n="address">Adresse</th></tr></thead><tbody id="utxoBody"><tr><td colspan="5" class="muted">—</td></tr></tbody></table></div></section>
+      </section>
 
-    <section id="view-settings" class="view"><div class="grid two"><article class="card"><h3 data-i18n="settings.language">Language</h3><div class="segmented"><button data-set-lang="de">Deutsch</button><button data-set-lang="en">English</button></div><div class="divider"></div><h3 data-i18n="settings.files">Local files</h3><div class="action-row"><button id="openDataBtn" data-i18n="settings.data">Open data directory</button><button id="openConfigBtn" data-i18n="settings.config">Open config</button></div><p class="hint" id="pathInfo"></p></article><article class="card"><h3 data-i18n="settings.about">About</h3><div class="about-row"><img src="../../assets/vmesh-coin.png" alt="VMESH"><div><strong>VargaMesh Desktop</strong><span id="versionLabel">v0.1.0</span></div></div><p data-i18n="settings.aboutbody">Open-source desktop interface for the VargaMesh full node and wallet.</p><button id="githubBtn">GitHub ↗</button></article></div></section>
-  </main>
-</div>
+      <section class="view" id="view-send">
+        <div class="section-head"><div><span class="eyebrow">VMESH</span><h2 data-i18n="send_vmesh">VMESH senden</h2><p data-i18n="send_warning">Transaktionen sind nach Bestätigung durch das Netzwerk nicht rückgängig zu machen.</p></div></div>
+        <div class="form-panel panel narrow">
+          <label><span data-i18n="destination">Empfängeradresse</span><input id="sendAddress" type="text" spellcheck="false" autocomplete="off" placeholder="vm1…"></label>
+          <div class="field-note" id="addressValidation"></div>
+          <div class="form-row"><label><span data-i18n="amount_vmesh">Betrag (VMESH)</span><input id="sendAmount" type="number" min="0" step="0.00000001" inputmode="decimal"></label><label><span data-i18n="fee_target">Gebührenschätzung</span><select id="feeTarget"><option value="2">2 Blocks</option><option value="6" selected>6 Blocks</option><option value="12">12 Blocks</option><option value="24">24 Blocks</option></select></label></div>
+          <label><span data-i18n="comment_optional">Notiz (optional, lokal)</span><input id="sendComment" type="text" maxlength="120"></label>
+          <label class="check"><input id="subtractFee" type="checkbox"><span data-i18n="subtract_fee">Gebühr vom Betrag abziehen</span></label>
+          <div class="send-summary"><div><span data-i18n="estimated_fee">Geschätzte Fee-Rate</span><b id="estimatedFee">—</b></div><div><span data-i18n="from_wallet">Von Wallet</span><b id="sendWalletName">—</b></div></div>
+          <button class="btn primary wide" id="sendBtn" data-i18n="review_transaction">Transaktion prüfen</button>
+        </div>
+      </section>
 
-<div id="toast" class="toast"></div>
-<div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><h3 id="modalTitle"></h3><div id="modalBody"></div><div class="modal-actions"><button id="modalCancel" data-i18n="common.cancel">Cancel</button><button id="modalConfirm" class="primary danger-soft" data-i18n="common.confirm">Confirm</button></div></div></div>
-<div id="onboarding" class="onboarding hidden"><div class="onboard-card"><img src="../../assets/vmesh-coin.png" alt="VMESH"><span class="eyebrow">VARGAMESH DESKTOP</span><h2 data-i18n="onboard.title">Your local VMESH node and wallet</h2><p data-i18n="onboard.body">VargaMesh Desktop runs the real Core daemon locally. Wallet keys remain in Core and RPC never leaves localhost.</p><div class="segmented"><button data-onboard-lang="de">Deutsch</button><button data-onboard-lang="en">English</button></div><button id="onboardContinue" class="primary" data-i18n="onboard.continue">Continue</button></div></div>
+      <section class="view" id="view-receive">
+        <div class="section-head"><div><span class="eyebrow">VMESH</span><h2 data-i18n="receive_vmesh">VMESH empfangen</h2><p data-i18n="receive_hint">Erzeuge eine neue Bech32-Adresse direkt in deiner aktiven Core-Wallet.</p></div></div>
+        <div class="receive-card panel narrow centered">
+          <canvas id="qrCanvas" width="246" height="246"></canvas>
+          <div class="address-box"><code id="receiveAddress">—</code><button class="btn ghost" id="copyAddressBtn" data-i18n="copy">Kopieren</button></div>
+          <label><span data-i18n="label_optional">Label (optional)</span><input id="receiveLabel" type="text" maxlength="96"></label>
+          <button class="btn primary wide" id="newAddressBtn" data-i18n="generate_address">Neue Adresse erzeugen</button>
+          <small class="muted" data-i18n="qr_local">QR-Code wird vollständig lokal erzeugt.</small>
+        </div>
+      </section>
 
-<script src="qr.js"></script>
-<script src="app.js"></script>
+      <section class="view" id="view-transactions">
+        <div class="section-head"><div><span class="eyebrow">HISTORY</span><h2 data-i18n="transactions">Transaktionen</h2></div><button class="btn secondary" id="reloadTxBtn" data-i18n="refresh">Aktualisieren</button></div>
+        <section class="panel"><div class="table-wrap"><table><thead><tr><th data-i18n="date">Datum</th><th data-i18n="type">Typ</th><th>TXID</th><th data-i18n="amount">Betrag</th><th data-i18n="confirmations">Bestätigungen</th></tr></thead><tbody id="txBody"><tr><td colspan="5" class="muted">—</td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="view" id="view-node">
+        <div class="section-head"><div><span class="eyebrow">FULL NODE</span><h2 data-i18n="node_network">Node & Netzwerk</h2><p data-i18n="node_hint">Status deines lokalen VargaMesh Core und der verbundenen Peers.</p></div><div class="row"><button class="btn secondary" id="dataDirBtn" data-i18n="open_data_dir">Datenordner</button><button class="btn secondary" id="debugLogBtn">debug.log</button></div></div>
+        <div class="metric-grid node-metrics"><article class="metric-card"><span data-i18n="block_height">Blockhöhe</span><strong id="nodeBlocks">—</strong><small id="nodeHeaders">—</small></article><article class="metric-card"><span data-i18n="peers">Peers</span><strong id="nodePeers">—</strong><small id="nodePeerSplit">—</small></article><article class="metric-card"><span data-i18n="mempool">Mempool</span><strong id="nodeMempool">—</strong><small id="nodeMempoolBytes">—</small></article><article class="metric-card"><span data-i18n="network_hash">Netzwerk-Hashrate</span><strong id="nodeHashrate">—</strong><small id="nodeDifficulty">—</small></article></div>
+        <section class="panel"><div class="panel-head"><div><span class="eyebrow">P2P</span><h3 data-i18n="connected_peers">Verbundene Peers</h3></div><button class="text-btn" id="reloadPeersBtn" data-i18n="refresh">Aktualisieren</button></div><div class="table-wrap"><table><thead><tr><th data-i18n="address">Adresse</th><th data-i18n="direction">Richtung</th><th data-i18n="client">Client</th><th>Ping</th><th data-i18n="synced_block">Sync Block</th></tr></thead><tbody id="peerBody"><tr><td colspan="5" class="muted">—</td></tr></tbody></table></div></section>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="section-head"><div><span class="eyebrow">DESKTOP</span><h2 data-i18n="settings">Einstellungen</h2></div></div>
+        <div class="two-col settings-grid">
+          <section class="panel settings-panel"><h3 data-i18n="appearance">Darstellung</h3><label><span data-i18n="language">Sprache</span><select id="languageSelect"><option value="de">Deutsch</option><option value="en">English</option></select></label><label><span data-i18n="theme">Theme</span><select id="themeSelect"><option value="system" data-i18n="theme_system">System</option><option value="light" data-i18n="theme_light">Hell</option><option value="dark" data-i18n="theme_dark">Dunkel</option></select></label><label class="check"><input id="hideBalances" type="checkbox"><span data-i18n="hide_balances">Guthaben standardmäßig ausblenden</span></label></section>
+          <section class="panel settings-panel"><h3 data-i18n="security">Sicherheit</h3><label><span data-i18n="unlock_time">Wallet-Entsperrdauer</span><select id="autoLock"><option value="30">30 s</option><option value="60">60 s</option><option value="90">90 s</option><option value="300">5 min</option><option value="900">15 min</option></select></label><label class="check"><input id="confirmSend" type="checkbox"><span data-i18n="always_confirm_send">Senden immer bestätigen</span></label><p class="muted small" data-i18n="security_note">Passwörter werden nicht in Desktop-Einstellungen gespeichert.</p></section>
+        </div>
+        <section class="panel about-panel"><img src="../../assets/vmesh_mark.png" alt="VargaMesh"><div><span class="eyebrow">VARGAMESH</span><h3>VargaMesh Desktop <span id="aboutVersion"></span></h3><p data-i18n="about_text">Lokale Full-Node-Wallet für Windows x64. Private Schlüssel und Signaturen bleiben in VargaMesh Core.</p><div class="link-row"><button class="text-btn ext" data-url="https://vargacoin.com/">Website ↗</button><button class="text-btn ext" data-url="https://mempool.vargacoin.com/">Explorer ↗</button><button class="text-btn ext" data-url="https://github.com/ati1993de/vargamesh-desktop">GitHub ↗</button><button class="text-btn ext" data-url="https://www.npmjs.com/package/@vargamesh/wallet-sdk">Wallet SDK ↗</button></div></div></section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <dialog id="walletDialog" class="modal"><form method="dialog" id="walletForm"><button class="modal-close" value="cancel">×</button><span class="eyebrow">WALLET</span><h2 data-i18n="create_wallet">Wallet erstellen</h2><label><span data-i18n="wallet_name">Wallet-Name</span><input id="createWalletName" maxlength="96" required pattern="[A-Za-z0-9._ -]+"></label><label><span data-i18n="passphrase_recommended">Passphrase (empfohlen)</span><input id="createWalletPass" type="password" autocomplete="new-password" minlength="8"></label><label><span data-i18n="repeat_passphrase">Passphrase wiederholen</span><input id="createWalletPass2" type="password" autocomplete="new-password"></label><p class="warning-box" data-i18n="passphrase_warning">Ohne Backup und Passphrase kann der Zugriff auf Coins dauerhaft verloren gehen.</p><button type="button" class="btn primary wide" id="createWalletConfirm" data-i18n="create_wallet">Wallet erstellen</button></form></dialog>
+
+  <dialog id="loadDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">WALLET</span><h2 data-i18n="load_wallet">Wallet laden</h2><div id="availableWallets" class="wallet-list"></div></form></dialog>
+
+  <dialog id="unlockDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">SECURITY</span><h2 data-i18n="unlock_wallet">Wallet entsperren</h2><label><span data-i18n="passphrase">Passphrase</span><input id="unlockPass" type="password" autocomplete="current-password"></label><button type="button" class="btn primary wide" id="unlockConfirm" data-i18n="unlock_wallet">Wallet entsperren</button></form></dialog>
+
+  <dialog id="restoreDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">BACKUP</span><h2 data-i18n="restore_wallet">Backup wiederherstellen</h2><label><span data-i18n="wallet_name">Wallet-Name</span><input id="restoreWalletName" maxlength="96" required pattern="[A-Za-z0-9._ -]+"></label><p class="warning-box" data-i18n="restore_notice">Wähle anschließend eine vertrauenswürdige VargaMesh-Core-Wallet-Sicherungsdatei aus.</p><button type="button" class="btn primary wide" id="restoreConfirm" data-i18n="restore_wallet">Backup wiederherstellen</button></form></dialog>
+
+  <dialog id="migrateDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">MIGRATION</span><h2 data-i18n="migrate_wallet">Legacy-Wallet migrieren</h2><p class="warning-box" data-i18n="migrate_notice">Erstelle vor der Migration ein unabhängiges Backup. Falls die Legacy-Wallet verschlüsselt ist, gib ihre Passphrase ein.</p><label><span data-i18n="passphrase_optional">Passphrase (falls erforderlich)</span><input id="migratePass" type="password" autocomplete="current-password"></label><button type="button" class="btn danger wide" id="migrateConfirm" data-i18n="migrate_wallet">Legacy-Wallet migrieren</button></form></dialog>
+
+  <dialog id="confirmDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">TRANSACTION</span><h2 data-i18n="confirm_transaction">Transaktion bestätigen</h2><div class="confirm-box"><div><span data-i18n="destination">Empfängeradresse</span><code id="confirmAddress"></code></div><div><span data-i18n="amount">Betrag</span><strong id="confirmAmount"></strong></div><div><span data-i18n="from_wallet">Von Wallet</span><b id="confirmWallet"></b></div></div><p class="warning-box" data-i18n="irreversible_warning">Prüfe Adresse und Betrag sorgfältig. Netzwerktransaktionen sind endgültig.</p><button type="button" class="btn danger wide" id="sendConfirmBtn" data-i18n="send_now">Jetzt senden</button></form></dialog>
+
+  <script src="qr.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
