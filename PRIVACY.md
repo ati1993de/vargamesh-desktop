@@ -1,7 +1,9 @@
 # Privacy
 
-VargaMesh Desktop does not intentionally include telemetry, advertising analytics or a cloud wallet backend.
+VargaMesh Desktop does not intentionally include telemetry, advertising trackers or a cloud wallet service.
 
-Wallet actions occur locally between the application and VargaMesh Core. VargaMesh Core itself participates in the public peer-to-peer network, so normal network peers can observe protocol-level network information such as the connecting IP address as part of ordinary P2P operation.
+Wallet operations are sent from the local Electron main process to the local VargaMesh Core RPC endpoint on `127.0.0.1` using Core cookie authentication.
 
-The application stores non-secret preferences such as language, theme and the last selected wallet in its local Electron user-data directory. Wallet passwords are not stored in Desktop settings.
+Sensitive values such as wallet passphrases and WIF private keys are not stored in Desktop settings or Desktop runtime diagnostics. A WIF entered for import exists in application memory only for the requested local import operation and is then cleared from the visible input by the renderer.
+
+Blockchain/P2P operation inherently communicates with VargaMesh network peers. Peer IP addresses and other network information may appear in VargaMesh Core's own `debug.log`; Core itself warns that logs may contain privacy-sensitive information.

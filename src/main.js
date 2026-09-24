@@ -1,10 +1,11 @@
 "use strict";
 
-const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, session, powerMonitor } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, session, powerMonitor, Tray, Menu, nativeImage } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const { CoreManager } = require("./core-manager");
 const { SettingsStore } = require("./settings");
+const { requireWif, requireAddressType, privateDescriptorForWif, addDescriptorChecksum } = require("./wallet-import");
 
 app.setAppUserModelId("net.vargatech.vargamesh.desktop");
 
@@ -15,6 +16,10 @@ let mainWindow = null;
 let core = null;
 let settings = null;
 let closing = false;
+let tray = null;
+let isQuitting = false;
+let trayHintShown = false;
+let trayStatusTimer = null;
 
 const EXTERNAL_ALLOWLIST = new Set([
   "https://vargacoin.com/",
@@ -67,10 +72,53 @@ function requireAddress(value) {
   return address;
 }
 
+function requireLabel(value) {
+  if (value == null) return "";
+  if (typeof value !== "string") throw new Error("Invalid label.");
+  return value.trim().slice(0, 96);
+}
+
+function requireOptionalPassphrase(value) {
+  if (value == null) return "";
+  if (typeof value !== "string" || value.length > 1024) throw new Error("Invalid wallet passphrase.");
+  return value;
+}
+
+async function withTemporaryWalletUnlock(wallet, passphrase, operation) {
+  const secret = requireOptionalPassphrase(passphrase);
+  const info = await walletRpc("getwalletinfo", [], wallet, 30_000);
+  const encrypted = info?.unlocked_until !== undefined;
+  let unlockedHere = false;
+  if (secret && encrypted) {
+    await walletRpc("walletpassphrase", [secret, 180], wallet, 30_000);
+    unlockedHere = true;
+  }
+  try {
+    return await operation();
+  } finally {
+    if (unlockedHere) {
+      try { await walletRpc("walletlock", [], wallet, 10_000); } catch (_) {}
+    }
+  }
+}
+
+async function lockAllWallets() {
+  try {
+    const wallets = await core.rpc.call("listwallets");
+    await Promise.allSettled(wallets.map(name => core.rpc.call("walletlock", [], name, 10_000)));
+    return { locked: wallets.length };
+  } catch (_) {
+    return { locked: 0 };
+  }
+}
+
 function errorText(err) {
   if (!err) return "Unknown error";
   const text = String(err.message || err);
-  return text.replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "[redacted-auth]").slice(0, 1200);
+  return text
+    .replace(/Basic\s+[A-Za-z0-9+/=]+/gi, "[redacted-auth]")
+    .replace(/\b[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50,55}\b/g, "[redacted-private-key]")
+    .slice(0, 1200);
 }
 
 function register(channel, handler) {
@@ -113,7 +161,12 @@ function installHandlers() {
   });
 
   register("settings:get", async () => settings.get());
-  register("settings:update", async payload => settings.update(payload));
+  register("settings:update", async payload => {
+    const updated = settings.update(payload);
+    applyNativeSettings();
+    updateTrayMenu();
+    return updated;
+  });
 
   register("core:start", async () => core.start());
   register("core:stop", async () => core.stop());
@@ -237,9 +290,100 @@ function installHandlers() {
   });
   register("wallet:migrate", async payload => {
     const name = requireWalletName(payload.wallet);
-    const passphrase = typeof payload.passphrase === "string" ? payload.passphrase : "";
+    const info = await walletRpc("getwalletinfo", [], name, 30_000);
+    if (info?.descriptors === true) {
+      throw new Error("This wallet already uses descriptor format. No migration is required.");
+    }
+    const passphrase = requireOptionalPassphrase(payload.passphrase);
     return core.rpc.call("migratewallet", passphrase ? [name, passphrase] : [name], "", 120_000);
   });
+
+  register("wallet:previewPrivateKey", async payload => {
+    const wif = requireWif(payload.wif);
+    const type = requireAddressType(payload.addressType);
+    const rawDescriptor = privateDescriptorForWif(wif, type);
+    const descriptorInfo = await core.rpc.call("getdescriptorinfo", [rawDescriptor], "", 30_000);
+    if (!descriptorInfo?.hasprivatekeys) throw new Error("Core did not recognize the supplied WIF as a private key.");
+    const derived = await core.rpc.call("deriveaddresses", [descriptorInfo.descriptor], "", 30_000);
+    const address = Array.isArray(derived) ? derived[0] : "";
+    if (!address) throw new Error("Could not derive an address from the supplied private key.");
+    return { address, addressType: type };
+  });
+
+  register("wallet:importPrivateKey", async payload => {
+    const wallet = requireWalletName(payload.wallet);
+    const wif = requireWif(payload.wif);
+    const type = requireAddressType(payload.addressType);
+    const label = requireLabel(payload.label);
+    const expectedAddress = payload.expectedAddress ? requireAddress(payload.expectedAddress) : "";
+    const rescan = payload.rescan !== false;
+    const passphrase = requireOptionalPassphrase(payload.passphrase);
+    const walletInfo = await walletRpc("getwalletinfo", [], wallet, 30_000);
+    if (walletInfo?.private_keys_enabled === false) throw new Error("This wallet has private keys disabled and cannot import a WIF key.");
+
+    const rawDescriptor = privateDescriptorForWif(wif, type);
+    const descriptorInfo = await core.rpc.call("getdescriptorinfo", [rawDescriptor], "", 30_000);
+    if (!descriptorInfo?.hasprivatekeys) throw new Error("Core did not recognize the supplied WIF as a private key.");
+    const derived = await core.rpc.call("deriveaddresses", [descriptorInfo.descriptor], "", 30_000);
+    const derivedAddress = Array.isArray(derived) ? derived[0] : "";
+    if (!derivedAddress) throw new Error("Could not derive an address from the supplied private key.");
+    if (expectedAddress) {
+      const check = await core.rpc.call("validateaddress", [expectedAddress], "", 30_000);
+      if (!check?.isvalid) throw new Error("The expected address is not a valid VargaMesh address.");
+      const matches = type === "bech32"
+        ? derivedAddress.toLowerCase() === expectedAddress.toLowerCase()
+        : derivedAddress === expectedAddress;
+      if (!matches) {
+        throw new Error(`Private key mismatch: this key derives ${derivedAddress}, not the expected address.`);
+      }
+    }
+    const existing = await walletRpc("getaddressinfo", [derivedAddress], wallet, 30_000).catch(() => null);
+    if (existing?.ismine) {
+      return { address: derivedAddress, addressType: type, descriptorWallet: walletInfo?.descriptors === true, rescanned: false, alreadyPresent: true, warnings: [] };
+    }
+
+    return withTemporaryWalletUnlock(wallet, passphrase, async () => {
+      if (walletInfo?.descriptors === true) {
+        const privateDescriptor = addDescriptorChecksum(rawDescriptor, descriptorInfo.checksum);
+        const request = { desc: privateDescriptor, timestamp: rescan ? 0 : "now", active: false, internal: false };
+        if (label) request.label = label;
+        const result = await walletRpc("importdescriptors", [[request]], wallet, 0);
+        const first = Array.isArray(result) ? result[0] : null;
+        if (!first?.success) throw new Error(first?.error?.message || "Descriptor private-key import failed.");
+        return { address: derivedAddress, addressType: type, descriptorWallet: true, rescanned: rescan, warnings: first.warnings || [] };
+      }
+
+      await walletRpc("importprivkey", [wif, label, rescan], wallet, 0);
+      return { address: derivedAddress, addressType: type, descriptorWallet: false, rescanned: rescan, warnings: [] };
+    });
+  });
+
+  register("wallet:importWatchAddress", async payload => {
+    const wallet = requireWalletName(payload.wallet);
+    const address = requireAddress(payload.address);
+    const label = requireLabel(payload.label);
+    const rescan = payload.rescan !== false;
+    const check = await core.rpc.call("validateaddress", [address], "", 30_000);
+    if (!check?.isvalid) throw new Error("Invalid VargaMesh address.");
+    const walletInfo = await walletRpc("getwalletinfo", [], wallet, 30_000);
+    const existing = await walletRpc("getaddressinfo", [address], wallet, 30_000).catch(() => null);
+    if (existing?.ismine || existing?.iswatchonly) {
+      return { address, descriptorWallet: walletInfo?.descriptors === true, watchOnly: !existing?.ismine, rescanned: false, alreadyPresent: true, warnings: [] };
+    }
+    if (walletInfo?.descriptors === true) {
+      const descriptorInfo = await core.rpc.call("getdescriptorinfo", [`addr(${address})`], "", 30_000);
+      const request = { desc: descriptorInfo.descriptor, timestamp: rescan ? 0 : "now", active: false, internal: false };
+      if (label) request.label = label;
+      const result = await walletRpc("importdescriptors", [[request]], wallet, 0);
+      const first = Array.isArray(result) ? result[0] : null;
+      if (!first?.success) throw new Error(first?.error?.message || "Watch-only address import failed.");
+      return { address, descriptorWallet: true, watchOnly: true, rescanned: rescan, warnings: first.warnings || [] };
+    }
+    await walletRpc("importaddress", [address, label, rescan, false], wallet, 0);
+    return { address, descriptorWallet: false, watchOnly: true, rescanned: rescan, warnings: [] };
+  });
+
+  register("wallet:lockAll", async () => lockAllWallets());
   register("wallet:rescan", async payload => walletRpc("rescanblockchain", [], payload.wallet, 0));
   register("wallet:abandon", async payload => walletRpc("abandontransaction", [requireTxid(payload.txid)], payload.wallet, 30_000));
 
@@ -268,6 +412,95 @@ function installHandlers() {
   });
 }
 
+function showMainWindow() {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+function applyNativeSettings() {
+  if (!settings) return;
+  const current = settings.get();
+  if (process.platform === "win32" && app.isPackaged) {
+    try {
+      app.setLoginItemSettings({
+        openAtLogin: !!current.launchAtLogin,
+        path: process.execPath,
+        args: ["--background"]
+      });
+    } catch (_) {}
+  }
+}
+
+function updateTrayMenu(status = null) {
+  if (!tray || !settings) return;
+  const de = settings.get().language !== "en";
+  const online = status?.running === true;
+  const statusLabel = online
+    ? `Core: online · Block ${status.blocks ?? "—"}`
+    : (de ? "Core: Status wird geprüft" : "Core: checking status");
+  tray.setToolTip(online ? `VargaMesh Desktop · Block ${status.blocks ?? "—"}` : "VargaMesh Desktop");
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: de ? "VargaMesh Desktop öffnen" : "Open VargaMesh Desktop", click: showMainWindow },
+    { label: statusLabel, enabled: false },
+    { type: "separator" },
+    { label: de ? "Alle Wallets sperren" : "Lock all wallets", click: () => { void lockAllWallets(); } },
+    { type: "separator" },
+    { label: de ? "Beenden und Core stoppen" : "Quit and stop Core", click: () => { void requestQuit(); } }
+  ]));
+}
+
+async function refreshTrayStatus() {
+  if (!tray || !core) return;
+  try {
+    if (await core.isRpcReady()) updateTrayMenu(await core.nodeStatus());
+    else updateTrayMenu(null);
+  } catch (_) { updateTrayMenu(null); }
+}
+
+function createTray() {
+  if (tray) return tray;
+  const iconFile = path.join(__dirname, "..", "assets", "vmesh_mark.png");
+  let image = nativeImage.createFromPath(iconFile);
+  if (!image.isEmpty()) image = image.resize({ width: 20, height: 20 });
+  tray = new Tray(image);
+  tray.on("double-click", showMainWindow);
+  tray.on("click", showMainWindow);
+  updateTrayMenu();
+  return tray;
+}
+
+function hideToTray() {
+  if (!mainWindow) return;
+  mainWindow.hide();
+  if (!trayHintShown && tray && process.platform === "win32") {
+    trayHintShown = true;
+    try {
+      tray.displayBalloon({
+        title: "VargaMesh Desktop",
+        content: settings?.get().language === "en"
+          ? "VargaMesh Core keeps running in the background. Use the tray icon to reopen the wallet."
+          : "VargaMesh Core läuft im Hintergrund weiter. Über das Tray-Symbol kannst du die Wallet wieder öffnen.",
+        iconType: "info"
+      });
+    } catch (_) {}
+  }
+}
+
+async function requestQuit() {
+  if (isQuitting) return;
+  isQuitting = true;
+  closing = true;
+  if (trayStatusTimer) { clearInterval(trayStatusTimer); trayStatusTimer = null; }
+  try {
+    await Promise.race([core?.stop?.(), new Promise(resolve => setTimeout(resolve, 6000))]);
+  } catch (_) {}
+  try { tray?.destroy(); } catch (_) {}
+  tray = null;
+  app.quit();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1420,
@@ -290,27 +523,33 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
-  mainWindow.once("ready-to-show", () => mainWindow.show());
+  mainWindow.once("ready-to-show", () => {
+    const startHidden = process.argv.includes("--background") || settings?.get().startMinimized;
+    if (!startHidden) mainWindow.show();
+  });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   mainWindow.webContents.on("will-navigate", event => event.preventDefault());
-  mainWindow.on("close", event => {
-    if (!closing) {
+  mainWindow.on("minimize", event => {
+    if (!isQuitting && settings?.get().minimizeToTray) {
       event.preventDefault();
-      closing = true;
-      Promise.race([core?.stop?.(), new Promise(resolve => setTimeout(resolve, 4000))])
-        .catch(() => {})
-        .finally(() => { mainWindow?.destroy(); });
+      hideToTray();
     }
+  });
+  mainWindow.on("close", event => {
+    if (isQuitting || closing) return;
+    if (settings?.get().closeToTray) {
+      event.preventDefault();
+      hideToTray();
+      return;
+    }
+    event.preventDefault();
+    void requestQuit();
   });
   mainWindow.on("closed", () => { mainWindow = null; });
 }
 
 app.on("second-instance", () => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.show();
-    mainWindow.focus();
-  }
+  if (mainWindow) showMainWindow();
 });
 
 app.whenReady().then(async () => {
@@ -323,13 +562,32 @@ app.whenReady().then(async () => {
   session.defaultSession.setPermissionCheckHandler(() => false);
   register("noop", async () => true);
   installHandlers();
+  applyNativeSettings();
+  createTray();
   createWindow();
 
-  powerMonitor.on("lock-screen", () => {
-    core.rpc.call("listwallets").then(wallets => Promise.allSettled(wallets.map(w => core.rpc.call("walletlock", [], w)))).catch(() => {});
-  });
+  powerMonitor.on("lock-screen", () => { void lockAllWallets(); });
 
-  core.start().catch(err => core.writeDiagnostic("core-autostart-error", { message: errorText(err) }));
+  core.start()
+    .then(() => refreshTrayStatus())
+    .catch(err => core.writeDiagnostic("core-autostart-error", { message: errorText(err) }));
+  trayStatusTimer = setInterval(() => { void refreshTrayStatus(); }, 10_000);
+  trayStatusTimer.unref?.();
 });
 
-app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
+app.on("activate", () => {
+  if (mainWindow) showMainWindow();
+  else if (app.isReady()) createWindow();
+});
+
+app.on("before-quit", event => {
+  if (!isQuitting) {
+    event.preventDefault();
+    void requestQuit();
+  }
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform === "darwin") return;
+  if (isQuitting) app.quit();
+});

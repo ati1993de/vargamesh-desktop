@@ -64,4 +64,4 @@ jobs:
         run: |
           $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
           if ($env:GITHUB_REF_NAME -ne "v$v") { throw "Tag/version mismatch" }
-          gh release create "$env:GITHUB_REF_NAME" "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe" "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip" "dist/SHA256SUMS" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --prerelease
+          gh release create "$env:GITHUB_REF_NAME" "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe" "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip" "dist/SHA256SUMS" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --verify-tag --latest

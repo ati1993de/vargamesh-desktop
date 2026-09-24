@@ -1,6 +1,6 @@
 # Security Policy
 
-VargaMesh Desktop is non-custodial desktop software. Private keys remain in VargaMesh Core wallet databases.
+VargaMesh Desktop is non-custodial desktop software. Private keys are managed by VargaMesh Core.
 
 ## Never include in bug reports
 
@@ -23,6 +23,21 @@ VargaMesh Desktop is non-custodial desktop software. Private keys remain in Varg
 - renderer has only explicit preload methods
 - no arbitrary RPC method bridge
 - RPC cookie is never returned to the renderer
-- passphrases are sent only for the immediate Core operation and are not persisted by Desktop settings
+- Core RPC stays on localhost
+- wallet passphrases and WIF keys are used only for the immediate requested operation and are not persisted in Desktop settings
+- sensitive-looking Base58 private keys are redacted from surfaced main-process errors
+- the screen-lock event requests `walletlock` for all loaded wallets
+
+## WIF import
+
+For descriptor wallets, Desktop builds the selected descriptor form around the supplied WIF, asks Core to validate it, derives the public address, optionally verifies it against an expected address, then imports it with `importdescriptors`.
+
+The private descriptor is not written to Desktop logs or settings. If a wallet passphrase is supplied for the import operation, Desktop temporarily unlocks the wallet and requests `walletlock` afterward.
+
+Always use the **Expected address** field when recovering a known address if possible.
+
+## Tray mode
+
+Closing or minimizing to tray does not terminate the process. Core continues running locally. Use the tray action **Quit and stop Core** when you want a full shutdown.
 
 Use independent backups and test new pre-release builds with small amounts first.

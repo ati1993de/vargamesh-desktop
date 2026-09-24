@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: VargaMesh website
+    url: https://vargacoin.com/
+    about: Project information and ecosystem links
+  - name: VargaMesh Core issues
+    url: https://github.com/ati1993de/vargamesh-core/issues
+    about: Report Core, consensus, P2P or daemon issues here

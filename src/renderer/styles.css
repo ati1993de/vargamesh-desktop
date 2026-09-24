@@ -7,3 +7,11 @@
 .banner.error{border-color:#8f3345;background:rgba(90,20,35,.34)}
 .banner.error .spinner{display:none}
 .banner.error strong{color:#ff9baa}
+
+/* v0.3.0 wallet import + background/tray UI */
+.wallet-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}.wallet-meta small{padding:3px 7px;border:1px solid var(--line);border-radius:999px;background:var(--surface2)}
+.form-stack{display:flex;flex-direction:column;gap:14px}
+.action-card:disabled{opacity:.46;cursor:not-allowed;transform:none!important;border-color:var(--line)!important}
+#importWif,#importWalletPass{font-family:"Cascadia Code",Consolas,monospace;letter-spacing:.04em}
+#importDialog{width:min(590px,calc(100vw - 30px))}
+.import-preview{display:flex;flex-direction:column;gap:5px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:11px}.import-preview>span{font-size:11px;color:var(--muted)}.import-preview code{word-break:break-all;font-size:12px}

@@ -1,11 +1,9 @@
 node_modules/
 dist/
-resources/core/*.exe
-resources/core/*.zip
-resources/core/*.sha256
-*.log
-.DS_Store
 
-# Bundled VargaMesh Core runtime is downloaded during release builds
+# Bundled VargaMesh Core runtime is downloaded during release builds.
 resources/core/*
 !resources/core/README.txt
+
+*.log
+.DS_Store

@@ -31,9 +31,76 @@ const I18N = {
   }
 };
 
+Object.assign(I18N.de, {
+  unlock_hint:"Verschlüsselte Wallet vorübergehend entsperren",
+  import_key_address:"Schlüssel / Adresse importieren",
+  import_key_hint:"WIF privat oder Adresse nur beobachten",
+  migrate_descriptor_hint:"Bereits Descriptor-Wallet – keine Migration nötig",
+  wallet_type_descriptor:"Descriptor-Wallet",
+  wallet_type_legacy:"Legacy-Wallet",
+  wallet_type_unknown:"Wallet-Format unbekannt",
+  import_mode:"Import-Art",
+  import_wif:"Privater Schlüssel (WIF)",
+  import_watch:"Adresse nur beobachten",
+  wif_private_key:"WIF Private Key",
+  address_type:"Adress-Typ",
+  expected_address:"Erwartete Adresse (empfohlen)",
+  wallet_passphrase_optional:"Wallet-Passphrase (nur falls Wallet gesperrt)",
+  preview_key:"Schlüssel prüfen",
+  derived_address:"Aus WIF abgeleitete Adresse",
+  address_matches:"✓ Schlüssel gehört zur erwarteten Adresse",
+  address_mismatch:"✕ Schlüssel gehört nicht zur erwarteten Adresse",
+  watch_address:"Zu beobachtende Adresse",
+  full_rescan_import:"Blockchain-Historie vollständig nach Guthaben/Transaktionen durchsuchen",
+  wif_warning:"Ein WIF ist ein privater Schlüssel. Niemals an Support, Webseiten oder andere Personen senden. VargaMesh Desktop speichert den eingegebenen Schlüssel nicht dauerhaft.",
+  watch_warning:"Watch-only bedeutet: Guthaben und Transaktionen beobachten, aber ohne privaten Schlüssel keine Coins ausgeben.",
+  import_now:"Jetzt importieren",
+  import_success:"Import abgeschlossen",
+  background_mode:"Hintergrund & Tray",
+  close_to_tray:"Beim Schließen im Tray weiterlaufen",
+  minimize_to_tray:"Beim Minimieren ins Tray",
+  start_minimized:"VargaMesh Desktop minimiert starten",
+  launch_at_login:"Mit Windows starten (im Hintergrund)",
+  tray_note:"Solange VargaMesh Desktop im Tray läuft, bleibt der lokale Core aktiv. Über „Beenden und Core stoppen“ wird sauber beendet.",
+  wallet_unlocked:"Wallet entsperrt"
+});
+Object.assign(I18N.en, {
+  unlock_hint:"Temporarily unlock an encrypted wallet",
+  import_key_address:"Import key / address",
+  import_key_hint:"Private WIF or watch-only address",
+  migrate_descriptor_hint:"Already a descriptor wallet – no migration required",
+  wallet_type_descriptor:"Descriptor wallet",
+  wallet_type_legacy:"Legacy wallet",
+  wallet_type_unknown:"Unknown wallet format",
+  import_mode:"Import type",
+  import_wif:"Private key (WIF)",
+  import_watch:"Watch-only address",
+  wif_private_key:"WIF private key",
+  address_type:"Address type",
+  expected_address:"Expected address (recommended)",
+  wallet_passphrase_optional:"Wallet passphrase (only if wallet is locked)",
+  preview_key:"Check key",
+  derived_address:"Address derived from WIF",
+  address_matches:"✓ Key matches the expected address",
+  address_mismatch:"✕ Key does not match the expected address",
+  watch_address:"Address to watch",
+  full_rescan_import:"Scan full blockchain history for balance and transactions",
+  wif_warning:"A WIF is a private key. Never send it to support, websites or other people. VargaMesh Desktop does not persist the entered key.",
+  watch_warning:"Watch-only means balances and transactions can be monitored, but funds cannot be spent without the private key.",
+  import_now:"Import now",
+  import_success:"Import completed",
+  background_mode:"Background & tray",
+  close_to_tray:"Keep running in tray when the window is closed",
+  minimize_to_tray:"Minimize to tray",
+  start_minimized:"Start VargaMesh Desktop minimized",
+  launch_at_login:"Start with Windows (in background)",
+  tray_note:"While VargaMesh Desktop is running in the tray, the local Core remains active. Use “Quit and stop Core” for a clean shutdown.",
+  wallet_unlocked:"Wallet unlocked"
+});
+
 const state = {
-  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, txPageSize:50 },
-  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null
+  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
+  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, unlockPurpose:"wallet"
 };
 
 function tr(key){ return I18N[state.settings.language]?.[key] || I18N.de[key] || key; }
@@ -114,8 +181,14 @@ function renderWallet(){
   const name=state.activeWallet||'—', info=state.wallet?.info||{}, b=balanceValues();
   $("walletName").textContent=name; $("sendWalletName").textContent=name; $("walletBalance").textContent=formatVMESH(b.trusted); $("dashBalance").textContent=formatVMESH(b.trusted);
   $("walletPending").textContent=`${formatVMESH(b.pending)} pending · ${formatVMESH(b.immature)} immature`; $("dashUnconfirmed").textContent=`${formatVMESH(b.pending)} pending`;
-  $("walletEncryption").textContent=info.unlocked_until!==undefined?(info.unlocked_until>Math.floor(Date.now()/1000)?'Unlocked':'Encrypted / locked'):'Wallet ready';
+  const encrypted=info.unlocked_until!==undefined;
+  const unlocked=encrypted&&info.unlocked_until>Math.floor(Date.now()/1000);
+  $("walletEncryption").textContent=encrypted?(unlocked?(state.settings.language==='de'?'Verschlüsselt · entsperrt':'Encrypted · unlocked'):(state.settings.language==='de'?'Verschlüsselt · gesperrt':'Encrypted · locked')):(state.activeWallet?(state.settings.language==='de'?'Nicht verschlüsselt':'Not encrypted'):'—');
+  $("walletType").textContent=state.activeWallet?(info.descriptors===true?tr('wallet_type_descriptor'):info.descriptors===false?tr('wallet_type_legacy'):tr('wallet_type_unknown')):'—';
   $("sendBtn").disabled=!state.activeWallet; $("newAddressBtn").disabled=!state.activeWallet;
+  $("backupBtn").disabled=!state.activeWallet; $("lockBtn").disabled=!state.activeWallet||!encrypted||!unlocked; $("unlockBtn").disabled=!state.activeWallet||!encrypted||unlocked;
+  $("importBtn").disabled=!state.activeWallet; $("rescanBtn").disabled=!state.activeWallet; $("unloadBtn").disabled=!state.activeWallet;
+  const descriptor=info.descriptors===true; $("migrateBtn").disabled=!state.activeWallet||descriptor; $("migrateHint").textContent=descriptor?tr('migrate_descriptor_hint'):tr('migrate_hint');
 }
 
 function renderTransactions(target,rows){
@@ -162,12 +235,56 @@ async function sendNow(){
   try{
     const result=await api.send(state.pendingSend);
     if(!result.ok && /passphrase|wallet.*locked|unlock/i.test(result.error||'')){
-      $("confirmDialog").close(); $("unlockPass").value=''; $("unlockDialog").showModal(); return;
+      $("confirmDialog").close(); $("unlockPass").value=''; state.unlockPurpose='send'; $("unlockDialog").showModal(); return;
     }
     const txid=unwrap(result); $("confirmDialog").close(); showToast(`${state.settings.language==='de'?'Gesendet':'Sent'}: ${shortHash(txid,10)}`); $("sendAmount").value=''; $("sendComment").value=''; state.pendingSend=null; await refreshWallet();
   }catch(err){showToast(err.message,true);}finally{$("sendConfirmBtn").disabled=false;}
 }
-async function unlockAndSend(){const pass=$("unlockPass").value;if(!pass)return;$("unlockConfirm").disabled=true;try{unwrap(await api.unlockWallet(state.activeWallet,pass,state.settings.autoLockSeconds));$("unlockPass").value='';$("unlockDialog").close();await sendNow();}catch(err){showToast(err.message,true);}finally{$("unlockConfirm").disabled=false;}}
+async function unlockAndContinue(){const pass=$("unlockPass").value;if(!pass)return;$("unlockConfirm").disabled=true;try{unwrap(await api.unlockWallet(state.activeWallet,pass,state.settings.autoLockSeconds));$("unlockPass").value='';$("unlockDialog").close();const purpose=state.unlockPurpose;state.unlockPurpose='wallet';await refreshWallet();if(purpose==='send')await sendNow();else showToast(tr('wallet_unlocked'));}catch(err){showToast(err.message,true);}finally{$("unlockConfirm").disabled=false;}}
+
+function toggleImportMode(){
+  const watch=$("importMode").value==='watch';
+  $("importWifFields").classList.toggle('hidden',watch);
+  $("importWatchFields").classList.toggle('hidden',!watch);
+  $("importWarning").textContent=watch?tr('watch_warning'):tr('wif_warning');
+}
+function openImportDialog(){
+  if(!state.activeWallet)return showToast(state.settings.language==='de'?'Keine aktive Wallet':'No active wallet',true);
+  $("importMode").value='wif'; $("importWif").value=''; $("importExpectedAddress").value=''; $("importDerivedAddress").textContent='—'; $("importPreviewNote").textContent=''; $("importPreviewNote").className='field-note'; $("importWalletPass").value=''; $("importWatchAddress").value=''; $("importLabel").value=''; $("importRescan").checked=true; $("importAddressType").value='bech32'; toggleImportMode(); $("importDialog").showModal();
+}
+async function previewImportKey(){
+  const wif=$("importWif").value.trim(); if(!wif)return showToast(state.settings.language==='de'?'WIF Private Key fehlt.':'WIF private key is required.',true);
+  $("importPreviewBtn").disabled=true;
+  try{
+    const result=unwrap(await api.previewPrivateKey({wif,addressType:$("importAddressType").value}));
+    $("importDerivedAddress").textContent=result.address||'—';
+    const expected=$("importExpectedAddress").value.trim(), note=$("importPreviewNote");
+    if(expected){const match=$("importAddressType").value==='bech32'?String(result.address).toLowerCase()===expected.toLowerCase():String(result.address)===expected;note.textContent=match?tr('address_matches'):tr('address_mismatch');note.className=`field-note ${match?'ok':'bad'}`;}else{note.textContent='';note.className='field-note';}
+  }catch(err){$("importDerivedAddress").textContent='—';showToast(err.message,true);}finally{$("importPreviewBtn").disabled=false;}
+}
+
+async function importKeyOrAddress(){
+  if(!state.activeWallet)return;
+  const mode=$("importMode").value, rescan=$("importRescan").checked, label=$("importLabel").value.trim();
+  $("importConfirm").disabled=true;
+  const original=$("importConfirm").textContent;
+  $("importConfirm").textContent=state.settings.language==='de'?'Import läuft…':'Importing…';
+  try{
+    let result;
+    if(mode==='wif'){
+      const wif=$("importWif").value.trim(); if(!wif)throw new Error(state.settings.language==='de'?'WIF Private Key fehlt.':'WIF private key is required.');
+      result=unwrap(await api.importPrivateKey({wallet:state.activeWallet,wif,addressType:$("importAddressType").value,expectedAddress:$("importExpectedAddress").value.trim(),passphrase:$("importWalletPass").value,label,rescan}));
+    }else{
+      const address=$("importWatchAddress").value.trim(); if(!address)throw new Error(state.settings.language==='de'?'Adresse fehlt.':'Address is required.');
+      result=unwrap(await api.importWatchAddress({wallet:state.activeWallet,address,label,rescan}));
+    }
+    $("importDialog").close();
+    showToast(`${tr('import_success')}: ${shortHash(result.address||'',10)}`);
+    await refreshWallet(); await loadTransactions(false); await loadUtxos();
+  }catch(err){showToast(err.message,true);}finally{
+    $("importWif").value=''; $("importWalletPass").value=''; $("importConfirm").disabled=false; $("importConfirm").textContent=original;
+  }
+}
 
 async function createWallet(){const name=$("createWalletName").value.trim(),p1=$("createWalletPass").value,p2=$("createWalletPass2").value;if(!name)return;if(p1!==p2)return showToast(state.settings.language==='de'?'Passphrasen stimmen nicht überein':'Passphrases do not match',true);$("createWalletConfirm").disabled=true;try{unwrap(await api.createWallet({name,passphrase:p1}));$("walletDialog").close();$("createWalletPass").value=$("createWalletPass2").value='';state.activeWallet=name;await refreshWallets();showToast(state.settings.language==='de'?'Wallet erstellt':'Wallet created');}catch(err){showToast(err.message,true);}finally{$("createWalletConfirm").disabled=false;}}
 async function openLoadDialog(){try{const data=unwrap(await api.listWallets()),box=$("availableWallets");box.innerHTML='';const unloaded=(data.wallets||[]).filter(w=>!w.loaded);if(!unloaded.length){box.innerHTML='<div class="muted">No unloaded wallets found.</div>';}unloaded.forEach(w=>{const d=document.createElement('div');d.className='wallet-option';const b=document.createElement('button');b.className='btn secondary';b.textContent=state.settings.language==='de'?'Laden':'Load';b.onclick=async()=>{try{unwrap(await api.loadWallet(w.name));$("loadDialog").close();state.activeWallet=w.name;await refreshWallets();}catch(err){showToast(err.message,true);}};d.innerHTML=`<b>${escapeHtml(w.name)}</b>`;d.appendChild(b);box.appendChild(d);});$("loadDialog").showModal();}catch(err){showToast(err.message,true);}}
@@ -175,7 +292,7 @@ async function openLoadDialog(){try{const data=unwrap(await api.listWallets()),b
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 function escapeAttr(value){return escapeHtml(value);}
 
-async function saveSettings(patch){try{state.settings=unwrap(await api.updateSettings(patch));applyTheme();applyI18n();renderWallet();}catch(err){showToast(err.message,true);}}
+async function saveSettings(patch){try{state.settings=unwrap(await api.updateSettings(patch));applyTheme();applyI18n();renderWallet();if($("importDialog")?.open)toggleImportMode();}catch(err){showToast(err.message,true);}}
 
 function bind(){
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view))); $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
@@ -184,23 +301,26 @@ function bind(){
   $("walletSelect").onchange=async e=>{state.activeWallet=e.target.value;await refreshWallet();};
   $("reloadTxBtn").onclick=()=>loadTransactions(true); $("reloadUtxoBtn").onclick=loadUtxos; $("reloadPeersBtn").onclick=loadNodeExtras;
   $("newAddressBtn").onclick=generateAddress; $("copyAddressBtn").onclick=async()=>{if(state.address){unwrap(await api.copy(state.address));showToast(tr('copy'));}};
-  $("sendAddress").addEventListener('blur',validateSendAddress); $("feeTarget").onchange=estimateFee; $("sendBtn").onclick=reviewSend; $("sendConfirmBtn").onclick=sendNow; $("unlockConfirm").onclick=unlockAndSend;
+  $("sendAddress").addEventListener('blur',validateSendAddress); $("feeTarget").onchange=estimateFee; $("sendBtn").onclick=reviewSend; $("sendConfirmBtn").onclick=sendNow; $("unlockConfirm").onclick=unlockAndContinue;
   $("backupBtn").onclick=async()=>{if(!state.activeWallet)return;try{const r=unwrap(await api.backupWallet(state.activeWallet));if(!r.canceled)showToast(state.settings.language==='de'?'Backup erstellt':'Backup created');}catch(err){showToast(err.message,true);}};
   $("restoreBtn").onclick=()=>{$("restoreWalletName").value='';$("restoreDialog").showModal();};
   $("restoreConfirm").onclick=async()=>{const name=$("restoreWalletName").value.trim();if(!name)return;$("restoreConfirm").disabled=true;try{const r=unwrap(await api.restoreWallet(name));if(!r.canceled){state.activeWallet=name;$("restoreDialog").close();await refreshWallets();showToast(state.settings.language==='de'?'Wallet wiederhergestellt':'Wallet restored');}}catch(err){showToast(err.message,true);}finally{$("restoreConfirm").disabled=false;}};
+  $("unlockBtn").onclick=()=>{if(!state.activeWallet)return;state.unlockPurpose='wallet';$("unlockPass").value='';$("unlockDialog").showModal();};
   $("lockBtn").onclick=async()=>{if(!state.activeWallet)return;try{unwrap(await api.lockWallet(state.activeWallet));showToast(state.settings.language==='de'?'Wallet gesperrt':'Wallet locked');await refreshWallet();}catch(err){showToast(err.message,true);}};
+  $("importBtn").onclick=openImportDialog; $("importMode").onchange=toggleImportMode; $("importPreviewBtn").onclick=previewImportKey; $("importConfirm").onclick=importKeyOrAddress;
+  $("importDialog").addEventListener('close',()=>{$("importWif").value='';$("importWalletPass").value='';$("importDerivedAddress").textContent='—';$("importPreviewNote").textContent='';}); $("unlockDialog").addEventListener('close',()=>{$("unlockPass").value='';}); $("migrateDialog").addEventListener('close',()=>{$("migratePass").value='';});
   $("rescanBtn").onclick=async()=>{if(!state.activeWallet)return;if(!confirm(state.settings.language==='de'?'Blockchain-Rescan starten? Dies kann länger dauern.':'Start blockchain rescan? This may take some time.'))return;showToast(state.settings.language==='de'?'Rescan gestartet':'Rescan started');api.rescanWallet(state.activeWallet).then(r=>{if(!r.ok)showToast(r.error,true);}).catch(err=>showToast(err.message,true));};
-  $("migrateBtn").onclick=()=>{if(!state.activeWallet)return;$("migratePass").value='';$("migrateDialog").showModal();};
+  $("migrateBtn").onclick=()=>{if(!state.activeWallet)return;if(state.wallet?.info?.descriptors===true)return showToast(tr('migrate_descriptor_hint'));$("migratePass").value='';$("migrateDialog").showModal();};
   $("migrateConfirm").onclick=async()=>{if(!state.activeWallet)return;const passphrase=$("migratePass").value;$("migrateConfirm").disabled=true;try{unwrap(await api.migrateWallet(state.activeWallet,passphrase));$("migratePass").value='';$("migrateDialog").close();showToast(state.settings.language==='de'?'Migration abgeschlossen':'Migration completed');await refreshWallets();}catch(err){showToast(err.message,true);}finally{$("migrateConfirm").disabled=false;}};
   $("unloadBtn").onclick=async()=>{if(!state.activeWallet)return;const name=state.activeWallet;try{unwrap(await api.unloadWallet(name));state.activeWallet='';await refreshWallets();showToast(state.settings.language==='de'?`Wallet ${name} entladen`:`Wallet ${name} unloaded`);}catch(err){showToast(err.message,true);}};
   $("dataDirBtn").onclick=async()=>{try{unwrap(await api.showDataDir());}catch(err){showToast(err.message,true);}}; $("debugLogBtn").onclick=async()=>{try{unwrap(await api.showDebugLog());}catch(err){showToast(err.message,true);}};
-  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)});
+  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
   $$('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
 }
 
 async function init(){
   bind();
-  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);applyTheme();applyI18n();unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
+  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;applyTheme();applyI18n();unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
     showToast(err.message,true);
     $("coreDot").className='dot error';
     $("coreText").textContent='Core error';

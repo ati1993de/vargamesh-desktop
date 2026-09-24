@@ -1,30 +1,42 @@
 # Changelog
 
-## 0.2.1 - 2026-09-24
+All notable VargaMesh Desktop changes are documented here.
 
-- Fixed packaged Core startup diagnostics on Windows.
-- Bundle the complete Core runtime directory, including release-supplied DLLs/runtime files.
-- Harden child-process environment and surface startup errors in the UI.
+## [0.3.0] - 2026-09-24
 
-## 0.2.1 - 2026-09-23
+### Added
 
-- complete UI redesign with official VargaMesh artwork
-- hardened renderer/preload/main-process security boundaries
-- German/English UI and light/dark/system themes
-- improved node sync/network dashboard
-- peer, mempool, difficulty and hashrate diagnostics
-- wallet creation/load, balance and transaction improvements
-- UTXO viewer
-- send address validation and transaction review
-- receive address + local QR flow
-- wallet backup/restore, lock and rescan actions
-- Linux + Wine Windows x64 release build script
-- automatic Core release acquisition via GitHub CLI
-- Store/MSIX preparation guide and store artwork
+- Windows system-tray/background mode.
+- Close-to-tray, minimize-to-tray, start-minimized and start-with-Windows settings.
+- Tray command to lock all loaded wallets.
+- WIF private-key import for descriptor wallets through Core `importdescriptors`.
+- WIF private-key import for legacy wallets through Core `importprivkey`.
+- Bech32/P2WPKH, P2SH-SegWit and P2PKH import choices.
+- Expected-address verification before private-key import.
+- Watch-only address import.
+- Optional full-chain history scan for imported keys/addresses.
+- Optional temporary wallet unlock for protected imports, followed by relock.
+- Wallet format/encryption state display.
+- Professional release, build, support and wallet-import documentation.
 
-## 0.1.1 - 2026-09-22
+### Changed
 
-- hardened Windows startup/config behavior
-- removed duplicate P2P/RPC Core launch arguments
-- portable ZIP packaging
-- packaged runtime regression checks
+- Descriptor wallets no longer expose an actionable legacy-migration flow.
+- Headless Linux/Wine build preflight now uses Xvfb when required.
+- Tagged GitHub builds are published as the primary/Latest release rather than a pre-release.
+
+### Security
+
+- Private-key-like Base58 strings are redacted from surfaced main-process errors.
+- WIF keys and wallet passphrases are not persisted in Desktop settings or runtime diagnostics.
+- The tray screen-lock action can lock loaded wallets without opening the main window.
+
+## [0.2.1]
+
+- Fixed bundled Core Windows runtime handling and startup diagnostics.
+- Preserved the complete Core runtime directory required by `vargameshd.exe`.
+
+## [0.2.0]
+
+- Redesigned VargaMesh-native UI.
+- Expanded wallet, transaction, node, peer, mempool and diagnostic functionality.

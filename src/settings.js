@@ -10,7 +10,11 @@ const DEFAULTS = Object.freeze({
   autoLockSeconds: 90,
   confirmSend: true,
   hideBalances: false,
-  txPageSize: 50
+  txPageSize: 50,
+  closeToTray: true,
+  minimizeToTray: false,
+  startMinimized: false,
+  launchAtLogin: false
 });
 
 function clean(input = {}) {
@@ -22,6 +26,10 @@ function clean(input = {}) {
   if (typeof input.confirmSend === "boolean") out.confirmSend = input.confirmSend;
   if (typeof input.hideBalances === "boolean") out.hideBalances = input.hideBalances;
   if (Number.isInteger(input.txPageSize) && input.txPageSize >= 10 && input.txPageSize <= 200) out.txPageSize = input.txPageSize;
+  if (typeof input.closeToTray === "boolean") out.closeToTray = input.closeToTray;
+  if (typeof input.minimizeToTray === "boolean") out.minimizeToTray = input.minimizeToTray;
+  if (typeof input.startMinimized === "boolean") out.startMinimized = input.startMinimized;
+  if (typeof input.launchAtLogin === "boolean") out.launchAtLogin = input.launchAtLogin;
   return out;
 }
 

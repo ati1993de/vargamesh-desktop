@@ -1,6 +1,6 @@
 {
   "name": "vargamesh-desktop",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Secure Windows desktop wallet and full-node controller for VargaMesh (VMESH)",
   "productName": "VargaMesh Desktop",
   "main": "src/main.js",
@@ -12,8 +12,8 @@
   },
   "scripts": {
     "start": "electron .",
-    "check": "node --check src/main.js && node --check src/preload.js && node --check src/rpc.js && node --check src/core-manager.js && node --check src/settings.js && node --check src/renderer/app.js && node scripts/verify-project.js",
-    "test": "node scripts/verify-project.js",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/rpc.js && node --check src/core-manager.js && node --check src/settings.js && node --check src/wallet-import.js && node --check src/renderer/app.js && node scripts/test-wallet-import.js && node scripts/verify-project.js",
+    "test": "node scripts/test-wallet-import.js && node scripts/verify-project.js",
     "prepare:core:linux": "bash scripts/prepare-core-linux.sh",
     "dist:win": "electron-builder --win nsis zip --x64",
     "dist:installer": "electron-builder --win nsis --x64",

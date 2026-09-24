@@ -4,13 +4,13 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const required = [
   "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js",
-  "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/qr.js",
+  "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/qr.js","src/wallet-import.js",
   "assets/vmesh_coin.png","assets/vmesh_mark.png","build/icon.ico","docs/MSIX-STORE.md",
   "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh"
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.2.1") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.3.0") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 const html = fs.readFileSync(path.join(root,"src/renderer/index.html"),"utf8");
 if (/(?:src|href)=["\']https?:\/\//i.test(html)) throw new Error("Renderer HTML must not load remote resources");
@@ -45,5 +45,17 @@ for (const token of ["STATUS_DLL_NOT_FOUND","path.join(win, \"System32\")","cwd:
 const prep = fs.readFileSync(path.join(root,"scripts/prepare-core-linux.sh"),"utf8");
 if (!prep.includes('cp -a "$daemon_dir"/. "$DEST"/')) throw new Error("Full Core runtime copy is missing");
 if (!appjs.includes('unwrap(await api.startCore())')) throw new Error("Renderer does not surface Core startup errors");
+for (const token of ["importPrivateKey","importWatchAddress","expectedAddress","migrate_descriptor_hint","closeToTray","launchAtLogin"]) {
+  if (!appjs.includes(token) && !preload.includes(token) && !main.includes(token)) throw new Error(`v0.3.0 feature token missing: ${token}`);
+}
+for (const token of ["new Tray","setLoginItemSettings","hideToTray","Beenden und Core stoppen","wallet:importPrivateKey","wallet:importWatchAddress","importdescriptors","getdescriptorinfo","deriveaddresses","redacted-private-key"]) {
+  if (!main.includes(token)) throw new Error(`Main-process v0.3.0 token missing: ${token}`);
+}
+const settings = fs.readFileSync(path.join(root,"src/settings.js"),"utf8");
+for (const token of ["closeToTray","minimizeToTray","startMinimized","launchAtLogin"]) if (!settings.includes(token)) throw new Error(`Tray setting missing: ${token}`);
+const importer = fs.readFileSync(path.join(root,"src/wallet-import.js"),"utf8");
+for (const token of ["wpkh(","pkh(","sh(wpkh(","requireWif","addDescriptorChecksum"]) if (!importer.includes(token)) throw new Error(`Wallet importer token missing: ${token}`);
+const buildScript = fs.readFileSync(path.join(root,"scripts/build-windows-linux.sh"),"utf8");
+if (!buildScript.includes("xvfb-run") || !buildScript.includes("wine32:i386")) throw new Error("Headless Wine build preflight missing");
 
 console.log("VargaMesh Desktop source verification: PASS");

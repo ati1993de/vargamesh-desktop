@@ -20,6 +20,25 @@ if ! command -v wine64 >/dev/null 2>&1 && ! command -v wine >/dev/null 2>&1; the
   exit 1
 fi
 
+BUILD_PREFIX=()
+if [[ -z "${DISPLAY:-}" ]]; then
+  command -v xvfb-run >/dev/null 2>&1 || {
+    echo "ERROR: This is a headless server and xvfb-run is missing."
+    echo "Install with: apt install -y xvfb xauth"
+    exit 1
+  }
+  BUILD_PREFIX=(xvfb-run -a)
+fi
+
+# Initialize/test Wine once so missing WoW64/i386 support fails before electron-builder.
+if ! "${BUILD_PREFIX[@]}" wine cmd /c ver >/tmp/vmesh-wine-check.log 2>&1; then
+  cat /tmp/vmesh-wine-check.log || true
+  echo "ERROR: Wine cannot start a Windows process."
+  echo "On Ubuntu/Debian install 32-bit Wine support too:"
+  echo "  dpkg --add-architecture i386 && apt update && apt install -y wine wine32:i386 xvfb xauth"
+  exit 1
+fi
+
 echo "=============================================================="
 echo " VARGAMESH DESKTOP v$(node -p 'require("./package.json").version')"
 echo " WINDOWS x64 BUILD ON LINUX + WINE"
@@ -42,7 +61,7 @@ rm -rf dist
 
 echo "[5/6] Building Windows x64 installer + portable ZIP"
 export CSC_IDENTITY_AUTO_DISCOVERY=false
-npm run dist:win
+"${BUILD_PREFIX[@]}" npm run dist:win
 
 echo "[6/6] Verifying artifacts + checksums"
 VERSION="$(node -p 'require("./package.json").version')"

@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest an improvement to VargaMesh Desktop
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What problem or workflow should the feature improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired behavior without including wallet secrets or credentials.
+    validations:
+      required: true

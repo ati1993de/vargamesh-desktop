@@ -1,13 +1,13 @@
 # Microsoft Store / MSIX preparation
 
-VargaMesh Desktop v0.2.1 is prepared so the normal Windows x64 installer can be converted with Microsoft's **MSIX Packaging Tool**.
+VargaMesh Desktop v0.3.0 is prepared so the normal Windows x64 installer can be converted with Microsoft's **MSIX Packaging Tool**.
 
 ## Before conversion
 
 Build and test:
 
 ```text
-VargaMesh-Desktop-v0.2.1-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.3.0-Windows-x64-Setup.exe
 ```
 
 Use a clean Windows 11 VM for the conversion. Install the Microsoft MSIX Packaging Tool and reserve the application name in Partner Center first.
@@ -29,7 +29,7 @@ For the **MSIX package identity**, use the exact values from Microsoft Partner C
 
 1. Start from a clean Windows VM snapshot.
 2. Open MSIX Packaging Tool → Application package → Create package on this computer.
-3. Select `VargaMesh-Desktop-v0.2.1-Windows-x64-Setup.exe`.
+3. Select `VargaMesh-Desktop-v0.3.0-Windows-x64-Setup.exe`.
 4. Let the installer complete normally.
 5. Launch VargaMesh Desktop once only if the tool requires first-run capture; do not create or fund a real wallet during capture.
 6. Finish monitoring and review captured files/registry entries.
