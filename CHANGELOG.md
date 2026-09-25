@@ -2,6 +2,16 @@
 
 All notable VargaMesh Desktop changes are documented here.
 
+## [0.3.1] - 2026-09-25
+
+### Fixed
+
+- sending no longer fails on a new or low-traffic VargaMesh network when `estimatesmartfee` has insufficient history
+- Desktop now derives a temporary fallback fee from the local node's relay/mempool policy, with a 1 sat/vB minimum and a defensive automatic ceiling
+- the temporary wallet fee override is cleared immediately after the send attempt so normal automatic fee selection resumes
+- the Send page now shows when the displayed rate is a fallback instead of presenting fee-estimator insufficiency as a fatal error
+- the selected confirmation target is carried into the send request for consistent fee-policy resolution
+
 ## [0.3.0] - 2026-09-24
 
 ### Added

@@ -6,6 +6,7 @@ const fs = require("node:fs");
 const { CoreManager } = require("./core-manager");
 const { SettingsStore } = require("./settings");
 const { requireWif, requireAddressType, privateDescriptorForWif, addDescriptorChecksum } = require("./wallet-import");
+const { resolveFeePolicy } = require("./fee-policy");
 
 app.setAppUserModelId("net.vargatech.vargamesh.desktop");
 
@@ -245,7 +246,7 @@ function installHandlers() {
   register("wallet:validate", async payload => core.rpc.call("validateaddress", [requireAddress(payload.address)]));
   register("wallet:fee", async payload => {
     const target = Math.min(1008, Math.max(1, Number(payload.target) || 6));
-    return core.rpc.call("estimatesmartfee", [target, "conservative"]);
+    return resolveFeePolicy(core.rpc, target);
   });
   register("wallet:unlock", async payload => {
     const passphrase = typeof payload.passphrase === "string" ? payload.passphrase : "";
@@ -263,7 +264,23 @@ function installHandlers() {
     if (!check?.isvalid) throw new Error("Destination address is not valid for VargaMesh.");
     const comment = typeof payload.comment === "string" ? payload.comment.slice(0, 120) : "";
     const subtract = !!payload.subtractFee;
-    return walletRpc("sendtoaddress", [address, amount, comment, "", subtract], wallet, 60_000);
+    const target = Math.min(1008, Math.max(1, Number(payload.feeTarget) || 6));
+    const feePolicy = await resolveFeePolicy(core.rpc, target);
+
+    if (!feePolicy.fallback) {
+      return walletRpc("sendtoaddress", [address, amount, comment, "", subtract], wallet, 60_000);
+    }
+
+    // Sparse/new networks may not yet have enough history for estimatesmartfee.
+    // Apply a node-policy-aware fallback only for this send, then immediately
+    // return the wallet to automatic fee selection.
+    const applied = await walletRpc("settxfee", [feePolicy.feerate], wallet, 30_000);
+    if (applied !== true) throw new Error("Unable to apply temporary fallback fee rate.");
+    try {
+      return await walletRpc("sendtoaddress", [address, amount, comment, "", subtract], wallet, 60_000);
+    } finally {
+      try { await walletRpc("settxfee", [0], wallet, 30_000); } catch (_) {}
+    }
   });
   register("wallet:backup", async payload => {
     const wallet = requireWalletName(payload.wallet);
