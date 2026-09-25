@@ -10,7 +10,7 @@ const required = [
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.3.1") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.3.2") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 const html = fs.readFileSync(path.join(root,"src/renderer/index.html"),"utf8");
 if (/(?:src|href)=["\']https?:\/\//i.test(html)) throw new Error("Renderer HTML must not load remote resources");
@@ -42,18 +42,22 @@ const coreManager = fs.readFileSync(path.join(root,"src/core-manager.js"),"utf8"
 for (const token of ["STATUS_DLL_NOT_FOUND","path.join(win, \"System32\")","cwd: this.coreDir","env }"]) {
   if (!coreManager.includes(token)) throw new Error(`Core runtime hardening token missing: ${token}`);
 }
+
+if (!coreManager.includes('"-fallbackfee=0.00001000"')) throw new Error("Bundled Core fallbackfee launch arg missing");
+if (main.includes('walletRpc("settxfee"')) throw new Error("Unsupported settxfee RPC must not be used by Desktop");
+
 const prep = fs.readFileSync(path.join(root,"scripts/prepare-core-linux.sh"),"utf8");
 if (!prep.includes('cp -a "$daemon_dir"/. "$DEST"/')) throw new Error("Full Core runtime copy is missing");
 if (!appjs.includes('unwrap(await api.startCore())')) throw new Error("Renderer does not surface Core startup errors");
 for (const token of ["importPrivateKey","importWatchAddress","expectedAddress","migrate_descriptor_hint","closeToTray","launchAtLogin"]) {
-  if (!appjs.includes(token) && !preload.includes(token) && !main.includes(token)) throw new Error(`v0.3.1 feature token missing: ${token}`);
+  if (!appjs.includes(token) && !preload.includes(token) && !main.includes(token)) throw new Error(`v0.3.2 feature token missing: ${token}`);
 }
 for (const token of ["new Tray","setLoginItemSettings","hideToTray","Beenden und Core stoppen","wallet:importPrivateKey","wallet:importWatchAddress","importdescriptors","getdescriptorinfo","deriveaddresses","redacted-private-key"]) {
-  if (!main.includes(token)) throw new Error(`Main-process v0.3.1 token missing: ${token}`);
+  if (!main.includes(token)) throw new Error(`Main-process v0.3.2 token missing: ${token}`);
 }
 
 const feePolicy = fs.readFileSync(path.join(root,"src/fee-policy.js"),"utf8");
-for (const token of ["DEFAULT_FALLBACK_FEE_RATE","MAX_AUTOMATIC_FALLBACK_FEE_RATE","resolveFeePolicy","mempoolminfee","settxfee"]) {
+for (const token of ["DEFAULT_FALLBACK_FEE_RATE","MAX_AUTOMATIC_FALLBACK_FEE_RATE","resolveFeePolicy","mempoolminfee"]) {
   const corpus = `${feePolicy}\n${main}`;
   if (!corpus.includes(token)) throw new Error(`Fee fallback hardening token missing: ${token}`);
 }

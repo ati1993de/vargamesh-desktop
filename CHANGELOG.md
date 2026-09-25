@@ -2,6 +2,15 @@
 
 All notable VargaMesh Desktop changes are documented here.
 
+## [0.3.2] - 2026-09-25
+
+### Fixed
+
+- removed the `settxfee` RPC call used by v0.3.1 because VargaMesh Core v0.1.0 does not expose that RPC
+- bundled Core now starts with `-fallbackfee=0.00001000` (1 sat/vB equivalent), which is the Core-supported path when fee-estimator history is insufficient
+- sending again uses the normal `sendtoaddress` flow; smart estimates are used when available and Core falls back only when necessary
+- if an already-running Core still has fallback fees disabled, Desktop now tells the user to fully stop the old Core and restart v0.3.2 instead of showing only a generic RPC error
+
 ## [0.3.1] - 2026-09-25
 
 ### Fixed

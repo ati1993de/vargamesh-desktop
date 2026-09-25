@@ -267,19 +267,21 @@ function installHandlers() {
     const target = Math.min(1008, Math.max(1, Number(payload.feeTarget) || 6));
     const feePolicy = await resolveFeePolicy(core.rpc, target);
 
-    if (!feePolicy.fallback) {
-      return walletRpc("sendtoaddress", [address, amount, comment, "", subtract], wallet, 60_000);
-    }
-
-    // Sparse/new networks may not yet have enough history for estimatesmartfee.
-    // Apply a node-policy-aware fallback only for this send, then immediately
-    // return the wallet to automatic fee selection.
-    const applied = await walletRpc("settxfee", [feePolicy.feerate], wallet, 30_000);
-    if (applied !== true) throw new Error("Unable to apply temporary fallback fee rate.");
     try {
+      // VargaMesh Core in the Desktop bundle is launched with a conservative
+      // -fallbackfee so the wallet can still create a transaction while
+      // estimatesmartfee has insufficient history. Do not use settxfee here:
+      // VargaMesh Core v0.1.0 does not expose that RPC.
       return await walletRpc("sendtoaddress", [address, amount, comment, "", subtract], wallet, 60_000);
-    } finally {
-      try { await walletRpc("settxfee", [0], wallet, 30_000); } catch (_) {}
+    } catch (err) {
+      const message = String(err?.message || err || "");
+      if (feePolicy.fallback && /fallbackfee is disabled/i.test(message)) {
+        throw new Error(
+          "VargaMesh Core is running without the Desktop fallback fee. " +
+          "Quit VargaMesh Desktop completely (including the tray/Core process) and start v0.3.2 again."
+        );
+      }
+      throw err;
     }
   });
   register("wallet:backup", async payload => {

@@ -1,50 +1,29 @@
-# VargaMesh Desktop v0.3.1
+# VargaMesh Desktop v0.3.2
 
 **Recommended Windows release.**
 
-VargaMesh Desktop v0.3.1 is a focused transaction-fee reliability update for the Windows x64 self-custody wallet and local full-node client.
+VargaMesh Desktop v0.3.2 fixes the v0.3.1 send regression on sparse/new VargaMesh networks.
 
-## Fixed: sending on a sparse/new network
+## Fixed: `Method not found` while sending
 
-VargaMesh Core's smart fee estimator can legitimately have no estimate when the chain has not yet observed enough transaction and block history. In v0.3.0 that state was shown as **“Insufficient data or no feerate found”**, and a send could then fail with **“Fee estimation failed. Fallbackfee is disabled.”**
+v0.3.1 correctly detected that `estimatesmartfee` had insufficient history, but attempted to apply the temporary rate through the `settxfee` RPC. VargaMesh Core v0.1.0 does not expose that RPC, so clicking the send/review flow could end with **“Method not found.”**
 
-v0.3.1 handles that condition inside Desktop:
+v0.3.2 uses the Core-supported fallback mechanism instead:
 
-- use `estimatesmartfee` when a valid estimate exists
-- otherwise derive a conservative temporary fallback from the local node's relay/mempool minimums
-- never fall below 1 sat/vB (0.00001000 VMESH/kvB)
-- refuse an unexpectedly high automatic fallback above 100 sat/vB instead of silently overpaying
-- apply the fallback only to the active wallet for the send attempt
-- immediately reset the wallet to automatic fee selection afterwards
-- show **Fallback** in the Send UI when estimator history is not yet sufficient
+- bundled VargaMesh Core starts with `-fallbackfee=0.00001000`
+- this equals a 1 sat/vB baseline for an 8-decimal VMESH network
+- `estimatesmartfee` remains preferred when sufficient history exists
+- normal `sendtoaddress` transaction creation is used; no `settxfee` RPC is called
+- the UI continues to show `Fallback` while estimator history is insufficient
+- if an old/external Core is still running without fallback fees enabled, Desktop returns an actionable restart message
 
-No persistent `fallbackfee=` setting is added to the user's Core configuration.
-
-## Existing v0.3 features
-
-- local VargaMesh Core v0.1.0 full node
-- self-custody wallet with local signing
-- WIF private-key import with expected-address verification
-- watch-only import and optional blockchain rescan
-- wallet backup/restore and descriptor/legacy handling
-- Windows tray/background mode and optional start with Windows
-- local cookie-authenticated RPC only
-- no telemetry, advertising or cloud wallet backend
+After installing v0.3.2, fully quit the old Desktop instance (including tray/Core) before launching v0.3.2 so the bundled Core is restarted with the new fee setting.
 
 ## Downloads
 
-- `VargaMesh-Desktop-v0.3.1-Windows-x64-Setup.exe`
-- `VargaMesh-Desktop-v0.3.1-Windows-x64-Portable.zip`
+- `VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe`
+- `VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip`
 - `SHA256SUMS`
-
-## Verify the download
-
-```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.3.1-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.3.1-Windows-x64-Portable.zip -Algorithm SHA256
-```
-
-Compare the values with `SHA256SUMS` attached to the GitHub release.
 
 Existing blockchain and wallet data remains under `%LOCALAPPDATA%\VargaMesh`. Keep an independent wallet backup before upgrading.
 

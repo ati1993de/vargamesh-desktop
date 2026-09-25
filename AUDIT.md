@@ -1,6 +1,6 @@
-# VargaMesh Desktop v0.3.1 – verification summary
+# VargaMesh Desktop v0.3.2 – verification summary
 
-This document records project-level checks included with the v0.3.1 source tree. It is not a third-party security audit.
+This document records project-level checks included with the v0.3.2 source tree. It is not a third-party security audit.
 
 ## Automated checks
 

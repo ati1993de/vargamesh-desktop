@@ -19,8 +19,8 @@ npm run dist:win
 Expected artifacts:
 
 ```text
-VargaMesh-Desktop-v0.3.1-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.3.1-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip
 ```
 
 ## Linux + Wine build

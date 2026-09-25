@@ -1,6 +1,6 @@
 {
   "name": "vargamesh-desktop",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Secure Windows desktop wallet and full-node controller for VargaMesh (VMESH)",
   "productName": "VargaMesh Desktop",
   "main": "src/main.js",
