@@ -256,12 +256,6 @@ Tagged `v*` builds run through GitHub Actions on `windows-latest`. The release w
 
 Maintainer checklist: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md)
 
-## Microsoft Store / MSIX
-
-The project includes Microsoft Store artwork and MSIX conversion notes. See [`docs/MSIX-STORE.md`](docs/MSIX-STORE.md).
-
-Partner Center package identity and Publisher values must always come from the actual Microsoft Partner Center reservation and must not be guessed.
-
 ## Support and security
 
 - Usage/support information: [`SUPPORT.md`](SUPPORT.md)
