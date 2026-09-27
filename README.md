@@ -12,13 +12,13 @@
   <a href="https://github.com/ati1993de/vargamesh-desktop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ati1993de/vargamesh-desktop?display_name=tag&sort=semver"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%20x64-0078D6">
-  <img alt="Core" src="https://img.shields.io/badge/VargaMesh%20Core-v0.1.0-00bfe8">
+  <img alt="Core" src="https://img.shields.io/badge/VargaMesh%20Core-v0.2.0-00bfe8">
 </p>
 
 VargaMesh Desktop is the recommended graphical Windows client for running a local VargaMesh full node and managing a self-custody VMESH wallet. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current public release:** `v0.3.2`
-> **Bundled Core:** `VargaMesh Core v0.1.0`
+> **Current public release:** `v0.3.3`
+> **Bundled Core:** `VargaMesh Core v0.2.0`
 > **Platform:** Windows 10/11 x64
 
 ## Download
@@ -30,14 +30,14 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip
 SHA256SUMS
 ```
 
 Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
 
-## What v0.3.2 provides
+## What v0.3.3 provides
 
 ### Wallet
 
@@ -202,8 +202,8 @@ Before importing private keys, restoring wallets or performing legacy migration,
 PowerShell example:
 
 ```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip -Algorithm SHA256
 ```
 
 Compare the resulting values with `SHA256SUMS` from the same GitHub release.
@@ -243,8 +243,8 @@ npm run build:linux-wine
 The build script downloads the official VargaMesh Core Windows x64 release, preserves its complete runtime directory, performs project checks and builds:
 
 ```text
-dist/VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe
-dist/VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip
+dist/VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe
+dist/VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 

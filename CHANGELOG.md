@@ -2,6 +2,21 @@
 
 All notable VargaMesh Desktop changes are documented here.
 
+## [0.3.3] - 2026-09-27
+
+### Changed
+
+- upgraded the bundled VargaMesh Core from v0.1.0 to v0.2.0
+- Windows builds now use the official VargaMesh Core v0.2.0 Windows x64 release
+- synchronized Desktop package metadata for v0.3.3
+- retained the existing sparse-network fallback-fee compatibility behavior
+
+### Core
+
+- bundled Core: VargaMesh Core v0.2.0
+- Mainnet remains the default network
+- the bundled Core also contains VargaMesh Public Testnet v1 support
+
 ## [0.3.2] - 2026-09-25
 
 ### Fixed

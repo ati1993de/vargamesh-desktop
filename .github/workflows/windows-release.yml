@@ -25,8 +25,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force resources/core | Out-Null
-          gh release download v0.1.0 --repo ati1993de/vargamesh-core --pattern "VargaMesh-v0.1.0-windows-x86_64.zip" --dir "$env:RUNNER_TEMP"
-          Expand-Archive "$env:RUNNER_TEMP/VargaMesh-v0.1.0-windows-x86_64.zip" "$env:RUNNER_TEMP/vmesh-core" -Force
+          gh release download v0.2.0 --repo ati1993de/vargamesh-core --pattern "vargamesh-core-0.2.0-windows-x86_64.zip" --dir "$env:RUNNER_TEMP"
+          Expand-Archive "$env:RUNNER_TEMP/vargamesh-core-0.2.0-windows-x86_64.zip" "$env:RUNNER_TEMP/vmesh-core" -Force
           $daemon = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargameshd.exe | Select-Object -First 1
           $cli = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargamesh-cli.exe | Select-Object -First 1
           if (!$daemon -or !$cli) { throw "Core binaries missing" }

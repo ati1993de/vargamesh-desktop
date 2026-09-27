@@ -271,14 +271,14 @@ function installHandlers() {
       // VargaMesh Core in the Desktop bundle is launched with a conservative
       // -fallbackfee so the wallet can still create a transaction while
       // estimatesmartfee has insufficient history. Do not use settxfee here:
-      // VargaMesh Core v0.1.0 does not expose that RPC.
+      // Some VargaMesh Core versions do not expose that RPC.
       return await walletRpc("sendtoaddress", [address, amount, comment, "", subtract], wallet, 60_000);
     } catch (err) {
       const message = String(err?.message || err || "");
       if (feePolicy.fallback && /fallbackfee is disabled/i.test(message)) {
         throw new Error(
           "VargaMesh Core is running without the Desktop fallback fee. " +
-          "Quit VargaMesh Desktop completely (including the tray/Core process) and start v0.3.2 again."
+          "Quit VargaMesh Desktop completely (including the tray/Core process) and start v0.3.3 again."
         );
       }
       throw err;

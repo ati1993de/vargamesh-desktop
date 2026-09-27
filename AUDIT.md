@@ -1,6 +1,6 @@
-# VargaMesh Desktop v0.3.2 – verification summary
+# VargaMesh Desktop v0.3.3 – verification summary
 
-This document records project-level checks included with the v0.3.2 source tree. It is not a third-party security audit.
+This document records project-level checks included with the v0.3.3 source tree. It is not a third-party security audit.
 
 ## Automated checks
 
@@ -36,7 +36,7 @@ VargaMesh Desktop source verification: PASS
 The tagged Windows workflow:
 
 1. uses `windows-latest`
-2. downloads the official VargaMesh Core v0.1.0 Windows x64 release
+2. downloads the official VargaMesh Core v0.2.0 Windows x64 release
 3. preserves the complete Core runtime directory
 4. runs `npm run check`
 5. builds Setup and Portable ZIP artifacts

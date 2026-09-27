@@ -19,8 +19,8 @@ npm run dist:win
 Expected artifacts:
 
 ```text
-VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip
 ```
 
 ## Linux + Wine build
@@ -43,7 +43,7 @@ npm run build:linux-wine
 The build helper:
 
 1. verifies the local build environment
-2. downloads the official VargaMesh Core `v0.1.0` Windows x64 release
+2. downloads the official VargaMesh Core `v0.2.0` Windows x64 release
 3. preserves the complete Core runtime directory
 4. runs project checks
 5. runs electron-builder for Windows x64

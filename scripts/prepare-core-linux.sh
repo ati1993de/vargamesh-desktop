@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="$ROOT/resources/core"
 REPO="ati1993de/vargamesh-core"
-TAG="${VMESH_CORE_TAG:-v0.1.0}"
-ASSET="${VMESH_CORE_ASSET:-VargaMesh-v0.1.0-windows-x86_64.zip}"
+TAG="${VMESH_CORE_TAG:-v0.2.0}"
+ASSET="${VMESH_CORE_ASSET:-vargamesh-core-0.2.0-windows-x86_64.zip}"
 
 mkdir -p "$DEST"
 

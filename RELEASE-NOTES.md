@@ -1,30 +1,33 @@
-# VargaMesh Desktop v0.3.2
+# VargaMesh Desktop v0.3.3
 
-**Recommended Windows release.**
+VargaMesh Desktop v0.3.3 updates the bundled full node to
+**VargaMesh Core v0.2.0**.
 
-VargaMesh Desktop v0.3.2 fixes the v0.3.1 send regression on sparse/new VargaMesh networks.
+## Main change
 
-## Fixed: `Method not found` while sending
+The Windows Desktop packages now bundle the official VargaMesh Core v0.2.0
+Windows x64 binaries instead of Core v0.1.0.
 
-v0.3.1 correctly detected that `estimatesmartfee` had insufficient history, but attempted to apply the temporary rate through the `settxfee` RPC. VargaMesh Core v0.1.0 does not expose that RPC, so clicking the send/review flow could end with **“Method not found.”**
+VargaMesh Core v0.2.0 contains both VargaMesh Mainnet and VargaMesh Public
+Testnet v1 support in the same Core binaries. VargaMesh Desktop continues to
+use its existing Desktop network configuration and wallet data.
 
-v0.3.2 uses the Core-supported fallback mechanism instead:
+## Compatibility
 
-- bundled VargaMesh Core starts with `-fallbackfee=0.00001000`
-- this equals a 1 sat/vB baseline for an 8-decimal VMESH network
-- `estimatesmartfee` remains preferred when sufficient history exists
-- normal `sendtoaddress` transaction creation is used; no `settxfee` RPC is called
-- the UI continues to show `Fallback` while estimator history is insufficient
-- if an old/external Core is still running without fallback fees enabled, Desktop returns an actionable restart message
+Existing Desktop wallet and blockchain data are retained. Users upgrading from
+v0.3.2 should completely exit the previous Desktop instance, including its tray
+and Core process, before starting v0.3.3.
 
-After installing v0.3.2, fully quit the old Desktop instance (including tray/Core) before launching v0.3.2 so the bundled Core is restarted with the new fee setting.
+The sparse-network fallback-fee handling introduced in v0.3.2 remains in place.
 
-## Downloads
+## Windows packages
 
-- `VargaMesh-Desktop-v0.3.2-Windows-x64-Setup.exe`
-- `VargaMesh-Desktop-v0.3.2-Windows-x64-Portable.zip`
-- `SHA256SUMS`
+- `VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe`
+- `VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip`
 
-Existing blockchain and wallet data remains under `%LOCALAPPDATA%\VargaMesh`. Keep an independent wallet backup before upgrading.
+## Bundled Core
 
-VargaMesh Desktop is pre-1.0 software. Carefully verify recipient addresses and transaction amounts before sending.
+- VargaMesh Core v0.2.0
+- Windows x86_64
+- Mainnet support
+- VargaMesh Public Testnet v1 support
