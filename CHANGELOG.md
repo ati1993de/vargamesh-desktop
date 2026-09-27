@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- Added BIP39 12/24-word recovery phrase wallets.
+- Added BIP32 HD derivation.
+- Added BIP44 VMESH derivation at coin type 22093.
+- Added BIP84 Native SegWit VMESH derivation at coin type 22093.
+- Added recovery-phrase wallet creation and restore UI.
+- Existing Core wallets, wallet.dat backups and WIF imports remain supported.
+- No VargaMesh consensus or network changes.
+
+
 All notable VargaMesh Desktop changes are documented here.
 
 ## [0.3.3] - 2026-09-27

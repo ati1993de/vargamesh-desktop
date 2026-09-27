@@ -17,7 +17,7 @@
 
 VargaMesh Desktop is the recommended graphical Windows client for running a local VargaMesh full node and managing a self-custody VMESH wallet. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current public release:** `v0.3.3`
+> **Current public release:** `v0.4.0`
 > **Bundled Core:** `VargaMesh Core v0.2.0`
 > **Platform:** Windows 10/11 x64
 
@@ -30,16 +30,24 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.4.0-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip
 SHA256SUMS
 ```
 
 Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
 
-## What v0.3.3 provides
+## What v0.4.0 provides
 
 ### Wallet
+
+* deterministic Recovery Wallets with 12- or 24-word BIP39 recovery phrases
+* BIP32 HD derivation using VargaMesh Mainnet extended-key prefixes
+* proposed SLIP-0044 coin type `22093`
+* BIP84 Native SegWit default path: `m/84'/22093'/0'/0/index`
+* BIP44 legacy compatibility path: `m/44'/22093'/0'/0/index`
+* recovery from mnemonic with blockchain rescan
+* recovery phrase copy and explicit TXT export during wallet creation
 
 - create encrypted or unencrypted wallets
 - load and unload existing wallets
@@ -202,8 +210,8 @@ Before importing private keys, restoring wallets or performing legacy migration,
 PowerShell example:
 
 ```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.4.0-Windows-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip -Algorithm SHA256
 ```
 
 Compare the resulting values with `SHA256SUMS` from the same GitHub release.
@@ -243,8 +251,8 @@ npm run build:linux-wine
 The build script downloads the official VargaMesh Core Windows x64 release, preserves its complete runtime directory, performs project checks and builds:
 
 ```text
-dist/VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe
-dist/VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip
+dist/VargaMesh-Desktop-v0.4.0-Windows-x64-Setup.exe
+dist/VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 
@@ -286,3 +294,25 @@ VargaMesh Core is a separate project derived from Bitcoin Core and retains the a
 ## Important notice
 
 VargaMesh Desktop is self-custody software. Cryptocurrency transactions are irreversible after confirmation. Keep independent backups, verify destination addresses, and test recovery/import procedures carefully before relying on them for significant funds.
+
+
+## Wallet Quick Start
+
+New to VargaMesh Desktop or upgrading from an older wallet?
+
+- [Wallet Quick Guide – English](docs/WALLET-GUIDE.md)
+- [Wallet-Kurzanleitung – Deutsch](docs/WALLET-GUIDE-DE.md)
+- [HD Wallet Derivation Specification](docs/WALLET-DERIVATION.md)
+
+The two recovery methods are different:
+
+| Function | Purpose |
+|---|---|
+| **Recovery Wallet** | Create a new 12/24-word deterministic wallet |
+| **Recovery Restore** | Restore a wallet from its 12/24 words |
+| **Backup Restore** | Restore an existing Core `.dat` / backup wallet |
+| **Load Wallet** | Load an existing local wallet |
+| **Unload Wallet** | Unload from Core; does **not** delete the wallet |
+
+Existing wallets remain supported and are not converted automatically into
+BIP39 Recovery Wallets.

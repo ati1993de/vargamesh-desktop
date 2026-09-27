@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld("vmesh", Object.freeze({
   peers: () => call("core:peers"),
   listWallets: () => call("wallet:list"),
   createWallet: data => call("wallet:create", data),
+  generateHdWallet: (words = 24) => call("wallet:hdGenerate", { words }),
+  createHdWallet: data => call("wallet:hdCreate", data),
+  saveRecoveryPhrase: data => call("wallet:saveRecoveryPhrase", data),
+  restoreHdWallet: data => call("wallet:hdRestore", data),
   loadWallet: name => call("wallet:load", { name }),
   unloadWallet: name => call("wallet:unload", { name }),
   walletSummary: wallet => call("wallet:summary", { wallet }),
@@ -37,6 +41,7 @@ contextBridge.exposeInMainWorld("vmesh", Object.freeze({
   rescanWallet: wallet => call("wallet:rescan", { wallet }),
   abandonTransaction: (wallet, txid) => call("wallet:abandon", { wallet, txid }),
   copy: text => call("clipboard:write", { text }),
+  clearClipboardIfMatches: text => call("clipboard:clearIfMatches", { text }),
   openExternal: url => call("external:open", { url }),
   showDataDir: () => call("system:showDataDir"),
   showDebugLog: () => call("system:showDebugLog")

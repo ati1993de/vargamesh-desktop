@@ -6,6 +6,11 @@ const fs = require("node:fs");
 const { CoreManager } = require("./core-manager");
 const { SettingsStore } = require("./settings");
 const { requireWif, requireAddressType, privateDescriptorForWif, addDescriptorChecksum } = require("./wallet-import");
+const {
+  createMnemonic,
+  requireMnemonic,
+  deriveWalletDescriptors
+} = require("./hd-wallet");
 const { resolveFeePolicy } = require("./fee-policy");
 
 app.setAppUserModelId("net.vargatech.vargamesh.desktop");
@@ -83,6 +88,16 @@ function requireOptionalPassphrase(value) {
   if (value == null) return "";
   if (typeof value !== "string" || value.length > 1024) throw new Error("Invalid wallet passphrase.");
   return value;
+}
+
+function requireWalletCreationPassphrase(value) {
+  const passphrase = requireOptionalPassphrase(value);
+
+  if (passphrase && passphrase.length < 8) {
+    throw new Error("Wallet passphrase must contain at least 8 characters.");
+  }
+
+  return passphrase;
 }
 
 async function withTemporaryWalletUnlock(wallet, passphrase, operation) {
@@ -209,10 +224,243 @@ function installHandlers() {
     return { loaded, wallets: entries.sort((a, b) => a.name.localeCompare(b.name)) };
   });
 
+
+  async function prepareHdDescriptors(mnemonic) {
+    const bundle = deriveWalletDescriptors(requireMnemonic(mnemonic));
+    const descriptors = {};
+
+    for (const [key, raw] of Object.entries(bundle.descriptors)) {
+      let info;
+
+      try {
+        info = await core.rpc.call(
+          "getdescriptorinfo",
+          [raw],
+          "",
+          30_000
+        );
+      } catch (_) {
+        throw new Error(
+          `VargaMesh Core rejected the ${key} HD descriptor.`
+        );
+      }
+
+      if (!info?.hasprivatekeys) {
+        throw new Error(`Core rejected private HD descriptor: ${key}`);
+      }
+
+      if (!info?.isrange) {
+        throw new Error(`Core rejected ranged HD descriptor: ${key}`);
+      }
+
+      if (typeof info?.checksum !== "string" || !info.checksum) {
+        throw new Error(`VargaMesh Core did not return a checksum for ${key}.`);
+      }
+
+      /*
+       * IMPORTANT:
+       * getdescriptorinfo().descriptor intentionally contains PUBLIC keys only.
+       * Import the original private descriptor plus Core's checksum instead.
+       */
+      descriptors[key] = addDescriptorChecksum(raw, info.checksum);
+    }
+
+    return { bundle, descriptors };
+  }
+
+  async function createHdCoreWallet(payload, restoring = false) {
+    const name = requireWalletName(payload.name);
+    const passphrase = requireWalletCreationPassphrase(payload.passphrase);
+    const mnemonic = requireMnemonic(payload.mnemonic);
+
+    const prepared = await prepareHdDescriptors(mnemonic);
+
+    const directory = await core.rpc.call(
+      "listwalletdir",
+      [],
+      "",
+      30_000
+    ).catch(() => ({ wallets: [] }));
+
+    const exists = (directory.wallets || []).some(item => {
+      const current = typeof item === "string" ? item : item?.name;
+      return current === name;
+    });
+
+    if (exists) throw new Error(`Wallet already exists: ${name}`);
+
+    await core.rpc.call(
+      "createwallet",
+      [name, false, true, passphrase, false, true, true],
+      "",
+      30_000
+    );
+
+    const timestamp = restoring ? 0 : "now";
+
+    try {
+      await withTemporaryWalletUnlock(name, passphrase, async () => {
+        const requests = [
+          {
+            desc: prepared.descriptors.segwitExternal,
+            timestamp,
+            active: true,
+            internal: false,
+            range: [0, 999],
+            next_index: 0
+          },
+          {
+            desc: prepared.descriptors.segwitInternal,
+            timestamp,
+            active: true,
+            internal: true,
+            range: [0, 999],
+            next_index: 0
+          },
+          {
+            desc: prepared.descriptors.legacyExternal,
+            timestamp,
+            active: false,
+            internal: false,
+            range: [0, 999]
+          },
+          {
+            desc: prepared.descriptors.legacyInternal,
+            timestamp,
+            active: false,
+            internal: true,
+            range: [0, 999]
+          }
+        ];
+
+        const result = await walletRpc(
+          "importdescriptors",
+          [requests],
+          name,
+          0
+        );
+
+        if (!Array.isArray(result) || result.length != requests.length) {
+          throw new Error("Unexpected importdescriptors response.");
+        }
+
+        const failed = result.find(item => item?.success !== true);
+        if (failed) {
+          throw new Error(
+            "VargaMesh Core rejected one or more HD wallet descriptors."
+          );
+        }
+      });
+
+      const address = await walletRpc(
+        "getnewaddress",
+        ["", "bech32"],
+        name,
+        30_000
+      );
+
+      return {
+        name,
+        address,
+        restored: restoring,
+        coinType: prepared.bundle.coinType,
+        bip44: prepared.bundle.paths.bip44Receive,
+        bip84: prepared.bundle.paths.bip84Receive
+      };
+    } catch (error) {
+      try {
+        await core.rpc.call("unloadwallet", [name, true], "", 30_000);
+      } catch (_) {}
+      throw error;
+    }
+  }
+
+  register("wallet:hdGenerate", async payload => {
+    const words = Number(payload?.words) === 12 ? 12 : 24;
+    const mnemonic = createMnemonic(words);
+    const prepared = await prepareHdDescriptors(mnemonic);
+
+    const preview = await core.rpc.call(
+      "deriveaddresses",
+      [prepared.descriptors.segwitExternal, [0, 0]],
+      "",
+      30_000
+    );
+
+    return {
+      mnemonic,
+      words,
+      address: Array.isArray(preview) ? preview[0] : "",
+      coinType: prepared.bundle.coinType,
+      path: prepared.bundle.paths.bip84Receive
+    };
+  });
+
+  register("wallet:saveRecoveryPhrase", async payload => {
+    const name = requireWalletName(payload.name);
+    const mnemonic = requireMnemonic(payload.mnemonic);
+
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: "Save VargaMesh recovery phrase",
+      defaultPath: path.join(
+        app.getPath("documents"),
+        `${name}-VargaMesh-Recovery.txt`
+      ),
+      filters: [
+        { name: "Text file", extensions: ["txt"] }
+      ]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    const contents = [
+      "VARGAMESH WALLET RECOVERY",
+      "==========================",
+      "",
+      `Wallet: ${name}`,
+      "Network: VargaMesh Mainnet",
+      "Coin type: 22093",
+      "",
+      "Recovery phrase:",
+      mnemonic,
+      "",
+      "Default receive path:",
+      "m/84'/22093'/0'/0/*",
+      "",
+      "Legacy compatibility path:",
+      "m/44'/22093'/0'/0/*",
+      "",
+      "IMPORTANT:",
+      "- Anyone with these recovery words can control this wallet.",
+      "- Store this file offline and securely.",
+      "- Do NOT store the wallet encryption passphrase in this file.",
+      "- Never send these recovery words to support or other people.",
+      ""
+    ].join("\r\n");
+
+    fs.writeFileSync(result.filePath, contents, {
+      encoding: "utf8"
+    });
+
+    return {
+      canceled: false,
+      fileName: path.basename(result.filePath)
+    };
+  });
+
+  register("wallet:hdCreate", async payload => {
+    return createHdCoreWallet(payload, false);
+  });
+
+  register("wallet:hdRestore", async payload => {
+    return createHdCoreWallet(payload, true);
+  });
+
   register("wallet:create", async payload => {
     const name = requireWalletName(payload.name);
-    const passphrase = typeof payload.passphrase === "string" ? payload.passphrase : "";
-    if (passphrase && passphrase.length < 8) throw new Error("Wallet passphrase must contain at least 8 characters.");
+    const passphrase = requireWalletCreationPassphrase(payload.passphrase);
     const result = await core.rpc.call("createwallet", [name, false, false, passphrase, false, true, true], "", 30_000);
     settings.update({ activeWallet: name });
     return result;
@@ -278,7 +526,7 @@ function installHandlers() {
       if (feePolicy.fallback && /fallbackfee is disabled/i.test(message)) {
         throw new Error(
           "VargaMesh Core is running without the Desktop fallback fee. " +
-          "Quit VargaMesh Desktop completely (including the tray/Core process) and start v0.3.3 again."
+          "Quit VargaMesh Desktop completely (including the tray/Core process) and start v0.4.0 again."
         );
       }
       throw err;
@@ -412,6 +660,24 @@ function installHandlers() {
     clipboard.writeText(text);
     return true;
   });
+  register("clipboard:clearIfMatches", async payload => {
+    const expected =
+      typeof payload?.text === "string"
+        ? payload.text
+        : "";
+
+    if (!expected) {
+      return { cleared: false };
+    }
+
+    if (clipboard.readText() === expected) {
+      clipboard.clear();
+      return { cleared: true };
+    }
+
+    return { cleared: false };
+  });
+
   register("external:open", async payload => {
     const url = typeof payload.url === "string" ? payload.url : "";
     if (!EXTERNAL_ALLOWLIST.has(url)) throw new Error("External URL is not allow-listed.");

@@ -15,7 +15,7 @@ const I18N = {
     receive_hint:"Erzeuge eine neue Bech32-Adresse direkt in deiner aktiven Core-Wallet.",copy:"Kopieren",label_optional:"Label (optional)",generate_address:"Neue Adresse erzeugen",qr_local:"QR-Code wird vollständig lokal erzeugt.",transactions:"Transaktionen",date:"Datum",type:"Typ",
     node_network:"Node & Netzwerk",node_hint:"Status deines lokalen VargaMesh Core und der verbundenen Peers.",open_data_dir:"Datenordner",mempool:"Mempool",network_hash:"Netzwerk-Hashrate",connected_peers:"Verbundene Peers",direction:"Richtung",client:"Client",synced_block:"Sync Block",
     settings:"Einstellungen",appearance:"Darstellung",language:"Sprache",theme:"Theme",theme_system:"System",theme_light:"Hell",theme_dark:"Dunkel",hide_balances:"Guthaben standardmäßig ausblenden",security:"Sicherheit",unlock_time:"Wallet-Entsperrdauer",always_confirm_send:"Senden immer bestätigen",security_note:"Passwörter werden nicht in Desktop-Einstellungen gespeichert.",about_text:"Lokale Full-Node-Wallet für Windows x64. Private Schlüssel und Signaturen bleiben in VargaMesh Core.",
-    create_wallet:"Wallet erstellen",wallet_name:"Wallet-Name",passphrase_recommended:"Passphrase (empfohlen)",repeat_passphrase:"Passphrase wiederholen",passphrase_warning:"Ohne Backup und Passphrase kann der Zugriff auf Coins dauerhaft verloren gehen.",unlock_wallet:"Wallet entsperren",passphrase:"Passphrase",confirm_transaction:"Transaktion bestätigen",irreversible_warning:"Prüfe Adresse und Betrag sorgfältig. Netzwerktransaktionen sind endgültig.",send_now:"Jetzt senden"
+    create_wallet:"Wallet erstellen",hd_wallet:"Recovery Wallet",hd_wallet_hint:"Deterministische VMESH-Wallet mit BIP39, BIP44 und BIP84.",generate_recovery:"Recovery Phrase erzeugen",recovery_words:"Recovery-Wörter",recovery_warning:"Diese Wörter sind der Wiederherstellungsschlüssel deiner Wallet.",seed_confirm:"Ich habe die Recovery Phrase sicher offline gespeichert.",create_hd_wallet:"HD Wallet erstellen",restore_from_phrase:"Recovery wiederherstellen",restore_phrase:"12/24 Recovery-Wörter",restore_hd_notice:"Die Blockchain wird nach früheren BIP44/BIP84-Transaktionen durchsucht. Das kann dauern.",first_address:"Erste Adresse",wallet_name:"Wallet-Name",passphrase_recommended:"Passphrase (empfohlen)",repeat_passphrase:"Passphrase wiederholen",passphrase_warning:"Ohne Backup und Passphrase kann der Zugriff auf Coins dauerhaft verloren gehen.",unlock_wallet:"Wallet entsperren",passphrase:"Passphrase",confirm_transaction:"Transaktion bestätigen",irreversible_warning:"Prüfe Adresse und Betrag sorgfältig. Netzwerktransaktionen sind endgültig.",send_now:"Jetzt senden"
   },
   en: {
     nav_dashboard:"Dashboard",nav_wallet:"Wallet",nav_send:"Send",nav_receive:"Receive",nav_transactions:"Transactions",nav_node:"Node",nav_settings:"Settings",
@@ -27,7 +27,7 @@ const I18N = {
     receive_hint:"Generate a new Bech32 address directly in your active Core wallet.",copy:"Copy",label_optional:"Label (optional)",generate_address:"Generate new address",qr_local:"QR code is generated entirely locally.",transactions:"Transactions",date:"Date",type:"Type",
     node_network:"Node & network",node_hint:"Status of your local VargaMesh Core and connected peers.",open_data_dir:"Data folder",mempool:"Mempool",network_hash:"Network hashrate",connected_peers:"Connected peers",direction:"Direction",client:"Client",synced_block:"Sync block",
     settings:"Settings",appearance:"Appearance",language:"Language",theme:"Theme",theme_system:"System",theme_light:"Light",theme_dark:"Dark",hide_balances:"Hide balances by default",security:"Security",unlock_time:"Wallet unlock duration",always_confirm_send:"Always confirm sending",security_note:"Passwords are never stored in Desktop settings.",about_text:"Local full-node wallet for Windows x64. Private keys and signatures stay in VargaMesh Core.",
-    create_wallet:"Create wallet",wallet_name:"Wallet name",passphrase_recommended:"Passphrase (recommended)",repeat_passphrase:"Repeat passphrase",passphrase_warning:"Without a backup and passphrase, access to coins may be permanently lost.",unlock_wallet:"Unlock wallet",passphrase:"Passphrase",confirm_transaction:"Confirm transaction",irreversible_warning:"Carefully verify the address and amount. Network transactions are final.",send_now:"Send now"
+    create_wallet:"Create wallet",hd_wallet:"Recovery wallet",hd_wallet_hint:"Deterministic VMESH wallet using BIP39, BIP44 and BIP84.",generate_recovery:"Generate recovery phrase",recovery_words:"Recovery words",recovery_warning:"These words are the recovery key for your wallet.",seed_confirm:"I have stored the recovery phrase securely offline.",create_hd_wallet:"Create HD wallet",restore_from_phrase:"Restore recovery phrase",restore_phrase:"12/24 recovery words",restore_hd_notice:"The blockchain will be scanned for previous BIP44/BIP84 transactions. This can take time.",first_address:"First address",wallet_name:"Wallet name",passphrase_recommended:"Passphrase (recommended)",repeat_passphrase:"Repeat passphrase",passphrase_warning:"Without a backup and passphrase, access to coins may be permanently lost.",unlock_wallet:"Unlock wallet",passphrase:"Passphrase",confirm_transaction:"Confirm transaction",irreversible_warning:"Carefully verify the address and amount. Network transactions are final.",send_now:"Send now"
   }
 };
 
@@ -98,10 +98,29 @@ Object.assign(I18N.en, {
   wallet_unlocked:"Wallet unlocked"
 });
 
+Object.assign(I18N.de, {
+  copy_recovery:"Recovery Phrase kopieren",
+  save_recovery_txt:"Als TXT speichern",
+  recovery_copied:"Recovery Phrase kopiert · Zwischenablage wird nach 60 Sekunden geleert.",
+  recovery_saved:"Recovery Phrase gespeichert",
+  recovery_missing:"Keine Recovery Phrase vorhanden.",
+  recovery_txt_warning:"Die Recovery Phrase wird als unverschlüsselte TXT-Datei gespeichert. Wirklich fortfahren?"
+});
+
+Object.assign(I18N.en, {
+  copy_recovery:"Copy recovery phrase",
+  save_recovery_txt:"Save as TXT",
+  recovery_copied:"Recovery phrase copied · clipboard will be cleared after 60 seconds.",
+  recovery_saved:"Recovery phrase saved",
+  recovery_missing:"No recovery phrase available.",
+  recovery_txt_warning:"The recovery phrase will be saved as an unencrypted TXT file. Continue?"
+});
+
 const state = {
   settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
   appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, unlockPurpose:"wallet"
 };
+let pendingHdMnemonic="";
 
 function tr(key){ return I18N[state.settings.language]?.[key] || I18N.de[key] || key; }
 function unwrap(result){ if (!result?.ok) throw new Error(result?.error || "Operation failed"); return result.data; }
@@ -286,6 +305,234 @@ async function importKeyOrAddress(){
   }
 }
 
+
+function clearHdCreate(){
+  pendingHdMnemonic="";
+  $("hdWalletName").value="";
+  $("hdWalletPass").value="";
+  $("hdWalletPass2").value="";
+  $("hdSeedConfirmed").checked=false;
+  $("hdMnemonicWords").textContent="";
+  $("hdPreviewAddress").textContent="—";
+  $("hdSeedStage").classList.add("hidden");
+}
+
+function renderHdMnemonic(mnemonic){
+  const box=$("hdMnemonicWords");
+  box.textContent="";
+
+  mnemonic.split(/\s+/).forEach((word,index)=>{
+    const item=document.createElement("div");
+    item.className="mnemonic-word";
+
+    const number=document.createElement("span");
+    number.className="mnemonic-index";
+    number.textContent=String(index+1);
+
+    const value=document.createElement("strong");
+    value.textContent=word;
+
+    item.appendChild(number);
+    item.appendChild(value);
+    box.appendChild(item);
+  });
+}
+
+async function generateHdMnemonic(){
+  const name=$("hdWalletName").value.trim();
+  const p1=$("hdWalletPass").value;
+  const p2=$("hdWalletPass2").value;
+
+  if(!name){
+    return showToast(
+      state.settings.language==="de"?"Wallet-Name fehlt.":"Wallet name is required.",
+      true
+    );
+  }
+
+  if(p1!==p2){
+    return showToast(
+      state.settings.language==="de"?"Passphrasen stimmen nicht überein.":"Passphrases do not match.",
+      true
+    );
+  }
+
+  $("hdGenerateBtn").disabled=true;
+
+  try{
+    const words=Number($("hdWordCount").value)===12?12:24;
+    const result=unwrap(await api.generateHdWallet(words));
+
+    pendingHdMnemonic=result.mnemonic;
+    renderHdMnemonic(result.mnemonic);
+
+    $("hdPreviewAddress").textContent=result.address||"—";
+    $("hdSeedConfirmed").checked=false;
+    $("hdSeedStage").classList.remove("hidden");
+  }catch(err){
+    showToast(err.message,true);
+  }finally{
+    $("hdGenerateBtn").disabled=false;
+  }
+}
+
+async function copyHdRecoveryPhrase(){
+  if(!pendingHdMnemonic){
+    return showToast(tr("recovery_missing"),true);
+  }
+
+  try{
+    const phrase=pendingHdMnemonic;
+
+    unwrap(await api.copy(phrase));
+    showToast(tr("recovery_copied"));
+
+    setTimeout(async()=>{
+      try{
+        await api.clearClipboardIfMatches(phrase);
+      }catch(_){}
+    },60000);
+
+  }catch(err){
+    showToast(err.message,true);
+  }
+}
+
+async function saveHdRecoveryPhrase(){
+  if(!pendingHdMnemonic){
+    return showToast(tr("recovery_missing"),true);
+  }
+
+  const name=$("hdWalletName").value.trim();
+
+  if(!name){
+    return showToast(
+      state.settings.language==="de"
+        ?"Wallet-Name fehlt."
+        :"Wallet name is required.",
+      true
+    );
+  }
+
+  if(!confirm(tr("recovery_txt_warning"))){
+    return;
+  }
+
+  try{
+    const result=unwrap(await api.saveRecoveryPhrase({
+      name,
+      mnemonic:pendingHdMnemonic
+    }));
+
+    if(!result.canceled){
+      showToast(
+        `${tr("recovery_saved")}: ${result.fileName}`
+      );
+    }
+  }catch(err){
+    showToast(err.message,true);
+  }
+}
+
+async function createHdWallet(){
+  const name=$("hdWalletName").value.trim();
+  const passphrase=$("hdWalletPass").value;
+
+  if(!pendingHdMnemonic){
+    return showToast(
+      state.settings.language==="de"?"Zuerst Recovery Phrase erzeugen.":"Generate the recovery phrase first.",
+      true
+    );
+  }
+
+  if(!$("hdSeedConfirmed").checked){
+    return showToast(
+      state.settings.language==="de"
+        ?"Bestätige zuerst, dass du die Recovery Phrase gespeichert hast."
+        :"Confirm that you stored the recovery phrase first.",
+      true
+    );
+  }
+
+  $("hdCreateConfirm").disabled=true;
+
+  try{
+    const result=unwrap(await api.createHdWallet({
+      name,
+      passphrase,
+      mnemonic:pendingHdMnemonic
+    }));
+
+    pendingHdMnemonic="";
+    $("hdWalletDialog").close();
+
+    state.activeWallet=result.name||name;
+    clearHdCreate();
+    await refreshWallets();
+
+    showToast(
+      state.settings.language==="de"
+        ?`HD Wallet erstellt · ${result.address||""}`
+        :`HD wallet created · ${result.address||""}`
+    );
+  }catch(err){
+    showToast(err.message,true);
+  }finally{
+    $("hdCreateConfirm").disabled=false;
+  }
+}
+
+async function restoreHdWallet(){
+  const name=$("hdRestoreName").value.trim();
+  const mnemonic=$("hdRestoreMnemonic").value.trim();
+  const p1=$("hdRestorePass").value;
+  const p2=$("hdRestorePass2").value;
+
+  if(!name || !mnemonic){
+    return showToast(
+      state.settings.language==="de"
+        ?"Wallet-Name und Recovery Phrase sind erforderlich."
+        :"Wallet name and recovery phrase are required.",
+      true
+    );
+  }
+
+  if(p1!==p2){
+    return showToast(
+      state.settings.language==="de"?"Passphrasen stimmen nicht überein.":"Passphrases do not match.",
+      true
+    );
+  }
+
+  $("hdRestoreConfirm").disabled=true;
+
+  try{
+    const result=unwrap(await api.restoreHdWallet({
+      name,
+      passphrase:p1,
+      mnemonic
+    }));
+
+    $("hdRestoreMnemonic").value="";
+    $("hdRestorePass").value="";
+    $("hdRestorePass2").value="";
+    $("hdRestoreDialog").close();
+
+    state.activeWallet=result.name||name;
+    await refreshWallets();
+
+    showToast(
+      state.settings.language==="de"
+        ?"HD Wallet wiederhergestellt."
+        :"HD wallet restored."
+    );
+  }catch(err){
+    showToast(err.message,true);
+  }finally{
+    $("hdRestoreConfirm").disabled=false;
+  }
+}
+
 async function createWallet(){const name=$("createWalletName").value.trim(),p1=$("createWalletPass").value,p2=$("createWalletPass2").value;if(!name)return;if(p1!==p2)return showToast(state.settings.language==='de'?'Passphrasen stimmen nicht überein':'Passphrases do not match',true);$("createWalletConfirm").disabled=true;try{unwrap(await api.createWallet({name,passphrase:p1}));$("walletDialog").close();$("createWalletPass").value=$("createWalletPass2").value='';state.activeWallet=name;await refreshWallets();showToast(state.settings.language==='de'?'Wallet erstellt':'Wallet created');}catch(err){showToast(err.message,true);}finally{$("createWalletConfirm").disabled=false;}}
 async function openLoadDialog(){try{const data=unwrap(await api.listWallets()),box=$("availableWallets");box.innerHTML='';const unloaded=(data.wallets||[]).filter(w=>!w.loaded);if(!unloaded.length){box.innerHTML='<div class="muted">No unloaded wallets found.</div>';}unloaded.forEach(w=>{const d=document.createElement('div');d.className='wallet-option';const b=document.createElement('button');b.className='btn secondary';b.textContent=state.settings.language==='de'?'Laden':'Load';b.onclick=async()=>{try{unwrap(await api.loadWallet(w.name));$("loadDialog").close();state.activeWallet=w.name;await refreshWallets();}catch(err){showToast(err.message,true);}};d.innerHTML=`<b>${escapeHtml(w.name)}</b>`;d.appendChild(b);box.appendChild(d);});$("loadDialog").showModal();}catch(err){showToast(err.message,true);}}
 
@@ -298,6 +545,15 @@ function bind(){
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view))); $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
   $("refreshBtn").onclick=async()=>{await refreshCore();await loadNodeExtras();showToast(tr('refresh'));};
   $("newWalletBtn").onclick=$("walletCreateBtn").onclick=()=>$("walletDialog").showModal(); $("createWalletConfirm").onclick=createWallet; $("loadWalletBtn").onclick=openLoadDialog;
+  $("hdWalletBtn").onclick=()=>{clearHdCreate();$("hdWalletDialog").showModal();};
+  $("hdRestoreBtn").onclick=()=>{$("hdRestoreName").value="";$("hdRestoreMnemonic").value="";$("hdRestorePass").value="";$("hdRestorePass2").value="";$("hdRestoreDialog").showModal();};
+  $("hdGenerateBtn").onclick=generateHdMnemonic;
+  $("hdCreateConfirm").onclick=createHdWallet;
+  $("hdCopyMnemonicBtn").onclick=copyHdRecoveryPhrase;
+  $("hdSaveMnemonicBtn").onclick=saveHdRecoveryPhrase;
+  $("hdRestoreConfirm").onclick=restoreHdWallet;
+  $("hdWalletDialog").addEventListener("close",()=>{pendingHdMnemonic="";$("hdMnemonicWords").textContent="";$("hdWalletPass").value="";$("hdWalletPass2").value="";});
+  $("hdRestoreDialog").addEventListener("close",()=>{$("hdRestoreMnemonic").value="";$("hdRestorePass").value="";$("hdRestorePass2").value="";});
   $("walletSelect").onchange=async e=>{state.activeWallet=e.target.value;await refreshWallet();};
   $("reloadTxBtn").onclick=()=>loadTransactions(true); $("reloadUtxoBtn").onclick=loadUtxos; $("reloadPeersBtn").onclick=loadNodeExtras;
   $("newAddressBtn").onclick=generateAddress; $("copyAddressBtn").onclick=async()=>{if(state.address){unwrap(await api.copy(state.address));showToast(tr('copy'));}};

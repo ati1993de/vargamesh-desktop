@@ -10,7 +10,7 @@ const required = [
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.3.3") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.4.0") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 const html = fs.readFileSync(path.join(root,"src/renderer/index.html"),"utf8");
 if (/(?:src|href)=["\']https?:\/\//i.test(html)) throw new Error("Renderer HTML must not load remote resources");
@@ -50,10 +50,10 @@ const prep = fs.readFileSync(path.join(root,"scripts/prepare-core-linux.sh"),"ut
 if (!prep.includes('cp -a "$daemon_dir"/. "$DEST"/')) throw new Error("Full Core runtime copy is missing");
 if (!appjs.includes('unwrap(await api.startCore())')) throw new Error("Renderer does not surface Core startup errors");
 for (const token of ["importPrivateKey","importWatchAddress","expectedAddress","migrate_descriptor_hint","closeToTray","launchAtLogin"]) {
-  if (!appjs.includes(token) && !preload.includes(token) && !main.includes(token)) throw new Error(`v0.3.3 feature token missing: ${token}`);
+  if (!appjs.includes(token) && !preload.includes(token) && !main.includes(token)) throw new Error(`v0.4.0 feature token missing: ${token}`);
 }
 for (const token of ["new Tray","setLoginItemSettings","hideToTray","Beenden und Core stoppen","wallet:importPrivateKey","wallet:importWatchAddress","importdescriptors","getdescriptorinfo","deriveaddresses","redacted-private-key"]) {
-  if (!main.includes(token)) throw new Error(`Main-process v0.3.3 token missing: ${token}`);
+  if (!main.includes(token)) throw new Error(`Main-process v0.4.0 token missing: ${token}`);
 }
 
 const feePolicy = fs.readFileSync(path.join(root,"src/fee-policy.js"),"utf8");

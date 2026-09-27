@@ -15,3 +15,49 @@
 #importWif,#importWalletPass{font-family:"Cascadia Code",Consolas,monospace;letter-spacing:.04em}
 #importDialog{width:min(590px,calc(100vw - 30px))}
 .import-preview{display:flex;flex-direction:column;gap:5px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:11px}.import-preview>span{font-size:11px;color:var(--muted)}.import-preview code{word-break:break-all;font-size:12px}
+
+
+/* VargaMesh v0.4.0 HD recovery wallet */
+.mnemonic-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(125px,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+
+.mnemonic-word{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  user-select:text;
+}
+
+.mnemonic-index{
+  opacity:.55;
+  min-width:20px;
+  text-align:right;
+  font-size:.82em;
+}
+
+#hdRestoreMnemonic{
+  width:100%;
+  resize:vertical;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  line-height:1.6;
+}
+
+
+.hd-recovery-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.hd-recovery-actions .btn {
+  flex: 1 1 180px;
+}

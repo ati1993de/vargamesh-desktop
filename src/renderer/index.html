@@ -88,7 +88,7 @@
       </section>
 
       <section class="view" id="view-wallet">
-        <div class="section-head"><div><span class="eyebrow">WALLET</span><h2 data-i18n="wallet_management">Wallet-Verwaltung</h2><p data-i18n="wallet_management_hint">Wallets werden durch VargaMesh Core gespeichert und signiert.</p></div><div class="row"><button class="btn secondary" id="loadWalletBtn" data-i18n="load_wallet">Wallet laden</button><button class="btn primary" id="walletCreateBtn" data-i18n="new_wallet">Neue Wallet</button></div></div>
+        <div class="section-head"><div><span class="eyebrow">WALLET</span><h2 data-i18n="wallet_management">Wallet-Verwaltung</h2><p data-i18n="wallet_management_hint">Wallets werden durch VargaMesh Core gespeichert und signiert.</p></div><div class="row"><button class="btn secondary" id="loadWalletBtn" data-i18n="load_wallet">Wallet laden</button><button class="btn secondary" id="hdRestoreBtn" data-i18n="restore_from_phrase">Recovery wiederherstellen</button><button class="btn secondary" id="hdWalletBtn" data-i18n="hd_wallet">Recovery Wallet</button><button class="btn primary" id="walletCreateBtn" data-i18n="new_wallet">Neue Wallet</button></div></div>
         <div class="wallet-overview panel">
           <div class="wallet-identity"><img src="../../assets/vmesh_mark.png" alt=""><div><span data-i18n="active_wallet">Aktive Wallet</span><h3 id="walletName">—</h3><div class="wallet-meta"><small id="walletEncryption">—</small><small id="walletType">—</small></div></div></div>
           <div class="wallet-balance"><span data-i18n="available_balance">Verfügbar</span><strong id="walletBalance">—</strong><small id="walletPending">—</small></div>
@@ -160,6 +160,110 @@
   <dialog id="loadDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">WALLET</span><h2 data-i18n="load_wallet">Wallet laden</h2><div id="availableWallets" class="wallet-list"></div></form></dialog>
 
   <dialog id="unlockDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">SECURITY</span><h2 data-i18n="unlock_wallet">Wallet entsperren</h2><label><span data-i18n="passphrase">Passphrase</span><input id="unlockPass" type="password" autocomplete="current-password"></label><button type="button" class="btn primary wide" id="unlockConfirm" data-i18n="unlock_wallet">Wallet entsperren</button></form></dialog>
+
+
+  <dialog id="hdWalletDialog" class="modal">
+    <form method="dialog">
+      <button class="modal-close" value="cancel">×</button>
+      <span class="eyebrow">HD WALLET</span>
+      <h2 data-i18n="hd_wallet">Recovery Wallet</h2>
+      <p class="field-note" data-i18n="hd_wallet_hint">Deterministische VMESH-Wallet mit BIP39, BIP44 und BIP84.</p>
+
+      <label>
+        <span data-i18n="wallet_name">Wallet-Name</span>
+        <input id="hdWalletName" maxlength="96" pattern="[A-Za-z0-9._ -]+">
+      </label>
+
+      <label>
+        <span data-i18n="recovery_words">Recovery-Wörter</span>
+        <select id="hdWordCount">
+          <option value="24" selected>24</option>
+          <option value="12">12</option>
+        </select>
+      </label>
+
+      <label>
+        <span data-i18n="passphrase_recommended">Passphrase (empfohlen)</span>
+        <input id="hdWalletPass" type="password" autocomplete="new-password" minlength="8">
+      </label>
+
+      <label>
+        <span data-i18n="repeat_passphrase">Passphrase wiederholen</span>
+        <input id="hdWalletPass2" type="password" autocomplete="new-password">
+      </label>
+
+      <button type="button" class="btn secondary wide" id="hdGenerateBtn" data-i18n="generate_recovery">Recovery Phrase erzeugen</button>
+
+      <div id="hdSeedStage" class="hidden">
+        <div class="warning-box">
+          <strong data-i18n="recovery_warning">Diese Wörter sind der Wiederherstellungsschlüssel deiner Wallet.</strong>
+          <div id="hdMnemonicWords" class="mnemonic-grid"></div>
+
+          <div class="hd-recovery-actions">
+            <button
+              type="button"
+              id="hdCopyMnemonicBtn"
+              class="btn secondary"
+              data-i18n="copy_recovery"
+            >
+              Recovery Phrase kopieren
+            </button>
+
+            <button
+              type="button"
+              id="hdSaveMnemonicBtn"
+              class="btn secondary"
+              data-i18n="save_recovery_txt"
+            >
+              Als TXT speichern
+            </button>
+          </div>
+        </div>
+
+        <p class="field-note">BIP84: <code>m/84'/22093'/0'/0/*</code></p>
+        <p class="field-note"><span data-i18n="first_address">Erste Adresse</span>: <code id="hdPreviewAddress">—</code></p>
+
+        <label class="check-row">
+          <input type="checkbox" id="hdSeedConfirmed">
+          <span data-i18n="seed_confirm">Ich habe die Recovery Phrase sicher offline gespeichert.</span>
+        </label>
+
+        <button type="button" class="btn primary wide" id="hdCreateConfirm" data-i18n="create_hd_wallet">HD Wallet erstellen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="hdRestoreDialog" class="modal">
+    <form method="dialog">
+      <button class="modal-close" value="cancel">×</button>
+      <span class="eyebrow">BIP39 RECOVERY</span>
+      <h2 data-i18n="restore_from_phrase">Recovery Phrase wiederherstellen</h2>
+
+      <label>
+        <span data-i18n="wallet_name">Wallet-Name</span>
+        <input id="hdRestoreName" maxlength="96" pattern="[A-Za-z0-9._ -]+">
+      </label>
+
+      <label>
+        <span data-i18n="restore_phrase">12/24 Recovery-Wörter</span>
+        <textarea id="hdRestoreMnemonic" rows="5" autocomplete="off" spellcheck="false"></textarea>
+      </label>
+
+      <label>
+        <span data-i18n="passphrase_recommended">Passphrase (empfohlen)</span>
+        <input id="hdRestorePass" type="password" autocomplete="new-password" minlength="8">
+      </label>
+
+      <label>
+        <span data-i18n="repeat_passphrase">Passphrase wiederholen</span>
+        <input id="hdRestorePass2" type="password" autocomplete="new-password">
+      </label>
+
+      <p class="warning-box" data-i18n="restore_hd_notice">Die Blockchain wird nach früheren BIP44/BIP84-Transaktionen durchsucht. Das kann dauern.</p>
+
+      <button type="button" class="btn primary wide" id="hdRestoreConfirm" data-i18n="restore_from_phrase">Recovery Phrase wiederherstellen</button>
+    </form>
+  </dialog>
 
   <dialog id="restoreDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow">BACKUP</span><h2 data-i18n="restore_wallet">Backup wiederherstellen</h2><label><span data-i18n="wallet_name">Wallet-Name</span><input id="restoreWalletName" maxlength="96" required pattern="[A-Za-z0-9._ -]+"></label><p class="warning-box" data-i18n="restore_notice">Wähle anschließend eine vertrauenswürdige VargaMesh-Core-Wallet-Sicherungsdatei aus.</p><button type="button" class="btn primary wide" id="restoreConfirm" data-i18n="restore_wallet">Backup wiederherstellen</button></form></dialog>
 
