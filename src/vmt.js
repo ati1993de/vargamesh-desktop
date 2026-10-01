@@ -549,11 +549,14 @@ async function prepareTransaction(rpc, wallet, request) {
   };
 }
 
-async function broadcastPrepared(rpc, candidateId) {
+async function broadcastPrepared(rpc, candidateId, wallet) {
   cleanupCandidates();
   const id = String(candidateId || "");
   const candidate = pendingCandidates.get(id);
   if (!candidate) throw new Error("VMT transaction candidate expired or does not exist. Build it again.");
+  if (candidate.wallet !== requireWalletName(wallet)) {
+    throw new Error("VMT transaction candidate belongs to a different wallet.");
+  }
   const preflight = await requestJson("/vmt/preflight", { method: "POST", body: { raw_hex: candidate.rawHex } });
   strictOperation(preflight, candidate.expected);
   if (preflight.txid !== candidate.txid) throw new Error("VMT transaction ID changed between preflight checks.");
