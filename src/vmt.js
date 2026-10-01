@@ -139,6 +139,12 @@ function strictOperation(preflight, expected) {
     throw new Error("VMT preflight amount mismatch.");
   }
   if (expected.recipient && op.recipient !== expected.recipient) throw new Error("VMT preflight recipient mismatch.");
+  if (expected.name && op.name !== expected.name) throw new Error("VMT preflight token name mismatch.");
+  if (expected.symbol && op.symbol !== expected.symbol) throw new Error("VMT preflight token symbol mismatch.");
+  if (expected.decimals != null && Number(op.decimals) !== Number(expected.decimals)) throw new Error("VMT preflight decimals mismatch.");
+  if (expected.mintable != null && Boolean(op.mintable) !== Boolean(expected.mintable)) throw new Error("VMT preflight mintability mismatch.");
+  if (expected.initialAtomic != null && String(op.initial_atomic) !== String(expected.initialAtomic)) throw new Error("VMT preflight initial supply mismatch.");
+  if (expected.maxAtomic != null && String(op.maximum_atomic) !== String(expected.maxAtomic)) throw new Error("VMT preflight maximum supply mismatch.");
   if (!preflight.ledger?.valid) throw new Error(preflight.ledger?.reason || "VMT ledger validation failed.");
   if (!preflight.base_chain?.mempool_allowed) {
     throw new Error(preflight.base_chain?.reject_reason || "VargaMesh mempool validation failed.");
@@ -319,14 +325,16 @@ async function portfolio(rpc, wallet) {
     while (cursor < addresses.length) {
       const item = addresses[cursor++];
       try {
-        const [tokens, events] = await Promise.all([
-          requestJson(`/addresses/${encodeURIComponent(item.address)}/tokens`),
-          requestJson(`/addresses/${encodeURIComponent(item.address)}/events?limit=20&offset=0`)
-        ]);
-        for (const token of tokens.tokens || []) {
+        const tokenState = await requestJson(`/addresses/${encodeURIComponent(item.address)}/tokens`);
+        for (const token of tokenState.tokens || []) {
           holdings.push({ ...token, owner_address: item.address, spendable: item.is_mine, source_vmesh: item.spendable_vmesh });
         }
-        for (const event of events.items || []) activity.push({ ...event, wallet_address: item.address });
+        try {
+          const events = await requestJson(`/addresses/${encodeURIComponent(item.address)}/events?limit=20&offset=0`);
+          for (const event of events.items || []) activity.push({ ...event, wallet_address: item.address });
+        } catch (_) {
+          // Token balances remain usable if the optional activity endpoint is temporarily unavailable.
+        }
       } catch (_) {}
     }
   }
@@ -423,7 +431,16 @@ async function prepareTransaction(rpc, wallet, request) {
       maxAtomic,
       mintable: request.mintable === true
     });
-    expected = { operation, authorizer };
+    expected = {
+      operation,
+      authorizer,
+      name: String(request.name || "").trim(),
+      symbol: String(request.symbol || "").trim().toUpperCase(),
+      decimals,
+      mintable: request.mintable === true,
+      initialAtomic: String(initialAtomic),
+      maxAtomic: String(maxAtomic)
+    };
     if (createFeeRequired(status)) {
       const policy = status.policy?.create_fee;
       if (!policy?.address || !policy?.minimum_vmesh) throw new Error("Active CREATE fee policy is incomplete.");
