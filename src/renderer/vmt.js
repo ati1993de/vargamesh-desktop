@@ -241,7 +241,7 @@
     const btn = $("vmtBroadcastBtn");
     btn.disabled = true;
     try {
-      const result = unwrap(await api.vmtBroadcast(id));
+      const result = unwrap(await api.vmtBroadcast(wallet(), id));
       state.candidate = null;
       $("vmtActionResult").innerHTML = `<div class="vmt-success"><b>${l("Broadcast erfolgreich","Broadcast successful")}</b><code>${esc(result.txid)}</code></div>`;
       toast(l("VMT-1 Transaktion gesendet","VMT-1 transaction broadcast"));
