@@ -265,8 +265,9 @@ async function walletAddressInventory(rpc, wallet) {
   const received = await rpc.call("listreceivedbyaddress", [0, true, true], name, 30_000).catch(() => []);
   for (const row of received || []) if (row?.address) candidates.add(row.address);
 
-  const labels = await rpc.call("listlabels", [], name, 30_000).catch(() => [""]);
-  for (const label of labels || [""]) {
+  const listedLabels = await rpc.call("listlabels", [], name, 30_000).catch(() => []);
+  const labels = new Set(["", ...(listedLabels || [])]);
+  for (const label of labels) {
     const rows = await rpc.call("getaddressesbylabel", [label], name, 30_000).catch(() => ({}));
     for (const address of Object.keys(rows || {})) candidates.add(address);
   }
@@ -462,9 +463,11 @@ async function prepareTransaction(rpc, wallet, request) {
       if (token?.issuer?.address !== authorizer || token?.mintable !== true) {
         throw new Error("Selected address is not authorized to mint this token.");
       }
-      const current = BigInt(token.supply?.current_atomic || "0");
+      const minted = BigInt(token.supply?.minted_atomic || "0");
       const maximum = BigInt(token.supply?.maximum_atomic || "0");
-      if (current + amountAtomic > maximum) throw new Error("Mint would exceed the token maximum supply.");
+      if (minted + amountAtomic > maximum) {
+        throw new Error("Mint would exceed the token lifetime maximum supply. Burns do not reopen mint capacity.");
+      }
     }
 
     let recipient = "";
