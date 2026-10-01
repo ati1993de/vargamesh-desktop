@@ -21,7 +21,7 @@
         <button class="nav-item" data-view="send"><span>↗</span><b data-i18n="nav_send">Senden</b></button>
         <button class="nav-item" data-view="receive"><span>↙</span><b data-i18n="nav_receive">Empfangen</b></button>
         <button class="nav-item" data-view="transactions"><span>≡</span><b data-i18n="nav_transactions">Transaktionen</b></button>
-        <button class="nav-item" data-view="vmt"><span>◈</span><b>Tokens</b></button>
+        <button class="nav-item" data-view="vmt"><span>◈</span><b data-i18n="nav_tokens">Tokens</b></button>
         <button class="nav-item" data-view="node"><span>⧉</span><b data-i18n="nav_node">Node</b></button>
         <button class="nav-item" data-view="settings"><span>⚙</span><b data-i18n="nav_settings">Einstellungen</b></button>
       </nav>
@@ -140,12 +140,12 @@
         <div class="section-head">
           <div>
             <span class="eyebrow">VMT-1 · MAINNET</span>
-            <h2>VMT-1 Tokens</h2>
-            <p>Token-Bestände aus den vm1-Adressen der aktiven Core-Wallet. Signierung und Broadcast laufen über den lokalen VargaMesh Core.</p>
+            <h2 data-i18n="vmt_tokens_title">VMT-1 Tokens</h2>
+            <p data-i18n="vmt_intro">Token-Bestände aus den vm1-Adressen der aktiven Core-Wallet. Signierung und Broadcast laufen über den lokalen VargaMesh Core.</p>
           </div>
           <div class="row">
             <span class="vmt-api-status" id="vmtApiStatus">VMT-1 · —</span>
-            <button class="btn secondary" id="vmtRefresh">Aktualisieren</button>
+            <button class="btn secondary" id="vmtRefresh" data-i18n="vmt_refresh">Aktualisieren</button>
           </div>
         </div>
 
@@ -154,27 +154,27 @@
         <div class="two-col vmt-top-grid">
           <section class="panel">
             <div class="panel-head">
-              <div><span class="eyebrow">PORTFOLIO</span><h3>Meine Token</h3></div>
+              <div><span class="eyebrow">PORTFOLIO</span><h3 data-i18n="vmt_my_tokens">Meine Token</h3></div>
             </div>
             <div id="vmtAssets" class="vmt-assets"><div class="empty-state">Wallet laden und aktualisieren.</div></div>
           </section>
 
           <section class="panel">
-            <div class="panel-head"><div><span class="eyebrow">CREATE</span><h3>Token erstellen</h3></div></div>
+            <div class="panel-head"><div><span class="eyebrow">CREATE</span><h3 data-i18n="vmt_create_token">Token erstellen</h3></div></div>
             <div class="form-stack">
-              <label><span>Issuer / Authorizer</span><select id="vmtCreateAuthorizer"></select></label>
+              <label><span data-i18n="vmt_issuer_authorizer">Issuer / Authorizer</span><select id="vmtCreateAuthorizer"></select></label>
               <div class="form-row">
                 <label><span>Name</span><input id="vmtCreateName" maxlength="32" placeholder="YALCUS"></label>
                 <label><span>Symbol</span><input id="vmtCreateSymbol" maxlength="10" placeholder="YALC"></label>
               </div>
               <div class="form-row">
                 <label><span>Decimals</span><input id="vmtCreateDecimals" type="number" min="0" max="8" value="8"></label>
-                <label><span>Initial Supply</span><input id="vmtCreateInitial" inputmode="decimal" placeholder="1000000"></label>
+                <label><span data-i18n="vmt_initial_supply">Initial Supply</span><input id="vmtCreateInitial" inputmode="decimal" placeholder="1000000"></label>
               </div>
-              <label class="check"><input id="vmtCreateMintable" type="checkbox"><span>Mintable</span></label>
-              <label><span>Maximum Supply (bei Fixed automatisch = Initial)</span><input id="vmtCreateMax" inputmode="decimal" placeholder="1000000"></label>
+              <label class="check"><input id="vmtCreateMintable" type="checkbox"><span data-i18n="vmt_mintable">Mintable</span></label>
+              <label><span data-i18n="vmt_max_supply">Maximum Supply (bei Fixed automatisch = Initial)</span><input id="vmtCreateMax" inputmode="decimal" placeholder="1000000"></label>
               <label><span>Fee target</span><select id="vmtCreateFeeTarget"><option value="2">2 Blocks</option><option value="6" selected>6 Blocks</option><option value="12">12 Blocks</option></select></label>
-              <button class="btn primary wide" id="vmtCreateBtn">Prüfen & lokal signieren</button>
+              <button class="btn primary wide" id="vmtCreateBtn" data-i18n="vmt_review_sign">Prüfen & lokal signieren</button>
               <div id="vmtCreateResult"></div>
             </div>
           </section>
@@ -182,7 +182,7 @@
 
         <section class="panel hidden" id="vmtActionPanel">
           <div class="panel-head">
-            <div><span class="eyebrow">TOKEN ACTION</span><h3 id="vmtActionTitle">Token-Aktion</h3></div>
+            <div><span class="eyebrow">TOKEN ACTION</span><h3 id="vmtActionTitle" data-i18n="vmt_token_action">Token-Aktion</h3></div>
             <button class="btn ghost" id="vmtActionClose">×</button>
           </div>
           <div class="vmt-action-summary">
@@ -190,32 +190,32 @@
             <code id="vmtActionOwner">—</code>
           </div>
           <div class="form-row">
-            <label><span>Betrag</span><input id="vmtActionAmount" inputmode="decimal"></label>
+            <label><span data-i18n="vmt_amount">Betrag</span><input id="vmtActionAmount" inputmode="decimal"></label>
             <label><span>Fee target</span><select id="vmtActionFeeTarget"><option value="2">2 Blocks</option><option value="6" selected>6 Blocks</option><option value="12">12 Blocks</option></select></label>
           </div>
-          <label id="vmtActionRecipientWrap"><span>Empfänger vm1…</span><input id="vmtActionRecipient" spellcheck="false" autocomplete="off" placeholder="vm1…"></label>
-          <button class="btn primary" id="vmtActionPrepare">Prüfen & lokal signieren</button>
+          <label id="vmtActionRecipientWrap"><span data-i18n="vmt_recipient">Empfänger vm1…</span><input id="vmtActionRecipient" spellcheck="false" autocomplete="off" placeholder="vm1…"></label>
+          <button class="btn primary" id="vmtActionPrepare" data-i18n="vmt_review_sign">Prüfen & lokal signieren</button>
           <div id="vmtActionResult"></div>
         </section>
 
         <div class="two-col">
           <section class="panel">
-            <div class="panel-head"><div><span class="eyebrow">DIRECTORY</span><h3>Token Directory</h3></div></div>
+            <div class="panel-head"><div><span class="eyebrow">DIRECTORY</span><h3 data-i18n="vmt_directory">Token Directory</h3></div></div>
             <div class="vmt-search-row">
-              <input id="vmtDirectoryQuery" placeholder="Name, Symbol, Token-ID oder Issuer">
-              <button class="btn secondary" id="vmtDirectorySearchBtn">Suchen</button>
+              <input id="vmtDirectoryQuery" data-i18n-placeholder="vmt_search_placeholder" placeholder="Name, Symbol, Token-ID oder Issuer">
+              <button class="btn secondary" id="vmtDirectorySearchBtn" data-i18n="vmt_search">Suchen</button>
             </div>
             <div id="vmtDirectoryResults" class="vmt-directory-results"></div>
           </section>
           <section class="panel">
-            <div class="panel-head"><div><span class="eyebrow">DETAILS</span><h3>Token-Details</h3></div></div>
-            <div id="vmtDetail" class="empty-state">Token auswählen.</div>
+            <div class="panel-head"><div><span class="eyebrow">DETAILS</span><h3 data-i18n="vmt_details">Token-Details</h3></div></div>
+            <div id="vmtDetail" class="empty-state" data-i18n="vmt_select_token">Token auswählen.</div>
           </section>
         </div>
 
         <section class="panel vmt-activity-panel">
-          <div class="panel-head"><div><span class="eyebrow">VMT ACTIVITY</span><h3>Token-Aktivität</h3></div></div>
-          <div id="vmtActivity" class="empty-state">Noch keine Daten geladen.</div>
+          <div class="panel-head"><div><span class="eyebrow">VMT ACTIVITY</span><h3 data-i18n="vmt_activity">Token-Aktivität</h3></div></div>
+          <div id="vmtActivity" class="empty-state" data-i18n="vmt_no_data">Noch keine Daten geladen.</div>
         </section>
       </section>
 
