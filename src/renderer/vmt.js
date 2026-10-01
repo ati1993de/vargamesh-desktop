@@ -93,6 +93,7 @@
           <strong>${esc(t.balance)} ${esc(t.symbol)}</strong>
           <small class="mono">${esc(t.owner_address)}</small>
         </div>
+        ${t.spendable ? "" : `<div class="vmt-utxo-note">${l("Zum Senden/Burnen braucht diese Token-Adresse mindestens einen bestätigten spendbaren VMESH-UTXO für vin[0].","To send/burn, this token address needs at least one confirmed spendable VMESH UTXO for vin[0].")}</div>`}
         <div class="vmt-card-actions">
           <button class="btn primary" data-vmt-action="transfer" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${l("Senden","Send")}</button>
           <button class="btn secondary" data-vmt-action="receive" data-vmt-index="${i}">${l("Empfangen","Receive")}</button>
