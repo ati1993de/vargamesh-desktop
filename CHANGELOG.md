@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.5.0 (unreleased)
+
+### Added
+
+- Native VMT-1 portfolio across owned `vm1...` addresses in the active Core wallet.
+- VMT-1 token directory and token detail view.
+- VMT-1 CREATE, TRANSFER, BURN and issuer-only MINT transaction flows.
+- Dynamic CREATE fee policy from the public VMT API; no hard-coded 1000 VMESH fee in Desktop.
+- Exact signed-transaction VMT preflight before broadcast and a second preflight immediately before `sendrawtransaction`.
+- VMT authorizer hardening: input 0 is explicitly selected from the token owner address and verified before and after signing.
+- VMT token logo retrieval with size/type limits.
+- YALCUS CREATE and 500 YALC TRANSFER regression vectors.
+
+### Security
+
+- Private keys remain in VargaMesh Core for VMT transaction signing.
+- Renderer receives only allow-listed VMT IPC methods; no arbitrary Core RPC or RPC cookie access.
+- Prepared signed VMT transactions are short-lived in the Electron main process and bound to the wallet that created them.
+- Mint capacity uses lifetime minted supply; burns do not reopen mint capacity.
+
+### Notes
+
+- Off-chain issuer metadata submission remains read-only in Desktop v0.5.0 until a Core-native issuer-proof method is added. Existing approved metadata is displayed.
+
 ## 0.4.0
 
 - Added BIP39 12/24-word recovery phrase wallets.
