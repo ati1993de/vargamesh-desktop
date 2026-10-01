@@ -36,7 +36,7 @@ contextBridge.exposeInMainWorld("vmesh", Object.freeze({
   vmtTokenDetail: tokenId => call("vmt:tokenDetail", { tokenId }),
   vmtTokenLogo: tokenId => call("vmt:tokenLogo", { tokenId }),
   vmtPrepare: (wallet, request) => call("vmt:prepare", { wallet, request }),
-  vmtBroadcast: candidateId => call("vmt:broadcast", { candidateId }),
+  vmtBroadcast: (wallet, candidateId) => call("vmt:broadcast", { wallet, candidateId }),
   backupWallet: wallet => call("wallet:backup", { wallet }),
   restoreWallet: (wallet) => call("wallet:restore", { wallet }),
   migrateWallet: (wallet, passphrase = "") => call("wallet:migrate", { wallet, passphrase }),
