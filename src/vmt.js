@@ -336,7 +336,13 @@ async function portfolio(rpc, wallet) {
         continue;
       }
       for (const token of tokenState.tokens || []) {
-        holdings.push({ ...token, owner_address: item.address, spendable: item.is_mine, source_vmesh: item.spendable_vmesh });
+        holdings.push({
+          ...token,
+          owner_address: item.address,
+          spendable: item.is_mine && Number(item.spendable_utxos || 0) > 0,
+          source_vmesh: item.spendable_vmesh,
+          source_vmesh_utxos: item.spendable_utxos
+        });
       }
       try {
         const events = await requestJson(`/addresses/${encodeURIComponent(item.address)}/events?limit=20&offset=0`);
