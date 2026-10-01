@@ -319,27 +319,37 @@ async function portfolio(rpc, wallet) {
   const addresses = await walletAddressInventory(rpc, name);
   const holdings = [];
   const activity = [];
+  let tokenQueriesSucceeded = 0;
+  let tokenQueriesFailed = 0;
 
   let cursor = 0;
   const workers = Math.min(8, Math.max(1, addresses.length));
   async function work() {
     while (cursor < addresses.length) {
       const item = addresses[cursor++];
+      let tokenState;
       try {
-        const tokenState = await requestJson(`/addresses/${encodeURIComponent(item.address)}/tokens`);
-        for (const token of tokenState.tokens || []) {
-          holdings.push({ ...token, owner_address: item.address, spendable: item.is_mine, source_vmesh: item.spendable_vmesh });
-        }
-        try {
-          const events = await requestJson(`/addresses/${encodeURIComponent(item.address)}/events?limit=20&offset=0`);
-          for (const event of events.items || []) activity.push({ ...event, wallet_address: item.address });
-        } catch (_) {
-          // Token balances remain usable if the optional activity endpoint is temporarily unavailable.
-        }
-      } catch (_) {}
+        tokenState = await requestJson(`/addresses/${encodeURIComponent(item.address)}/tokens`);
+        tokenQueriesSucceeded += 1;
+      } catch (_) {
+        tokenQueriesFailed += 1;
+        continue;
+      }
+      for (const token of tokenState.tokens || []) {
+        holdings.push({ ...token, owner_address: item.address, spendable: item.is_mine, source_vmesh: item.spendable_vmesh });
+      }
+      try {
+        const events = await requestJson(`/addresses/${encodeURIComponent(item.address)}/events?limit=20&offset=0`);
+        for (const event of events.items || []) activity.push({ ...event, wallet_address: item.address });
+      } catch (_) {
+        // Token balances remain usable if the optional activity endpoint is temporarily unavailable.
+      }
     }
   }
   await Promise.all(Array.from({ length: workers }, () => work()));
+  if (addresses.length && tokenQueriesSucceeded === 0 && tokenQueriesFailed > 0) {
+    throw new Error("VMT token-balance API requests failed for every wallet address.");
+  }
 
   holdings.sort((a, b) => {
     const aa = BigInt(a.balance_atomic || "0");
