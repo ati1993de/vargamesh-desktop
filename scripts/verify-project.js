@@ -29,9 +29,12 @@ for (const secret of ["rpcpassword=","BEGIN OPENSSH PRIVATE KEY","_authToken="])
 
 const appjs = fs.readFileSync(path.join(root,"src/renderer/app.js"),"utf8");
 const ids = new Set([...html.matchAll(/\sid="([A-Za-z0-9_-]+)"/g)].map(m => m[1]));
+const dynamicRendererIds = new Set(["vmtBroadcastBtn", "vmtCreateBroadcastBtn"]);
 for (const source of [appjs, fs.readFileSync(path.join(root,"src/renderer/vmt.js"),"utf8")]) {
   for (const m of source.matchAll(/\$\(\"([A-Za-z0-9_-]+)\"\)/g)) {
-    if (!ids.has(m[1])) throw new Error(`Renderer references missing HTML id: ${m[1]}`);
+    if (!ids.has(m[1]) && !dynamicRendererIds.has(m[1])) {
+      throw new Error(`Renderer references missing HTML id: ${m[1]}`);
+    }
   }
 }
 const mainChannels = new Set([...main.matchAll(/register\(\"([^\"]+)\"/g)].map(m => m[1]));
