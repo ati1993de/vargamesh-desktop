@@ -39,6 +39,8 @@ The renderer still has no arbitrary Core RPC access. Private keys remain in Core
 
 Native metadata submission is intentionally not enabled in the first v0.5.0 candidate because the existing metadata proof format cannot be produced through an approved VargaMesh Core wallet RPC without exporting private-key material. Approved metadata remains visible.
 
+Technical VMT-1 Desktop documentation: [`docs/VMT-1.md`](docs/VMT-1.md)
+
 ## Download
 
 Use the official GitHub Releases page:
