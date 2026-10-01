@@ -1,72 +1,40 @@
-# VargaMesh Desktop v0.4.0
+# VargaMesh Desktop v0.5.0 candidate
 
-VargaMesh Desktop v0.4.0 introduces deterministic recovery-phrase wallets while preserving compatibility with existing VargaMesh Core wallets.
+VargaMesh Desktop v0.5.0 adds native VMT-1 token support while preserving the existing self-custody full-node architecture.
 
-## Recovery Wallets
+## VMT-1
 
-- Create new wallets with 12- or 24-word BIP39 recovery phrases
-- Restore wallets deterministically from the recovery phrase
-- BIP32 HD key derivation
-- Proposed SLIP-0044 coin type: 22093
-- Native SegWit / BIP84 is the default:
-  `m/84'/22093'/0'/0/index`
-- Legacy BIP44 compatibility:
-  `m/44'/22093'/0'/0/index`
-- VargaMesh-specific BIP32 extended-key serialization
-- Full blockchain rescan when recovering an existing wallet
+- portfolio for token balances held by owned Native SegWit `vm1...` addresses
+- token directory and token details
+- CREATE, TRANSFER, BURN and authorized MINT
+- CREATE policy loaded dynamically from the VMT Mainnet API
+- local transaction construction/signing through the bundled VargaMesh Core
+- explicit VMT vin[0] authorizer selection and verification
+- read-only signed-transaction preflight
+- second exact preflight immediately before broadcast
+- approved metadata and token logos displayed
+- per-address VMT activity where supported by the API
 
-## Recovery safety
+## Security model
 
-- Recovery phrases are not stored in Desktop settings
-- Private HD descriptors remain under VargaMesh Core wallet control
-- Core descriptor errors are sanitized before reaching the UI
-- Recovery phrase can be copied explicitly during creation
-- Optional TXT export is available with a security warning
-- Wallet encryption passphrases are not written to the recovery TXT file
+The renderer remains sandboxed and does not receive the RPC cookie or an arbitrary RPC bridge. VMT private-key signing remains in VargaMesh Core. Desktop submits only the already signed raw transaction to the public VMT preflight API for deterministic protocol and mempool validation.
 
-## Compatibility
+A prepared signed transaction is retained in memory for only a short period and is bound to the Core wallet that created it.
 
-Existing functionality remains supported:
+## CREATE fee
 
-- existing descriptor wallets
-- encrypted and unencrypted Core wallets
-- wallet backup and restore
-- WIF private-key import
-- watch-only addresses
-- wallet lock/unlock
-- VMESH send and receive
-- local full node and transaction history
-- system tray/background operation
+Desktop does not hard-code the CREATE fee amount or fee address. It reads the active VMT policy from `/api/v1/vmt/status` and relies on the exact signed-transaction preflight before allowing broadcast.
 
-## Validation performed
+## Metadata
 
-The v0.4.0 recovery implementation was validated against VargaMesh Core with:
+Approved metadata, status and logo are visible. Native metadata submission is not enabled in this candidate because the current metadata API expects a raw secp256k1 SHA-256 issuer proof while VargaMesh Core does not expose that proof format through an approved wallet RPC. Desktop deliberately does not export private keys to work around this.
 
-- all four private BIP44/BIP84 receive/change descriptors accepted by Core
-- deterministic `vm1...` Native SegWit address generation
-- recovery under a different wallet name from the same mnemonic
-- blockchain rescan recovering the same transaction and UTXO
-- encrypted wallet operation
-- ESLint undefined-symbol checks
-- HD derivation and private-descriptor regression tests
+## Regression vectors
 
-Bundled Core: VargaMesh Core v0.2.0
+The v0.5.0 source checks include the real YALCUS Mainnet vectors:
 
-## Important
+- token ID: `be95b3080519d9be5c400ef13ddc303e32ffde6b0234becb106f56aef16ee451`
+- YALCUS CREATE payload
+- 500 YALC TRANSFER payload to `vm1qsfsgj70pdv86nguvexzvsflmcknz4lrsj87wx9`
 
-The SLIP-0044 value `22093` is currently the proposed VargaMesh coin type and is not an official SLIP-0044 registry assignment until accepted upstream.
-
-Keep recovery phrases offline and private. Anyone who obtains the recovery phrase can reconstruct the wallet.
-
-Verify downloaded binaries against `SHA256SUMS`.
-
-## Wallet documentation
-
-New and existing users should read the wallet quick-start documentation:
-
-- `docs/WALLET-GUIDE.md` – English
-- `docs/WALLET-GUIDE-DE.md` – Deutsch
-- `docs/WALLET-DERIVATION.md` – technical HD derivation specification
-
-Existing wallets remain fully supported. Older wallets are not automatically
-converted into BIP39 Recovery Wallets.
+Bundled Core remains VargaMesh Core v0.2.0.

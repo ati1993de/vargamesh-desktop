@@ -12,6 +12,14 @@ const {
   deriveWalletDescriptors
 } = require("./hd-wallet");
 const { resolveFeePolicy } = require("./fee-policy");
+const {
+  portfolio: vmtPortfolio,
+  tokenDirectory: vmtTokenDirectory,
+  tokenDetail: vmtTokenDetail,
+  tokenLogoData: vmtTokenLogoData,
+  prepareTransaction: vmtPrepareTransaction,
+  broadcastPrepared: vmtBroadcastPrepared
+} = require("./vmt");
 
 app.setAppUserModelId("net.vargatech.vargamesh.desktop");
 
@@ -532,6 +540,26 @@ function installHandlers() {
       throw err;
     }
   });
+  register("vmt:portfolio", async payload => {
+    return vmtPortfolio(core.rpc, requireWalletName(payload.wallet));
+  });
+  register("vmt:directory", async payload => {
+    return vmtTokenDirectory(typeof payload.query === "string" ? payload.query : "");
+  });
+  register("vmt:tokenDetail", async payload => {
+    return vmtTokenDetail(requireTxid(payload.tokenId));
+  });
+  register("vmt:tokenLogo", async payload => {
+    return vmtTokenLogoData(requireTxid(payload.tokenId));
+  });
+  register("vmt:prepare", async payload => {
+    const wallet = requireWalletName(payload.wallet);
+    return vmtPrepareTransaction(core.rpc, wallet, payload.request || {});
+  });
+  register("vmt:broadcast", async payload => {
+    return vmtBroadcastPrepared(core.rpc, payload.candidateId, requireWalletName(payload.wallet));
+  });
+
   register("wallet:backup", async payload => {
     const wallet = requireWalletName(payload.wallet);
     const result = await dialog.showSaveDialog(mainWindow, {

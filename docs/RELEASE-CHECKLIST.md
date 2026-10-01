@@ -24,6 +24,23 @@ Use this checklist before publishing a VargaMesh Desktop release.
 - watch-only import tested
 - no WIF/passphrase/RPC cookie appears in logs
 
+## VMT-1
+
+- VMT portfolio loads for owned `vm1...` addresses
+- approved token logo/metadata rendering tested
+- YALCUS regression vectors pass
+- CREATE policy is loaded from the VMT API and is not hard-coded
+- fixed-supply CREATE tested with a disposable token plan before any real fee is paid
+- TRANSFER tested with a small token amount
+- BURN tested only with a disposable amount
+- MINT is shown only for the issuer of a mintable token
+- input 0 resolves to the selected VMT authorizer address
+- signed transaction preflight returns VMT ledger PASS and mempool PASS
+- final preflight runs again immediately before broadcast
+- MAIN/HU VMT ledger state remains identical after confirmation
+- locked-wallet behavior is tested
+- no seed, WIF, private key or RPC cookie reaches the renderer or VMT API
+
 ## Node
 
 - bundled Core starts automatically

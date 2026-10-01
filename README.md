@@ -21,6 +21,26 @@ VargaMesh Desktop is the recommended graphical Windows client for running a loca
 > **Bundled Core:** `VargaMesh Core v0.2.0`
 > **Platform:** Windows 10/11 x64
 
+## Upcoming v0.5.0 – VMT-1 desktop support
+
+The current development branch adds native VMT-1 token support without turning Desktop into a custodial or cloud wallet.
+
+- discover VMT-1 balances across owned `vm1...` addresses in the active Core wallet
+- show approved token metadata, logos, supply, issuer, holders and transfer counts
+- create VMT-1 tokens using the live Mainnet CREATE policy
+- transfer, burn and — for authorized mintable issuers — mint tokens
+- build and sign transactions with the local VargaMesh Core
+- force the VMT owner address to remain input 0 and verify that invariant after signing
+- run exact signed-transaction preflight before broadcast and repeat it immediately before broadcast
+- browse/search the VMT token directory
+- no hard-coded CREATE fee amount or fee recipient in Desktop
+
+The renderer still has no arbitrary Core RPC access. Private keys remain in Core for token transaction signing.
+
+Native metadata submission is intentionally not enabled in the first v0.5.0 candidate because the existing metadata proof format cannot be produced through an approved VargaMesh Core wallet RPC without exporting private-key material. Approved metadata remains visible.
+
+Technical VMT-1 Desktop documentation: [`docs/VMT-1.md`](docs/VMT-1.md)
+
 ## Download
 
 Use the official GitHub Releases page:

@@ -107,6 +107,53 @@ Object.assign(I18N.de, {
   recovery_txt_warning:"Die Recovery Phrase wird als unverschlüsselte TXT-Datei gespeichert. Wirklich fortfahren?"
 });
 
+Object.assign(I18N.de, {
+  nav_tokens:"Tokens",
+  vmt_tokens_title:"VMT-1 Tokens",
+  vmt_intro:"Token-Bestände aus den vm1-Adressen der aktiven Core-Wallet. Signierung und Broadcast laufen über den lokalen VargaMesh Core.",
+  vmt_refresh:"Aktualisieren",
+  vmt_my_tokens:"Meine Token",
+  vmt_create_token:"Token erstellen",
+  vmt_issuer_authorizer:"Issuer / Authorizer",
+  vmt_initial_supply:"Initial Supply",
+  vmt_mintable:"Mintable",
+  vmt_max_supply:"Maximum Supply (bei Fixed automatisch = Initial)",
+  vmt_review_sign:"Prüfen & lokal signieren",
+  vmt_token_action:"Token-Aktion",
+  vmt_amount:"Betrag",
+  vmt_recipient:"Empfänger vm1…",
+  vmt_directory:"Token Directory",
+  vmt_search:"Suchen",
+  vmt_search_placeholder:"Name, Symbol, Token-ID oder Issuer",
+  vmt_details:"Token-Details",
+  vmt_select_token:"Token auswählen.",
+  vmt_activity:"Token-Aktivität",
+  vmt_no_data:"Noch keine Daten geladen."
+});
+Object.assign(I18N.en, {
+  nav_tokens:"Tokens",
+  vmt_tokens_title:"VMT-1 Tokens",
+  vmt_intro:"Token balances from vm1 addresses in the active Core wallet. Signing and broadcast run through the local VargaMesh Core.",
+  vmt_refresh:"Refresh",
+  vmt_my_tokens:"My tokens",
+  vmt_create_token:"Create token",
+  vmt_issuer_authorizer:"Issuer / Authorizer",
+  vmt_initial_supply:"Initial supply",
+  vmt_mintable:"Mintable",
+  vmt_max_supply:"Maximum supply (for fixed supply automatically = initial)",
+  vmt_review_sign:"Review & sign locally",
+  vmt_token_action:"Token action",
+  vmt_amount:"Amount",
+  vmt_recipient:"Recipient vm1…",
+  vmt_directory:"Token Directory",
+  vmt_search:"Search",
+  vmt_search_placeholder:"Name, symbol, token ID or issuer",
+  vmt_details:"Token details",
+  vmt_select_token:"Select a token.",
+  vmt_activity:"Token activity",
+  vmt_no_data:"No data loaded yet."
+});
+
 Object.assign(I18N.en, {
   copy_recovery:"Copy recovery phrase",
   save_recovery_txt:"Save as TXT",
@@ -134,7 +181,8 @@ function balanceValues(){ const b=state.wallet?.balances; if(b?.mine)return {tru
 
 function applyI18n(){
   document.documentElement.lang=state.settings.language;
-  $$('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(I18N[state.settings.language]?.[k]) el.textContent=tr(k); });
+  $('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(I18N[state.settings.language]?.[k]) el.textContent=tr(k); });
+  $('[data-i18n-placeholder]').forEach(el=>{ const k=el.dataset.i18nPlaceholder; if(I18N[state.settings.language]?.[k]) el.placeholder=tr(k); });
   const active=document.querySelector('.nav-item.active'); if(active) $("pageTitle").textContent=active.querySelector("b")?.textContent || tr("nav_dashboard");
 }
 function applyTheme(){ document.documentElement.dataset.theme=state.settings.theme; }

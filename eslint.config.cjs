@@ -11,6 +11,7 @@ module.exports = [
       "src/wallet-import.js",
       "src/fee-policy.js",
       "src/hd-wallet.js",
+      "src/vmt.js",
       "scripts/*.js"
     ],
 
@@ -27,7 +28,8 @@ module.exports = [
 
   {
     files: [
-      "src/renderer/app.js"
+      "src/renderer/app.js",
+      "src/renderer/vmt.js"
     ],
 
     languageOptions: {

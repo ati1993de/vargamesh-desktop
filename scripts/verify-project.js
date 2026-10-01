@@ -3,14 +3,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const required = [
-  "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js","src/fee-policy.js",
-  "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/qr.js","src/wallet-import.js",
+  "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js","src/fee-policy.js","src/vmt.js",
+  "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/vmt.js","src/renderer/qr.js","src/wallet-import.js",
   "assets/vmesh_coin.png","assets/vmesh_mark.png","build/icon.ico","docs/MSIX-STORE.md",
   "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh"
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.4.0") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.5.0") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 const html = fs.readFileSync(path.join(root,"src/renderer/index.html"),"utf8");
 if (/(?:src|href)=["\']https?:\/\//i.test(html)) throw new Error("Renderer HTML must not load remote resources");
@@ -29,8 +29,13 @@ for (const secret of ["rpcpassword=","BEGIN OPENSSH PRIVATE KEY","_authToken="])
 
 const appjs = fs.readFileSync(path.join(root,"src/renderer/app.js"),"utf8");
 const ids = new Set([...html.matchAll(/\sid="([A-Za-z0-9_-]+)"/g)].map(m => m[1]));
-for (const m of appjs.matchAll(/\$\(\"([A-Za-z0-9_-]+)\"\)/g)) {
-  if (!ids.has(m[1])) throw new Error(`Renderer references missing HTML id: ${m[1]}`);
+const dynamicRendererIds = new Set(["vmtBroadcastBtn", "vmtCreateBroadcastBtn"]);
+for (const source of [appjs, fs.readFileSync(path.join(root,"src/renderer/vmt.js"),"utf8")]) {
+  for (const m of source.matchAll(/\$\(\"([A-Za-z0-9_-]+)\"\)/g)) {
+    if (!ids.has(m[1]) && !dynamicRendererIds.has(m[1])) {
+      throw new Error(`Renderer references missing HTML id: ${m[1]}`);
+    }
+  }
 }
 const mainChannels = new Set([...main.matchAll(/register\(\"([^\"]+)\"/g)].map(m => m[1]));
 for (const m of preload.matchAll(/call\(\"([^\"]+)\"/g)) {
@@ -61,6 +66,26 @@ for (const token of ["DEFAULT_FALLBACK_FEE_RATE","MAX_AUTOMATIC_FALLBACK_FEE_RAT
   const corpus = `${feePolicy}\n${main}`;
   if (!corpus.includes(token)) throw new Error(`Fee fallback hardening token missing: ${token}`);
 }
+
+const vmt = fs.readFileSync(path.join(root,"src/vmt.js"),"utf8");
+const vmtRenderer = fs.readFileSync(path.join(root,"src/renderer/vmt.js"),"utf8");
+for (const token of ["buildCreatePayload","buildTokenPayload","strictOperation","prepareTransaction","broadcastPrepared","/vmt/preflight","sendrawtransaction"]) {
+  if (!vmt.includes(token)) throw new Error(`VMT engine token missing: ${token}`);
+}
+for (const token of ["vmt:portfolio","vmt:prepare","vmt:broadcast"]) {
+  if (!main.includes(token)) throw new Error(`VMT IPC handler missing: ${token}`);
+}
+for (const token of ["vmtPortfolio","vmtPrepare","vmtBroadcast"]) {
+  if (!preload.includes(token)) throw new Error(`VMT preload bridge missing: ${token}`);
+}
+for (const token of ["view-vmt","vmtCreateBtn","vmtActionPrepare","vmtDirectorySearchBtn"]) {
+  if (!html.includes(token)) throw new Error(`VMT renderer HTML token missing: ${token}`);
+}
+for (const token of ["vmtPrepare","vmtBroadcast","prepareCreate","prepareAction","transfer","burn","mint"]) {
+  if (!vmtRenderer.includes(token)) throw new Error(`VMT renderer feature missing: ${token}`);
+}
+if (vmtRenderer.includes("1000.00000000")) throw new Error("CREATE fee must not be hard-coded in VMT renderer");
+if (vmt.includes("rpcpassword=") || vmtRenderer.includes("rpcpassword=")) throw new Error("VMT source must not contain RPC passwords");
 
 const settings = fs.readFileSync(path.join(root,"src/settings.js"),"utf8");
 for (const token of ["closeToTray","minimizeToTray","startMinimized","launchAtLogin"]) if (!settings.includes(token)) throw new Error(`Tray setting missing: ${token}`);
