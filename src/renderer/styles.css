@@ -61,3 +61,30 @@
 .hd-recovery-actions .btn {
   flex: 1 1 180px;
 }
+
+
+/* VargaMesh Desktop v0.5.0 · VMT-1 */
+.vmt-api-status{display:inline-flex;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface2);font-size:11px;color:var(--muted)}
+.vmt-policy-bar{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 16px}
+.vmt-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:11px;color:var(--muted)}
+.vmt-pill.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));color:var(--ok)}
+.vmt-pill.warn{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));color:var(--warn)}
+.vmt-top-grid{align-items:start}.vmt-assets{display:flex;flex-direction:column;gap:10px}
+.vmt-asset-card{border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:15px;display:grid;grid-template-columns:minmax(210px,1fr) minmax(180px,.8fr);gap:12px;align-items:center}
+.vmt-asset-main{display:flex;align-items:center;gap:11px}.vmt-token-logo{width:45px;height:45px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:10px;font-weight:800;overflow:hidden;flex:0 0 auto}
+.vmt-token-logo img{width:100%;height:100%;object-fit:cover}.vmt-token-logo.large{width:64px;height:64px}
+.vmt-title-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.vmt-title-row strong{font-size:15px}
+.vmt-badge{font-size:9px;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:3px 6px;color:var(--muted)}
+.vmt-badge.approved{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 42%,var(--line))}
+.vmt-badge.pending{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 42%,var(--line))}
+.vmt-holding{text-align:right}.vmt-holding strong,.vmt-holding small{display:block}.vmt-holding strong{font-size:17px}.vmt-holding small{margin-top:4px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.vmt-card-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:11px}
+.vmt-action-summary{display:flex;justify-content:space-between;gap:16px;align-items:center;background:var(--surface2);padding:12px;border-radius:11px;margin-bottom:14px}.vmt-action-summary code{max-width:60%;overflow:hidden;text-overflow:ellipsis}
+#vmtActionPanel{margin-bottom:16px;display:flex;flex-direction:column;gap:14px}
+.vmt-review{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}.vmt-review>div{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}.vmt-review span,.vmt-review b,.vmt-review code{display:block}.vmt-review span{font-size:10px;color:var(--muted);margin-bottom:4px}.vmt-review code{white-space:normal;word-break:break-all}.vmt-review .ok{color:var(--ok)}
+.vmt-success{border:1px solid color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok) 8%,var(--surface));border-radius:11px;padding:12px;margin-top:12px}.vmt-success b,.vmt-success code{display:block}.vmt-success code{margin-top:6px;word-break:break-all}
+.vmt-search-row{display:flex;gap:8px}.vmt-search-row input{flex:1}.vmt-directory-results{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.vmt-directory-row{width:100%;border:1px solid var(--line);background:var(--surface2);border-radius:11px;color:var(--text);padding:11px;display:flex;justify-content:space-between;gap:12px;text-align:left;cursor:pointer}.vmt-directory-row:hover{border-color:var(--accent)}.vmt-directory-row span:last-child{text-align:right}.vmt-directory-row b,.vmt-directory-row small{display:block}.vmt-directory-row small{color:var(--muted);margin-top:3px}
+.vmt-detail-head{display:flex;align-items:center;gap:12px}.vmt-detail-head h3{margin:0 0 5px}.vmt-detail-head code{font-size:10px;word-break:break-all}.vmt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.vmt-detail-grid>div{background:var(--surface2);border-radius:10px;padding:10px;min-width:0}.vmt-detail-grid span,.vmt-detail-grid b,.vmt-detail-grid code{display:block}.vmt-detail-grid span{font-size:10px;color:var(--muted);margin-bottom:4px}.vmt-detail-grid code{word-break:break-all}
+.vmt-activity-panel{margin-top:16px}
+@media(max-width:900px){.vmt-asset-card{grid-template-columns:1fr}.vmt-holding{text-align:left}.vmt-review,.vmt-detail-grid{grid-template-columns:1fr}.vmt-action-summary{align-items:flex-start;flex-direction:column}.vmt-action-summary code{max-width:100%}}
