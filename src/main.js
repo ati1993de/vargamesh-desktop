@@ -557,7 +557,7 @@ function installHandlers() {
     return vmtPrepareTransaction(core.rpc, wallet, payload.request || {});
   });
   register("vmt:broadcast", async payload => {
-    return vmtBroadcastPrepared(core.rpc, payload.candidateId);
+    return vmtBroadcastPrepared(core.rpc, payload.candidateId, requireWalletName(payload.wallet));
   });
 
   register("wallet:backup", async payload => {
