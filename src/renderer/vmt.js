@@ -97,7 +97,7 @@
           <button class="btn primary" data-vmt-action="transfer" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${l("Senden","Send")}</button>
           <button class="btn secondary" data-vmt-action="receive" data-vmt-index="${i}">${l("Empfangen","Receive")}</button>
           <button class="btn secondary" data-vmt-action="burn" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>Burn</button>
-          ${t.is_issuer && t.mintable ? `<button class="btn secondary" data-vmt-action="mint" data-vmt-index="${i}">Mint</button>` : ""}
+          ${t.is_issuer && t.mintable ? `<button class="btn secondary" data-vmt-action="mint" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>Mint</button>` : ""}
           <button class="text-btn" data-vmt-action="detail" data-vmt-index="${i}">${l("Details","Details")}</button>
         </div>
       </article>
@@ -123,9 +123,9 @@
   function renderAddresses() {
     const select = $("vmtCreateAuthorizer");
     if (!select) return;
-    const rows = (state.data?.addresses || []).filter(x => x.is_mine);
+    const rows = (state.data?.addresses || []).filter(x => x.is_mine && Number(x.spendable_utxos || 0) > 0);
     select.innerHTML = rows.map(a => `<option value="${esc(a.address)}">${esc(a.address)} · ${esc(a.spendable_vmesh)} VMESH · ${a.spendable_utxos} UTXO</option>`).join("");
-    if (!rows.length) select.innerHTML = `<option value="">${l("Keine eigene vm1-Adresse gefunden","No owned vm1 address found")}</option>`;
+    if (!rows.length) select.innerHTML = `<option value="">${l("Keine eigene vm1-Adresse mit bestätigtem VMESH-UTXO gefunden","No owned vm1 address with a confirmed VMESH UTXO found")}</option>`;
   }
 
   function renderActivity() {
@@ -187,7 +187,7 @@
     if (!token) return;
     const action = event.currentTarget.dataset.vmtAction;
     if (action === "receive") {
-      await api.copy(token.owner_address);
+      unwrap(await api.copy(token.owner_address));
       toast(l("Empfangsadresse kopiert: ","Receive address copied: ") + token.owner_address);
       return;
     }
