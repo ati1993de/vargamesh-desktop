@@ -81,7 +81,7 @@ for (const token of ["vmtPortfolio","vmtPrepare","vmtBroadcast"]) {
 for (const token of ["view-vmt","vmtCreateBtn","vmtActionPrepare","vmtDirectorySearchBtn"]) {
   if (!html.includes(token)) throw new Error(`VMT renderer HTML token missing: ${token}`);
 }
-for (const token of ["vmtPrepare","vmtBroadcast","CREATE","TRANSFER","BURN","MINT"]) {
+for (const token of ["vmtPrepare","vmtBroadcast","prepareCreate","prepareAction","transfer","burn","mint"]) {
   if (!vmtRenderer.includes(token)) throw new Error(`VMT renderer feature missing: ${token}`);
 }
 if (vmtRenderer.includes("1000.00000000")) throw new Error("CREATE fee must not be hard-coded in VMT renderer");
