@@ -5,6 +5,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { CoreManager } = require("./core-manager");
 const { SettingsStore } = require("./settings");
+const { nativeTr } = require("./i18n-native");
 const { requireWif, requireAddressType, privateDescriptorForWif, addDescriptorChecksum } = require("./wallet-import");
 const {
   createMnemonic,
@@ -48,6 +49,14 @@ const EXTERNAL_ALLOWLIST = new Set([
 
 function localBaseDir() {
   return process.env.LOCALAPPDATA || app.getPath("userData");
+}
+
+function uiLanguage() {
+  return settings?.get?.().language || "de";
+}
+
+function nt(key, vars = {}) {
+  return nativeTr(uiLanguage(), key, vars);
 }
 
 function paths() {
@@ -409,13 +418,13 @@ function installHandlers() {
     const mnemonic = requireMnemonic(payload.mnemonic);
 
     const result = await dialog.showSaveDialog(mainWindow, {
-      title: "Save VargaMesh recovery phrase",
+      title: nt("save_recovery_title"),
       defaultPath: path.join(
         app.getPath("documents"),
         `${name}-VargaMesh-Recovery.txt`
       ),
       filters: [
-        { name: "Text file", extensions: ["txt"] }
+        { name: nt("text_file"), extensions: ["txt"] }
       ]
     });
 
@@ -563,9 +572,9 @@ function installHandlers() {
   register("wallet:backup", async payload => {
     const wallet = requireWalletName(payload.wallet);
     const result = await dialog.showSaveDialog(mainWindow, {
-      title: "VargaMesh wallet backup",
+      title: nt("wallet_backup_title"),
       defaultPath: path.join(app.getPath("documents"), `${wallet}-${new Date().toISOString().slice(0, 10)}-wallet.dat`),
-      filters: [{ name: "Wallet backup", extensions: ["dat"] }]
+      filters: [{ name: nt("wallet_backup_filter"), extensions: ["dat"] }]
     });
     if (result.canceled || !result.filePath) return { canceled: true };
     await walletRpc("backupwallet", [result.filePath], wallet, 60_000);
@@ -574,9 +583,9 @@ function installHandlers() {
   register("wallet:restore", async payload => {
     const wallet = requireWalletName(payload.wallet);
     const selected = await dialog.showOpenDialog(mainWindow, {
-      title: "Restore VargaMesh wallet backup",
+      title: nt("restore_backup_title"),
       properties: ["openFile"],
-      filters: [{ name: "Wallet backup", extensions: ["dat", "bak"] }, { name: "All files", extensions: ["*"] }]
+      filters: [{ name: nt("wallet_backup_filter"), extensions: ["dat", "bak"] }, { name: nt("all_files"), extensions: ["*"] }]
     });
     if (selected.canceled || !selected.filePaths[0]) return { canceled: true };
     const result = await core.rpc.call("restorewallet", [wallet, selected.filePaths[0], true], "", 120_000);
@@ -748,19 +757,18 @@ function applyNativeSettings() {
 
 function updateTrayMenu(status = null) {
   if (!tray || !settings) return;
-  const de = settings.get().language !== "en";
   const online = status?.running === true;
   const statusLabel = online
-    ? `Core: online · Block ${status.blocks ?? "—"}`
-    : (de ? "Core: Status wird geprüft" : "Core: checking status");
-  tray.setToolTip(online ? `VargaMesh Desktop · Block ${status.blocks ?? "—"}` : "VargaMesh Desktop");
+    ? nt("tray_online", { block: status.blocks ?? "—" })
+    : nt("tray_checking");
+  tray.setToolTip(online ? `VargaMesh Desktop · ${statusLabel}` : "VargaMesh Desktop");
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: de ? "VargaMesh Desktop öffnen" : "Open VargaMesh Desktop", click: showMainWindow },
+    { label: nt("tray_open"), click: showMainWindow },
     { label: statusLabel, enabled: false },
     { type: "separator" },
-    { label: de ? "Alle Wallets sperren" : "Lock all wallets", click: () => { void lockAllWallets(); } },
+    { label: nt("tray_lock_all"), click: () => { void lockAllWallets(); } },
     { type: "separator" },
-    { label: de ? "Beenden und Core stoppen" : "Quit and stop Core", click: () => { void requestQuit(); } }
+    { label: nt("tray_quit"), click: () => { void requestQuit(); } }
   ]));
 }
 
@@ -792,9 +800,7 @@ function hideToTray() {
     try {
       tray.displayBalloon({
         title: "VargaMesh Desktop",
-        content: settings?.get().language === "en"
-          ? "VargaMesh Core keeps running in the background. Use the tray icon to reopen the wallet."
-          : "VargaMesh Core läuft im Hintergrund weiter. Über das Tray-Symbol kannst du die Wallet wieder öffnen.",
+        content: nt("tray_background"),
         iconType: "info"
       });
     } catch (_) {}
