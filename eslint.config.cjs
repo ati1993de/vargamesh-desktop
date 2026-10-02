@@ -12,6 +12,7 @@ module.exports = [
       "src/fee-policy.js",
       "src/hd-wallet.js",
       "src/vmt.js",
+      "src/i18n-native.js",
       "scripts/*.js"
     ],
 
@@ -29,7 +30,10 @@ module.exports = [
   {
     files: [
       "src/renderer/app.js",
-      "src/renderer/vmt.js"
+      "src/renderer/vmt.js",
+      "src/renderer/i18n-ru.js",
+      "src/renderer/i18n-zh.js",
+      "src/renderer/i18n-extra.js"
     ],
 
     languageOptions: {
