@@ -178,7 +178,7 @@ let pendingHdMnemonic="";
 function tr(key, vars={}){ let text=I18N[state.settings.language]?.[key] || I18N.en[key] || I18N.de[key] || key; for(const [name,value] of Object.entries(vars)) text=text.replaceAll(`{${name}}`,String(value)); return text; }
 function currentLocale(){ return LOCALES[state.settings.language] || LOCALES.en; }
 window.VargaI18N={ tr, locale:currentLocale, language:()=>state.settings.language };
-function unwrap(result){ if (!result?.ok) throw new Error(result?.error || "Operation failed"); return result.data; }
+function unwrap(result){ if (!result?.ok) throw new Error(result?.error || tr("operation_failed")); return result.data; }
 function showToast(message, error=false){ const el=$("toast"); el.textContent=message; el.className=`toast show${error?" error":""}`; clearTimeout(showToast.t); showToast.t=setTimeout(()=>el.className="toast",3500); }
 function shortHash(value,n=12){ if(!value)return "—"; return value.length>n*2?`${value.slice(0,n)}…${value.slice(-n)}`:value; }
 function formatBytes(n){ n=Number(n)||0; const units=["B","KB","MB","GB","TB"]; let i=0; while(n>=1024&&i<units.length-1){n/=1024;i++;} return `${n.toFixed(i?1:0)} ${units[i]}`; }
@@ -211,7 +211,7 @@ async function refreshCore(){
     state.core=unwrap(await api.coreStatus());
     const online=!!state.core.running;
     $("coreDot").className=`dot ${online?'online':''}`;
-    $("coreText").textContent=online?`Core ${state.core.blocks ?? 'online'}`:tr('core_offline');
+    $("coreText").textContent=online?`Core ${state.core.blocks ?? tr('online')}`:tr('core_offline');
     $("startupBanner").classList.toggle('hidden',online);
     renderCore();
     if(online) await refreshWallets(false);
@@ -289,7 +289,7 @@ async function loadNodeExtras(){
   if(!state.core?.running)return;
   const [mp,mi,pe]=await Promise.allSettled([api.mempool(),api.mining(),api.peers()]);
   if(mp.status==='fulfilled'&&mp.value.ok){const v=mp.value.data||{};$("nodeMempool").textContent=formatNumber(v.size,0);$("nodeMempoolBytes").textContent=formatBytes(v.bytes||v.usage);}
-  if(mi.status==='fulfilled'&&mi.value.ok){const v=mi.value.data||{};$("nodeHashrate").textContent=formatHashrate(v.networkhashps);$("nodeDifficulty").textContent=`Diff ${formatNumber(v.difficulty,4)}`;}
+  if(mi.status==='fulfilled'&&mi.value.ok){const v=mi.value.data||{};$("nodeHashrate").textContent=formatHashrate(v.networkhashps);$("nodeDifficulty").textContent=`${tr('difficulty')} ${formatNumber(v.difficulty,4)}`;}
   if(pe.status==='fulfilled'&&pe.value.ok)renderPeers(pe.value.data||[]);
 }
 function renderPeers(peers){const body=$("peerBody");body.innerHTML='';if(!peers.length){body.innerHTML='<tr><td colspan="5" class="muted">—</td></tr>';return;}peers.forEach(p=>{const r=document.createElement('tr');r.innerHTML=`<td><code>${escapeHtml(p.addr||'—')}</code></td><td>${p.inbound?tr('inbound'):tr('outbound')}</td><td>${escapeHtml(p.subver||'—')}</td><td>${p.pingtime?`${(p.pingtime*1000).toFixed(0)} ms`:'—'}</td><td>${p.synced_blocks??'—'}</td>`;body.appendChild(r);});}
