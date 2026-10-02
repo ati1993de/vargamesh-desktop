@@ -10,7 +10,7 @@ const required = [
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.5.0") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.5.1") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 const html = fs.readFileSync(path.join(root,"src/renderer/index.html"),"utf8");
 if (/(?:src|href)=["\']https?:\/\//i.test(html)) throw new Error("Renderer HTML must not load remote resources");
@@ -28,6 +28,14 @@ for (const secret of ["rpcpassword=","BEGIN OPENSSH PRIVATE KEY","_authToken="])
 }
 
 const appjs = fs.readFileSync(path.join(root,"src/renderer/app.js"),"utf8");
+if (/\$\(['"`]\[data-i18n(?:-placeholder)?\]['"`]\)/.test(appjs)) {
+  throw new Error("I18N collection selectors must use the $ querySelectorAll helper");
+}
+for (const selector of ["[data-i18n]", "[data-i18n-placeholder]"]) {
+  if (!appjs.includes(`$('${selector}')`) && !appjs.includes(`$("${selector}")`)) {
+    throw new Error(`Missing $ collection selector for ${selector}`);
+  }
+}
 const ids = new Set([...html.matchAll(/\sid="([A-Za-z0-9_-]+)"/g)].map(m => m[1]));
 const dynamicRendererIds = new Set(["vmtBroadcastBtn", "vmtCreateBroadcastBtn"]);
 for (const source of [appjs, fs.readFileSync(path.join(root,"src/renderer/vmt.js"),"utf8")]) {
