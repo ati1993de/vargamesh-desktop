@@ -587,7 +587,7 @@ async function openLoadDialog(){try{const data=unwrap(await api.listWallets()),b
 function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 function escapeAttr(value){return escapeHtml(value);}
 
-async function saveSettings(patch){try{state.settings=unwrap(await api.updateSettings(patch));applyTheme();applyI18n();renderCore();renderWallet();renderTransactions($("txBody"),state.transactions);renderRecent(state.transactions);if($("importDialog")?.open)toggleImportMode();}catch(err){showToast(err.message,true);}}
+async function saveSettings(patch){try{state.settings=unwrap(await api.updateSettings(patch));applyTheme();applyI18n();renderCore();renderWallet();renderTransactions($("txBody"),state.transactions);renderRecent(state.transactions);if($("importDialog")?.open)toggleImportMode();if(Object.prototype.hasOwnProperty.call(patch||{},"language"))window.dispatchEvent(new CustomEvent("vmesh-language-changed"));}catch(err){showToast(err.message,true);}}
 
 function bind(){
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view))); $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
