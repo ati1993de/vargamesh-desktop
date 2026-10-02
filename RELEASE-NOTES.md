@@ -1,40 +1,34 @@
-# VargaMesh Desktop v0.5.0 candidate
+# VargaMesh Desktop v0.5.1
 
-VargaMesh Desktop v0.5.0 adds native VMT-1 token support while preserving the existing self-custody full-node architecture.
+VargaMesh Desktop v0.5.1 is a focused Windows x64 hotfix for the v0.5.0 first-launch renderer startup error.
 
-## VMT-1
+## Fixed: startup error on first launch
 
-- portfolio for token balances held by owned Native SegWit `vm1...` addresses
-- token directory and token details
-- CREATE, TRANSFER, BURN and authorized MINT
-- CREATE policy loaded dynamically from the VMT Mainnet API
-- local transaction construction/signing through the bundled VargaMesh Core
-- explicit VMT vin[0] authorizer selection and verification
-- read-only signed-transaction preflight
-- second exact preflight immediately before broadcast
-- approved metadata and token logos displayed
-- per-address VMT activity where supported by the API
+v0.5.0 could show:
 
-## Security model
+`Cannot read properties of null (reading 'forEach')`
 
-The renderer remains sandboxed and does not receive the RPC cookie or an arbitrary RPC bridge. VMT private-key signing remains in VargaMesh Core. Desktop submits only the already signed raw transaction to the public VMT preflight API for deterministic protocol and mempool validation.
+The error came from the renderer localization initialization. The single-element DOM helper `$()` was accidentally used with CSS collection selectors such as `[data-i18n]`. Because that helper uses `getElementById`, it returned `null`, and the following `.forEach()` aborted the initialization sequence before the normal Core startup refresh completed.
 
-A prepared signed transaction is retained in memory for only a short period and is bound to the Core wallet that created it.
+v0.5.1 changes those selectors to the existing `$$()` querySelectorAll helper and adds a regression check to the project verifier.
 
-## CREATE fee
+## What stays unchanged
 
-Desktop does not hard-code the CREATE fee amount or fee address. It reads the active VMT policy from `/api/v1/vmt/status` and relies on the exact signed-transaction preflight before allowing broadcast.
+- native VMT-1 support from v0.5.0
+- local VargaMesh Core v0.2.0 full node
+- self-custody wallet and local signing
+- BIP39/BIP32 recovery wallets
+- CREATE, TRANSFER, BURN and authorized MINT flows
+- existing wallet, blockchain and settings data
 
-## Metadata
+## Downloads
 
-Approved metadata, status and logo are visible. Native metadata submission is not enabled in this candidate because the current metadata API expects a raw secp256k1 SHA-256 issuer proof while VargaMesh Core does not expose that proof format through an approved wallet RPC. Desktop deliberately does not export private keys to work around this.
+The tagged Windows build provides:
 
-## Regression vectors
+- `VargaMesh-Desktop-v0.5.1-Windows-x64-Setup.exe`
+- `VargaMesh-Desktop-v0.5.1-Windows-x64-Portable.zip`
+- `SHA256SUMS`
 
-The v0.5.0 source checks include the real YALCUS Mainnet vectors:
+Existing blockchain and wallet data remains under `%LOCALAPPDATA%\\VargaMesh`. Keep an independent wallet backup before upgrading.
 
-- token ID: `be95b3080519d9be5c400ef13ddc303e32ffde6b0234becb106f56aef16ee451`
-- YALCUS CREATE payload
-- 500 YALC TRANSFER payload to `vm1qsfsgj70pdv86nguvexzvsflmcknz4lrsj87wx9`
-
-Bundled Core remains VargaMesh Core v0.2.0.
+VargaMesh Desktop is pre-1.0 software. Carefully verify recipient addresses and transaction amounts before sending.
