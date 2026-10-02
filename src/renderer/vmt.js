@@ -3,7 +3,7 @@
 (() => {
   const api = window.vmesh;
   const $ = id => document.getElementById(id);
-  const t = key => window.VargaI18N?.tr(key) || key;
+  const tr = key => window.VargaI18N?.tr(key) || key;
   const locale = () => window.VargaI18N?.locale() || "en-US";
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
@@ -53,7 +53,7 @@
     if (!p) return '<span class="vmt-pill warn">VMT API —</span>';
     const active = !!p.active;
     return [
-      `<span class="vmt-pill ${active ? "ok" : "warn"}">${active ? t('vmt_create_fee_active') : t('vmt_create_fee_scheduled')}</span>`,
+      `<span class="vmt-pill ${active ? "ok" : "warn"}">${active ? tr('vmt_create_fee_active') : tr('vmt_create_fee_scheduled')}</span>`,
       `<span class="vmt-pill"><b>${esc(p.minimum_vmesh)}</b> VMESH</span>`,
       `<span class="vmt-pill mono">#${esc(p.activation_height ?? "—")}</span>`,
       `<span class="vmt-pill mono">${esc(short(status.policy?.sha256,8))}</span>`
@@ -77,7 +77,7 @@
     if (!host) return;
     const holdings = state.data?.holdings || [];
     if (!holdings.length) {
-      host.innerHTML = `<div class="empty-state">${t('vmt_no_balances')}</div>`;
+      host.innerHTML = `<div class="empty-state">${tr('vmt_no_balances')}</div>`;
       return;
     }
     host.innerHTML = holdings.map((t, i) => `
@@ -93,13 +93,13 @@
           <strong>${esc(t.balance)} ${esc(t.symbol)}</strong>
           <small class="mono">${esc(t.owner_address)}</small>
         </div>
-        ${t.spendable ? "" : `<div class="vmt-utxo-note">${t('vmt_spendable_note')}</div>`}
+        ${t.spendable ? "" : `<div class="vmt-utxo-note">${tr('vmt_spendable_note')}</div>`}
         <div class="vmt-card-actions">
-          <button class="btn primary" data-vmt-action="transfer" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${t('vmt_send')}</button>
-          <button class="btn secondary" data-vmt-action="receive" data-vmt-index="${i}">${t('vmt_receive')}</button>
-          <button class="btn secondary" data-vmt-action="burn" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${t("vmt_burn")}</button>
-          ${t.is_issuer && t.mintable ? `<button class="btn secondary" data-vmt-action="mint" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${t("vmt_mint")}</button>` : ""}
-          <button class="text-btn" data-vmt-action="detail" data-vmt-index="${i}">${t('vmt_details_action')}</button>
+          <button class="btn primary" data-vmt-action="transfer" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${tr('vmt_send')}</button>
+          <button class="btn secondary" data-vmt-action="receive" data-vmt-index="${i}">${tr('vmt_receive')}</button>
+          <button class="btn secondary" data-vmt-action="burn" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${tr("vmt_burn")}</button>
+          ${t.is_issuer && t.mintable ? `<button class="btn secondary" data-vmt-action="mint" data-vmt-index="${i}" ${t.spendable ? "" : "disabled"}>${tr("vmt_mint")}</button>` : ""}
+          <button class="text-btn" data-vmt-action="detail" data-vmt-index="${i}">${tr('vmt_details_action')}</button>
         </div>
       </article>
     `).join("");
@@ -126,7 +126,7 @@
     if (!select) return;
     const rows = (state.data?.addresses || []).filter(x => x.is_mine && Number(x.spendable_utxos || 0) > 0);
     select.innerHTML = rows.map(a => `<option value="${esc(a.address)}">${esc(a.address)} · ${esc(a.spendable_vmesh)} VMESH · ${a.spendable_utxos} UTXO</option>`).join("");
-    if (!rows.length) select.innerHTML = `<option value="">${t('vmt_no_authorizer_address')}</option>`;
+    if (!rows.length) select.innerHTML = `<option value="">${tr('vmt_no_authorizer_address')}</option>`;
   }
 
   function renderActivity() {
@@ -134,10 +134,10 @@
     if (!host) return;
     const rows = state.data?.activity || [];
     if (!rows.length) {
-      host.innerHTML = `<div class="empty-state">${t('vmt_no_activity_wallet')}</div>`;
+      host.innerHTML = `<div class="empty-state">${tr('vmt_no_activity_wallet')}</div>`;
       return;
     }
-    host.innerHTML = `<div class="table-wrap"><table><thead><tr><th>${t('block')}</th><th>${t('action')}</th><th>${t("token")}</th><th>${t('amount')}</th><th>TXID</th></tr></thead><tbody>${rows.map(e => `
+    host.innerHTML = `<div class="table-wrap"><table><thead><tr><th>${tr('block')}</th><th>${tr('action')}</th><th>${tr("token")}</th><th>${tr('amount')}</th><th>TXID</th></tr></thead><tbody>${rows.map(e => `
       <tr><td>#${esc(e.height)}</td><td>${esc(e.direction || e.op)}</td><td>${esc(e.symbol || short(e.token_id,6))}</td><td>${esc(e.amount || "—")}</td><td><code>${esc(short(e.txid,9))}</code></td></tr>
     `).join("")}</tbody></table></div>`;
   }
@@ -146,7 +146,7 @@
     const name = wallet();
     if (!name) {
       state.data = null;
-      if ($("vmtAssets")) $("vmtAssets").innerHTML = `<div class="empty-state">${t('vmt_load_wallet_first')}</div>`;
+      if ($("vmtAssets")) $("vmtAssets").innerHTML = `<div class="empty-state">${tr('vmt_load_wallet_first')}</div>`;
       return;
     }
     setBusy(true);
@@ -170,16 +170,16 @@
     const panel = $("vmtActionPanel");
     panel.classList.remove("hidden");
     $("vmtActionTitle").textContent = operation === "transfer"
-      ? t('vmt_send_token')
-      : operation === "burn" ? t("vmt_burn")
-      : operation === "mint" ? t("vmt_mint") : t('vmt_token_action');
+      ? tr('vmt_send_token')
+      : operation === "burn" ? tr("vmt_burn")
+      : operation === "mint" ? tr("vmt_mint") : tr('vmt_token_action');
     $("vmtActionToken").textContent = `${token.name} (${token.symbol}) · ${token.balance} ${token.symbol}`;
     $("vmtActionOwner").textContent = token.owner_address;
     $("vmtActionRecipientWrap").classList.toggle("hidden", operation !== "transfer");
     $("vmtActionAmount").value = "";
     $("vmtActionRecipient").value = "";
     $("vmtActionResult").innerHTML = "";
-    $("vmtActionPrepare").textContent = t('vmt_review_sign');
+    $("vmtActionPrepare").textContent = tr('vmt_review_sign');
   }
 
   async function onAssetAction(event) {
@@ -189,7 +189,7 @@
     const action = event.currentTarget.dataset.vmtAction;
     if (action === "receive") {
       unwrap(await api.copy(token.owner_address));
-      toast(t('vmt_receive_address_copied') + ': ' + token.owner_address);
+      toast(tr('vmt_receive_address_copied') + ': ' + token.owner_address);
       return;
     }
     if (action === "detail") {
@@ -218,14 +218,14 @@
       $("vmtActionResult").innerHTML = `
         <div class="vmt-review">
           <div><span>VMT</span><b class="ok">PASS · ${esc(pf.operation?.operation)}</b></div>
-          <div><span>${t('authorizer')}</span><code>${esc(pf.authorizer)}</code></div>
-          <div><span>${t('amount')}</span><b>${esc(pf.operation?.amount || "—")} ${esc(pf.operation?.symbol || selected.token.symbol)}</b></div>
-          <div><span>${t('network_fee')}</span><b>${esc(pf.network_fee?.vmesh)} VMESH</b></div>
+          <div><span>${tr('authorizer')}</span><code>${esc(pf.authorizer)}</code></div>
+          <div><span>${tr('amount')}</span><b>${esc(pf.operation?.amount || "—")} ${esc(pf.operation?.symbol || selected.token.symbol)}</b></div>
+          <div><span>${tr('network_fee')}</span><b>${esc(pf.network_fee?.vmesh)} VMESH</b></div>
           <div><span>Mempool</span><b class="ok">PASS</b></div>
           <div><span>TXID</span><code>${esc(pf.txid)}</code></div>
         </div>
-        <button class="btn primary wide" id="vmtBroadcastBtn">${t('vmt_broadcast_after_preflight')}</button>
-        <p class="muted small">${t('vmt_nothing_broadcast')}</p>
+        <button class="btn primary wide" id="vmtBroadcastBtn">${tr('vmt_broadcast_after_preflight')}</button>
+        <p class="muted small">${tr('vmt_nothing_broadcast')}</p>
       `;
       $("vmtBroadcastBtn").onclick = broadcastCandidate;
     } catch (err) {
@@ -238,14 +238,14 @@
   async function broadcastCandidate() {
     const id = state.candidate?.candidate_id;
     if (!id) return;
-    if (!confirm(t('vmt_broadcast_confirm'))) return;
+    if (!confirm(tr('vmt_broadcast_confirm'))) return;
     const btn = $("vmtBroadcastBtn");
     btn.disabled = true;
     try {
       const result = unwrap(await api.vmtBroadcast(wallet(), id));
       state.candidate = null;
-      $("vmtActionResult").innerHTML = `<div class="vmt-success"><b>${t('vmt_broadcast_success')}</b><code>${esc(result.txid)}</code></div>`;
-      toast(t('vmt_transaction_broadcast'));
+      $("vmtActionResult").innerHTML = `<div class="vmt-success"><b>${tr('vmt_broadcast_success')}</b><code>${esc(result.txid)}</code></div>`;
+      toast(tr('vmt_transaction_broadcast'));
       setTimeout(refresh, 4000);
     } catch (err) {
       toast(err.message, true);
@@ -275,15 +275,15 @@
       $("vmtCreateResult").innerHTML = `
         <div class="vmt-review">
           <div><span>VMT</span><b class="ok">PASS · CREATE</b></div>
-          <div><span>${t("token")}</span><b>${esc(pf.operation?.name)} (${esc(pf.operation?.symbol)})</b></div>
-          <div><span>${t('vmt_initial_supply')}</span><b>${esc(pf.operation?.initial)}</b></div>
-          <div><span>${t('maximum')}</span><b>${esc(pf.operation?.maximum)}</b></div>
-          <div><span>CREATE Fee</span><b>${createFee?.required ? esc(createFee.paid_vmesh) + " VMESH" : t('vmt_not_required')}</b></div>
-          <div><span>${t('network_fee')}</span><b>${esc(pf.network_fee?.vmesh)} VMESH</b></div>
+          <div><span>${tr("token")}</span><b>${esc(pf.operation?.name)} (${esc(pf.operation?.symbol)})</b></div>
+          <div><span>${tr('vmt_initial_supply')}</span><b>${esc(pf.operation?.initial)}</b></div>
+          <div><span>${tr('maximum')}</span><b>${esc(pf.operation?.maximum)}</b></div>
+          <div><span>CREATE Fee</span><b>${createFee?.required ? esc(createFee.paid_vmesh) + " VMESH" : tr('vmt_not_required')}</b></div>
+          <div><span>${tr('network_fee')}</span><b>${esc(pf.network_fee?.vmesh)} VMESH</b></div>
           <div><span>TXID / Token ID</span><code>${esc(pf.txid)}</code></div>
         </div>
-        <button class="btn primary wide" id="vmtCreateBroadcastBtn">${t('vmt_create_broadcast')}</button>
-        <p class="warning-box">${t('vmt_create_fee_warning')}</p>
+        <button class="btn primary wide" id="vmtCreateBroadcastBtn">${tr('vmt_create_broadcast')}</button>
+        <p class="warning-box">${tr('vmt_create_fee_warning')}</p>
       `;
       $("vmtCreateBroadcastBtn").onclick = broadcastCandidate;
     } catch (err) {
@@ -302,9 +302,9 @@
       host.innerHTML = (result.items || []).map(t => `
         <button class="vmt-directory-row" data-token-id="${esc(t.token_id)}">
           <span><b>${esc(t.name)}</b><small>${esc(t.symbol)} · ${esc(String(t.metadata?.status || "none").toUpperCase())}</small></span>
-          <span><b>${esc(t.supply?.current || "—")}</b><small>${esc(t.holders)} ${t('holders')}</small></span>
+          <span><b>${esc(t.supply?.current || "—")}</b><small>${esc(t.holders)} ${tr('holders')}</small></span>
         </button>
-      `).join("") || `<div class="empty-state">${t('vmt_no_tokens_found')}</div>`;
+      `).join("") || `<div class="empty-state">${tr('vmt_no_tokens_found')}</div>`;
       host.querySelectorAll("[data-token-id]").forEach(x => x.onclick = () => showTokenDetail(x.dataset.tokenId));
     } catch (err) {
       toast(err.message, true);
@@ -323,14 +323,14 @@
           <div><h3>${esc(t.name)} <span class="muted">${esc(t.symbol)}</span></h3><code>${esc(t.token_id)}</code></div>
         </div>
         <div class="vmt-detail-grid">
-          <div><span>${t('issuer')}</span><code>${esc(t.issuer?.address)}</code></div>
-          <div><span>${t('current_supply')}</span><b>${esc(t.supply?.current)}</b></div>
-          <div><span>${t("maximum")}</span><b>${esc(t.supply?.maximum)}</b></div>
-          <div><span>${t("vmt_mintable")}</span><b>${t.mintable ? t("yes") : t("no")}</b></div>
-          <div><span>${t("holders")}</span><b>${esc(t.holders)}</b></div>
-          <div><span>${t("transfers")}</span><b>${esc(t.transfers)}</b></div>
-          <div><span>${t("metadata")}</span><b>${esc(String(t.metadata?.status || "none").toUpperCase())}</b></div>
-          <div><span>${t("genesis")}</span><b>#${esc(t.genesis?.height)}</b></div>
+          <div><span>${tr('issuer')}</span><code>${esc(t.issuer?.address)}</code></div>
+          <div><span>${tr('current_supply')}</span><b>${esc(t.supply?.current)}</b></div>
+          <div><span>${tr("maximum")}</span><b>${esc(t.supply?.maximum)}</b></div>
+          <div><span>${tr("vmt_mintable")}</span><b>${t.mintable ? tr("yes") : tr("no")}</b></div>
+          <div><span>${tr("holders")}</span><b>${esc(t.holders)}</b></div>
+          <div><span>${tr("transfers")}</span><b>${esc(t.transfers)}</b></div>
+          <div><span>${tr("metadata")}</span><b>${esc(String(t.metadata?.status || "none").toUpperCase())}</b></div>
+          <div><span>${tr("genesis")}</span><b>#${esc(t.genesis?.height)}</b></div>
         </div>
         ${t.metadata?.description ? `<p>${esc(t.metadata.description)}</p>` : ""}
         ${t.metadata?.website ? `<p class="mono">${esc(t.metadata.website)}</p>` : ""}
