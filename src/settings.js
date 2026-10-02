@@ -19,7 +19,7 @@ const DEFAULTS = Object.freeze({
 
 function clean(input = {}) {
   const out = { ...DEFAULTS };
-  if (["de", "en"].includes(input.language)) out.language = input.language;
+  if (["de", "en", "ru", "zh"].includes(input.language)) out.language = input.language;
   if (["system", "light", "dark"].includes(input.theme)) out.theme = input.theme;
   if (typeof input.activeWallet === "string" && input.activeWallet.length <= 128) out.activeWallet = input.activeWallet;
   if (Number.isInteger(input.autoLockSeconds) && input.autoLockSeconds >= 15 && input.autoLockSeconds <= 3600) out.autoLockSeconds = input.autoLockSeconds;
