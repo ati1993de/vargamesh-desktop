@@ -181,8 +181,8 @@ function balanceValues(){ const b=state.wallet?.balances; if(b?.mine)return {tru
 
 function applyI18n(){
   document.documentElement.lang=state.settings.language;
-  $('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(I18N[state.settings.language]?.[k]) el.textContent=tr(k); });
-  $('[data-i18n-placeholder]').forEach(el=>{ const k=el.dataset.i18nPlaceholder; if(I18N[state.settings.language]?.[k]) el.placeholder=tr(k); });
+  $$('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(I18N[state.settings.language]?.[k]) el.textContent=tr(k); });
+  $$('[data-i18n-placeholder]').forEach(el=>{ const k=el.dataset.i18nPlaceholder; if(I18N[state.settings.language]?.[k]) el.placeholder=tr(k); });
   const active=document.querySelector('.nav-item.active'); if(active) $("pageTitle").textContent=active.querySelector("b")?.textContent || tr("nav_dashboard");
 }
 function applyTheme(){ document.documentElement.dataset.theme=state.settings.theme; }
