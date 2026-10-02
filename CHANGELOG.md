@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.5.2] - 2026-10-02
+
+### Added
+
+- Complete Russian (`ru`) and Simplified Chinese (`zh`) Desktop interface translations alongside German and English.
+- Four-language localization for wallet management, recovery, sending/receiving, transactions, node status, settings and VMT-1 token workflows.
+- Russian and Simplified Chinese translations for Windows tray actions, background notification text and native backup/recovery file dialogs.
+- Locale-aware number and date formatting for `de-DE`, `en-US`, `ru-RU` and `zh-CN`.
+- Dedicated localization regression tests that verify dictionary completeness, UI keys, dynamic strings, language persistence and native translations.
+- Windows font fallbacks for high-quality Cyrillic and Simplified Chinese rendering.
+
+### Changed
+
+- Removed German/English-only branching from dynamic renderer and VMT-1 UI strings in favor of shared translation keys.
+- Language changes now refresh dynamic wallet, node, transaction and VMT-1 content immediately without restarting Desktop.
+- The Windows release workflow can publish an explicitly marked, fully verified release directly from the final `main` commit.
+
+### Fixed
+
+- Extended the v0.5.1 startup regression guard to all localization collection selectors, including localized placeholders, titles and ARIA labels.
+
 ## [0.5.1] - 2026-10-02
 
 ### Fixed
