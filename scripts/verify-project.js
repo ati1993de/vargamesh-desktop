@@ -29,11 +29,11 @@ for (const secret of ["rpcpassword=","BEGIN OPENSSH PRIVATE KEY","_authToken="])
 
 const appjs = fs.readFileSync(path.join(root,"src/renderer/app.js"),"utf8");
 if (/\$\(['"`]\[data-i18n(?:-placeholder)?\]['"`]\)/.test(appjs)) {
-  throw new Error("I18N collection selectors must use the $ querySelectorAll helper");
+  throw new Error("I18N collection selectors must use the $$ querySelectorAll helper");
 }
 for (const selector of ["[data-i18n]", "[data-i18n-placeholder]"]) {
-  if (!appjs.includes(`$('${selector}')`) && !appjs.includes(`$("${selector}")`)) {
-    throw new Error(`Missing $ collection selector for ${selector}`);
+  if (!appjs.includes(`$$('${selector}')`) && !appjs.includes(`$$("${selector}")`)) {
+    throw new Error(`Missing $$ collection selector for ${selector}`);
   }
 }
 const ids = new Set([...html.matchAll(/\sid="([A-Za-z0-9_-]+)"/g)].map(m => m[1]));
