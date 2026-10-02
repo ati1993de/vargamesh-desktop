@@ -1,6 +1,18 @@
 # Changelog
 
-## 0.5.0 (unreleased)
+## [0.5.1] - 2026-10-02
+
+### Fixed
+
+- Fixed the renderer startup crash `Cannot read properties of null (reading 'forEach')` that could be shown as a Core startup failure on first launch.
+- `applyI18n()` now uses the `$$()` querySelectorAll helper for `[data-i18n]` and `[data-i18n-placeholder]` collections instead of the single-element `$()` helper.
+- The normal startup sequence can now continue directly into Core startup and wallet refresh without requiring a manual reload/refresh.
+
+### Tests
+
+- Added a source-verification regression guard so collection-style i18n selectors cannot accidentally be switched back to `$()`.
+
+## [0.5.0] - 2026-10-01
 
 ### Added
 
