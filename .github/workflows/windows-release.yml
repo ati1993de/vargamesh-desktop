@@ -79,8 +79,7 @@ jobs:
             if ($env:GITHUB_REF_NAME -ne $tag) { throw "Tag/version mismatch" }
             gh release create "$tag" "$setup" "$portable" "$sums" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --verify-tag --latest
           } else {
-            gh release view "$tag" --repo "$env:GITHUB_REPOSITORY" *> $null
-            if ($LASTEXITCODE -eq 0) { throw "Release $tag already exists" }
-            $global:LASTEXITCODE = 0
+            $existing = gh release list --repo "$env:GITHUB_REPOSITORY" --limit 100 --json tagName --jq ".[] | select(.tagName == `"$tag`") | .tagName"
+            if ($existing -eq $tag) { throw "Release $tag already exists" }
             gh release create "$tag" "$setup" "$portable" "$sums" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --target "$env:GITHUB_SHA" --latest
           }
