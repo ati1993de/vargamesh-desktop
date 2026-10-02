@@ -6,6 +6,8 @@ on:
     branches:
       - main
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -63,10 +65,21 @@ jobs:
             dist/*Setup.exe
             dist/*Portable.zip
             dist/SHA256SUMS
-      - name: Release tagged build
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v') || (github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]'))
         shell: pwsh
         run: |
           $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ($env:GITHUB_REF_NAME -ne "v$v") { throw "Tag/version mismatch" }
-          gh release create "$env:GITHUB_REF_NAME" "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe" "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip" "dist/SHA256SUMS" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --verify-tag --latest
+          $tag = "v$v"
+          $setup = "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe"
+          $portable = "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip"
+          $sums = "dist/SHA256SUMS"
+
+          if ($env:GITHUB_REF -like "refs/tags/*") {
+            if ($env:GITHUB_REF_NAME -ne $tag) { throw "Tag/version mismatch" }
+            gh release create "$tag" "$setup" "$portable" "$sums" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --verify-tag --latest
+          } else {
+            $existing = gh release list --repo "$env:GITHUB_REPOSITORY" --limit 100 --json tagName --jq ".[] | select(.tagName == `"$tag`") | .tagName"
+            if ($existing -eq $tag) { throw "Release $tag already exists" }
+            gh release create "$tag" "$setup" "$portable" "$sums" --title "VargaMesh Desktop v$v" --notes-file RELEASE-NOTES.md --target "$env:GITHUB_SHA" --latest
+          }
