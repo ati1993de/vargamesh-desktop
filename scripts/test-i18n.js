@@ -89,10 +89,13 @@ for (const selector of [
 ]) {
   const singleA = "$('" + selector + "').forEach";
   const singleB = '$("' + selector + '").forEach';
-  if (app.includes(singleA) || app.includes(singleB)) fail("Collection selector " + selector + " uses single-element $ helper");
-  const doubleA = "$$('" + selector + "').forEach";
-  const doubleB = '$$("' + selector + '").forEach';
-  if (!app.includes(doubleA) && !app.includes(doubleB)) fail("Collection selector " + selector + " is not handled by $$");
+  const doubleA = "$('" + selector + "').forEach";
+  const doubleB = '$("' + selector + '").forEach';
+  if (!app.includes(doubleA) && !app.includes(doubleB)) fail("Collection selector " + selector + " is not handled by $");
+  const withoutValidCollections = app.replaceAll(doubleA, "").replaceAll(doubleB, "");
+  if (withoutValidCollections.includes(singleA) || withoutValidCollections.includes(singleB)) {
+    fail("Collection selector " + selector + " uses single-element $ helper");
+  }
 }
 
 if (/state\.settings\.language\s*(?:===|!==|==|!=)/.test(app)) {
