@@ -79,7 +79,7 @@ function assertReferencedKeys(source, regex, label) {
   }
 }
 assertReferencedKeys(app, /\btr\(["']([^"']+)["']/g, "app.js");
-assertReferencedKeys(vmt, /\bt\(["']([^"']+)["']/g, "vmt.js");
+assertReferencedKeys(vmt, /\btr\(["']([^"']+)["']/g, "vmt.js");
 
 for (const selector of [
   "[data-i18n]",
