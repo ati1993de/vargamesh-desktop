@@ -17,13 +17,15 @@
 
 VargaMesh Desktop is the recommended graphical Windows client for running a local VargaMesh full node and managing a self-custody VMESH wallet. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current public release:** `v0.4.0`
+> **Current release line:** `v0.5.2`
 > **Bundled Core:** `VargaMesh Core v0.2.0`
 > **Platform:** Windows 10/11 x64
 
-## v0.5.x – VMT-1 desktop support
+## v0.5.2 – VMT-1 + multilingual desktop
 
-The current development branch adds native VMT-1 token support without turning Desktop into a custodial or cloud wallet.
+VargaMesh Desktop v0.5.2 combines native VMT-1 token support with a complete four-language interface without turning Desktop into a custodial or cloud wallet.
+
+Supported UI languages: **Deutsch · English · Русский · 简体中文**.
 
 - discover VMT-1 balances across owned `vm1...` addresses in the active Core wallet
 - show approved token metadata, logos, supply, issuer, holders and transfer counts
@@ -50,14 +52,14 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.4.0-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.5.2-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.5.2-Windows-x64-Portable.zip
 SHA256SUMS
 ```
 
 Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
 
-## What v0.4.0 provides
+## What v0.5.2 provides
 
 ### Wallet
 
