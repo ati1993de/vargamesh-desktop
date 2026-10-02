@@ -190,9 +190,9 @@ function balanceValues(){ const b=state.wallet?.balances; if(b?.mine)return {tru
 function applyI18n(){
   document.documentElement.lang=state.settings.language;
   $$('[data-i18n]').forEach(el=>{ const k=el.dataset.i18n; if(I18N[state.settings.language]?.[k]) el.textContent=tr(k); });
-  $('[data-i18n-placeholder]').forEach(el=>{ const k=el.dataset.i18nPlaceholder; if(I18N[state.settings.language]?.[k]) el.placeholder=tr(k); });
-  $('[data-i18n-title]').forEach(el=>{ const k=el.dataset.i18nTitle; if(I18N[state.settings.language]?.[k]) el.title=tr(k); });
-  $('[data-i18n-aria-label]').forEach(el=>{ const k=el.dataset.i18nAriaLabel; if(I18N[state.settings.language]?.[k]) el.setAttribute('aria-label',tr(k)); });
+  $$('[data-i18n-placeholder]').forEach(el=>{ const k=el.dataset.i18nPlaceholder; if(I18N[state.settings.language]?.[k]) el.placeholder=tr(k); });
+  $$('[data-i18n-title]').forEach(el=>{ const k=el.dataset.i18nTitle; if(I18N[state.settings.language]?.[k]) el.title=tr(k); });
+  $$('[data-i18n-aria-label]').forEach(el=>{ const k=el.dataset.i18nAriaLabel; if(I18N[state.settings.language]?.[k]) el.setAttribute('aria-label',tr(k)); });
   const active=document.querySelector('.nav-item.active'); if(active) $("pageTitle").textContent=active.querySelector("b")?.textContent || tr("nav_dashboard");
 }
 function applyTheme(){ document.documentElement.dataset.theme=state.settings.theme; }
