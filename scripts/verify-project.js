@@ -5,13 +5,16 @@ const root = path.resolve(__dirname, "..");
 const required = [
   "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js","src/fee-policy.js","src/vmt.js","src/i18n-native.js",
   "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/vmt.js","src/renderer/qr.js","src/renderer/i18n-ru.js","src/renderer/i18n-zh.js","src/renderer/i18n-extra.js","src/wallet-import.js",
-  "assets/vmesh_coin.png","assets/vmesh_mark.png","build/icon.ico","docs/MSIX-STORE.md",
-  "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh","scripts/test-i18n.js"
+  "assets/vmesh_coin.png","assets/vmesh_mark.png","build/icon.ico","docs/MSIX-STORE.md","docs/BUILDING-MACOS.md",
+  "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh","scripts/prepare-macos-icon.sh","scripts/test-i18n.js"
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.5.2") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.6.0") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
+if (pkg.build?.mac?.icon !== "build/icon.icns") throw new Error("macOS icon configuration missing");
+if (pkg.build?.mac?.artifactName !== "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}") throw new Error("macOS artifact naming missing");
+if (!pkg.scripts?.["dist:mac:x64"] || !pkg.scripts?.["dist:mac:arm64"]) throw new Error("macOS build scripts missing");
 const html = fs.readFileSync(path.join(root,"src/renderer/index.html"),"utf8");
 if (/(?:src|href)=["\']https?:\/\//i.test(html)) throw new Error("Renderer HTML must not load remote resources");
 if (!html.includes("Content-Security-Policy")) throw new Error("Renderer CSP missing");
@@ -52,7 +55,7 @@ for (const m of preload.matchAll(/call\(\"([^\"]+)\"/g)) {
 
 
 const coreManager = fs.readFileSync(path.join(root,"src/core-manager.js"),"utf8");
-for (const token of ["STATUS_DLL_NOT_FOUND","path.join(win, \"System32\")","cwd: this.coreDir","env }"]) {
+for (const token of ["STATUS_DLL_NOT_FOUND","path.join(win, \"System32\")","process.platform === \"win32\" ? \"vargameshd.exe\" : \"vargameshd\"","cwd: this.coreDir","env }"]) {
   if (!coreManager.includes(token)) throw new Error(`Core runtime hardening token missing: ${token}`);
 }
 
