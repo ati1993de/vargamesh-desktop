@@ -1,11 +1,11 @@
 # Changelog
 
-## [0.6.0] - Unreleased
+## [0.6.0] - 2026-10-04
 
 ### Added
 
 - Native macOS Desktop packaging for Intel x86_64 and Apple Silicon arm64.
-- DMG and ZIP test artifacts for both macOS architectures.
+- Public DMG and ZIP artifacts for both macOS architectures.
 - Native macOS CI builds using matching official VargaMesh Core v0.2.0 binaries.
 - macOS application icon generation from the existing VargaMesh artwork.
 - macOS build documentation and architecture/runtime verification.
@@ -22,7 +22,7 @@
 - Bundled Core remains VargaMesh Core v0.2.0.
 - No VargaMesh consensus, network, address or wallet-derivation rules are changed.
 - Existing Windows Desktop functionality remains part of the v0.6.0 source line.
-- macOS artifacts remain test builds until physical-device validation is complete.
+- macOS v0.6.0 is published as pre-1.0 public-testing software; the initial Mac packages are unsigned and not Apple-notarized.
 
 ## [0.5.2] - 2026-10-02
 

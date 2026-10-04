@@ -10,7 +10,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -142,3 +142,33 @@ jobs:
             dist/VargaMesh-Desktop-v*-macOS-${{ matrix.electron_arch }}.zip
             dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}
           if-no-files-found: error
+
+      - name: Publish macOS assets to v0.6.0 release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p 'require("./package.json").version')"
+          tag="v$version"
+          dmg="dist/VargaMesh-Desktop-v$version-macOS-${{ matrix.electron_arch }}.dmg"
+          zip="dist/VargaMesh-Desktop-v$version-macOS-${{ matrix.electron_arch }}.zip"
+          sums="dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}"
+
+          echo "Waiting for Windows release workflow to create $tag ..."
+          found=0
+          for attempt in $(seq 1 60); do
+            if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              found=1
+              break
+            fi
+            sleep 10
+          done
+
+          if [[ "$found" != "1" ]]; then
+            echo "ERROR: GitHub Release $tag was not created within 10 minutes."
+            exit 1
+          fi
+
+          gh release upload "$tag" "$dmg" "$zip" "$sums" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber

@@ -17,15 +17,15 @@
 
 VargaMesh Desktop is the graphical full-node client for running a local VargaMesh node and managing a self-custody VMESH wallet on supported desktop platforms. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current stable release:** `v0.5.2` · Windows 10/11 x64
-> **Current development line:** `v0.6.0` · adds native macOS Intel + Apple Silicon builds
+> **Current public release:** `v0.6.0`
+> **Platforms:** Windows 10/11 x64 · macOS Intel x86_64 · macOS Apple Silicon arm64
 > **Bundled Core:** `VargaMesh Core v0.2.0`
 
-## v0.6.0 development – macOS support
+## v0.6.0 – Windows + macOS
 
-The `v0.6.0` development line extends the existing Windows Desktop client to native macOS packaging while preserving the same self-custody/Core architecture.
+VargaMesh Desktop `v0.6.0` extends the existing Windows Desktop client to native macOS packaging while preserving the same self-custody/Core architecture.
 
-Current macOS work includes:
+The v0.6.0 release includes:
 
 - native **Intel x86_64** Desktop build
 - native **Apple Silicon arm64** Desktop build
@@ -34,9 +34,9 @@ Current macOS work includes:
 - native Core data directory at `~/Library/Application Support/VargaMesh`
 - platform-aware Core executable selection (`vargameshd.exe` on Windows, `vargameshd` on macOS)
 - native CI builds on Intel and Apple Silicon GitHub macOS runners
-- packaged Core architecture/runtime verification before test artifacts are uploaded
+- packaged Core architecture/runtime verification before artifacts are published
 
-The first macOS packages are **testing builds** and are not yet an official stable public release. They are intentionally unsigned while physical Mac testing is performed; macOS Gatekeeper may therefore show a warning.
+The first public macOS packages are **unsigned and not Apple-notarized**. They are built and verified on native Intel and Apple Silicon GitHub runners, but macOS Gatekeeper may show a warning or block first launch. Download only from the official GitHub release and verify the published SHA-256 checksum.
 
 Build documentation: [`docs/BUILDING-MACOS.md`](docs/BUILDING-MACOS.md)
 
@@ -71,14 +71,21 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.5.2-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.5.2-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.6.0-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.6.0-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.6.0-macOS-x64.dmg
+VargaMesh-Desktop-v0.6.0-macOS-x64.zip
+VargaMesh-Desktop-v0.6.0-macOS-arm64.dmg
+VargaMesh-Desktop-v0.6.0-macOS-arm64.zip
+
 SHA256SUMS
+SHA256SUMS-macOS-x64
+SHA256SUMS-macOS-arm64
 ```
 
 Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
 
-## What v0.5.2 provides
+## What v0.6.0 provides
 
 ### Wallet
 
@@ -132,8 +139,8 @@ Verify the SHA256 checksum before running a downloaded binary. The portable ZIP 
 
 ### macOS integration
 
-- Intel x86_64 DMG and ZIP test packages
-- Apple Silicon arm64 DMG and ZIP test packages
+- Intel x86_64 DMG and ZIP packages
+- Apple Silicon arm64 DMG and ZIP packages
 - native macOS VargaMesh Core v0.2.0 runtime
 - native Core data directory under `~/Library/Application Support/VargaMesh`
 - menu-bar/tray-compatible background behavior through Electron
@@ -264,8 +271,8 @@ Before importing private keys, restoring wallets or performing legacy migration,
 PowerShell example:
 
 ```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.4.0-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.6.0-Windows-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.6.0-Windows-x64-Portable.zip -Algorithm SHA256
 ```
 
 Compare the resulting values with `SHA256SUMS` from the same GitHub release.
@@ -305,8 +312,8 @@ npm run build:linux-wine
 The build script downloads the official VargaMesh Core Windows x64 release, preserves its complete runtime directory, performs project checks and builds:
 
 ```text
-dist/VargaMesh-Desktop-v0.4.0-Windows-x64-Setup.exe
-dist/VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip
+dist/VargaMesh-Desktop-v0.6.0-Windows-x64-Setup.exe
+dist/VargaMesh-Desktop-v0.6.0-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 
@@ -318,7 +325,7 @@ See [`docs/BUILDING-MACOS.md`](docs/BUILDING-MACOS.md) for Intel and Apple Silic
 
 ## Automated releases
 
-Tagged `v*` stable releases currently use the Windows release workflow. The macOS `v0.6.0` development workflow builds Intel and Apple Silicon packages on native macOS runners and uploads them as CI artifacts for testing; it intentionally does not publish a GitHub Release yet.
+Public releases build Windows x64 plus native Intel and Apple Silicon macOS packages. The Windows workflow creates the GitHub Release, and the native macOS jobs attach the verified DMG/ZIP packages and architecture-specific SHA-256 files to the same release.
 
 Maintainer checklist: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md)
 
