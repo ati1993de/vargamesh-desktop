@@ -104,7 +104,7 @@ separate from Core wallet/blockchain data.
 
 ## Signing and notarization
 
-The first macOS CI builds are intended for controlled testing and are unsigned.
+The initial public macOS v0.6.0 builds are unsigned and not Apple-notarized.
 macOS Gatekeeper may therefore warn or block a first launch.
 
 A polished public macOS release should be signed with an Apple Developer ID
@@ -118,6 +118,6 @@ macOS runners, downloads the matching official VargaMesh Core v0.2.0 runtime,
 runs source checks, builds DMG/ZIP artifacts and verifies that the packaged Core
 binary has the expected architecture.
 
-The macOS workflow intentionally does not publish a GitHub Release yet. The
-artifacts are for testing until the macOS Desktop path has been validated on
-real user hardware.
+For a release-marked main commit, the macOS workflow waits for the Windows
+release workflow to create the matching GitHub Release and then uploads the
+verified Intel/Apple-Silicon DMG, ZIP and SHA-256 assets to that same release.
