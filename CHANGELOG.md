@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.6.0] - Unreleased
+
+### Added
+
+- Native macOS Desktop packaging for Intel x86_64 and Apple Silicon arm64.
+- DMG and ZIP test artifacts for both macOS architectures.
+- Native macOS CI builds using matching official VargaMesh Core v0.2.0 binaries.
+- macOS application icon generation from the existing VargaMesh artwork.
+- macOS build documentation and architecture/runtime verification.
+
+### Changed
+
+- Core executable selection is platform-aware: `vargameshd.exe` on Windows and `vargameshd` on macOS/Unix.
+- VargaMesh Core data paths now use the native macOS location `~/Library/Application Support/VargaMesh`.
+- Desktop package metadata now describes the application as cross-platform.
+- Launch-at-login handling supports packaged Windows and macOS builds.
+
+### Compatibility
+
+- Bundled Core remains VargaMesh Core v0.2.0.
+- No VargaMesh consensus, network, address or wallet-derivation rules are changed.
+- Existing Windows Desktop functionality remains part of the v0.6.0 source line.
+- macOS artifacts remain test builds until physical-device validation is complete.
+
 ## [0.5.2] - 2026-10-02
 
 ### Added

@@ -5,21 +5,40 @@
 </p>
 
 <p align="center">
-  <strong>Self-custody Windows wallet and full-node desktop client for VargaMesh (VMESH).</strong>
+  <strong>Self-custody Windows and macOS wallet and full-node desktop client for VargaMesh (VMESH).</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com/ati1993de/vargamesh-desktop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ati1993de/vargamesh-desktop?display_name=tag&sort=semver"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%20x64-0078D6">
+  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%20x64%20%7C%20macOS-0078D6">
   <img alt="Core" src="https://img.shields.io/badge/VargaMesh%20Core-v0.2.0-00bfe8">
 </p>
 
-VargaMesh Desktop is the recommended graphical Windows client for running a local VargaMesh full node and managing a self-custody VMESH wallet. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
+VargaMesh Desktop is the graphical full-node client for running a local VargaMesh node and managing a self-custody VMESH wallet on supported desktop platforms. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current release line:** `v0.5.2`
+> **Current stable release:** `v0.5.2` · Windows 10/11 x64
+> **Current development line:** `v0.6.0` · adds native macOS Intel + Apple Silicon builds
 > **Bundled Core:** `VargaMesh Core v0.2.0`
-> **Platform:** Windows 10/11 x64
+
+## v0.6.0 development – macOS support
+
+The `v0.6.0` development line extends the existing Windows Desktop client to native macOS packaging while preserving the same self-custody/Core architecture.
+
+Current macOS work includes:
+
+- native **Intel x86_64** Desktop build
+- native **Apple Silicon arm64** Desktop build
+- matching official VargaMesh Core v0.2.0 runtime for each architecture
+- macOS `.dmg` and `.zip` packages
+- native Core data directory at `~/Library/Application Support/VargaMesh`
+- platform-aware Core executable selection (`vargameshd.exe` on Windows, `vargameshd` on macOS)
+- native CI builds on Intel and Apple Silicon GitHub macOS runners
+- packaged Core architecture/runtime verification before test artifacts are uploaded
+
+The first macOS packages are **testing builds** and are not yet an official stable public release. They are intentionally unsigned while physical Mac testing is performed; macOS Gatekeeper may therefore show a warning.
+
+Build documentation: [`docs/BUILDING-MACOS.md`](docs/BUILDING-MACOS.md)
 
 ## v0.5.2 – VMT-1 + multilingual desktop
 
@@ -89,7 +108,7 @@ Verify the SHA256 checksum before running a downloaded binary. The portable ZIP 
 
 ### Full node
 
-- bundled VargaMesh Core Windows x64 runtime
+- bundled platform-matched VargaMesh Core runtime
 - automatic Core startup and clean shutdown
 - localhost-only cookie-authenticated JSON-RPC
 - blockchain height and synchronization progress
@@ -110,6 +129,15 @@ Verify the SHA256 checksum before running a downloaded binary. The portable ZIP 
 - tray action to lock all loaded wallets
 - clean **Quit and stop Core** action
 - Microsoft Store/MSIX preparation assets
+
+### macOS integration
+
+- Intel x86_64 DMG and ZIP test packages
+- Apple Silicon arm64 DMG and ZIP test packages
+- native macOS VargaMesh Core v0.2.0 runtime
+- native Core data directory under `~/Library/Application Support/VargaMesh`
+- menu-bar/tray-compatible background behavior through Electron
+- macOS builds verified separately for Intel and Apple Silicon
 
 ### Privacy and security
 
@@ -153,17 +181,21 @@ The Desktop UI does not reimplement private-key cryptography or blockchain conse
 
 ## First start
 
-On first launch, Desktop creates or uses:
+On first launch, Desktop creates or uses the native VargaMesh Core data directory.
+
+Windows:
 
 ```text
 %LOCALAPPDATA%\VargaMesh
 ```
 
-The local Core configuration is:
+macOS:
 
 ```text
-%LOCALAPPDATA%\VargaMesh\vargamesh.conf
+~/Library/Application Support/VargaMesh
 ```
+
+The local Core configuration is `vargamesh.conf` inside that platform-specific Core data directory.
 
 Desktop starts the bundled Core, waits for local RPC readiness and begins synchronizing the VargaMesh blockchain. Initial synchronization time depends on current chain height, available peers, CPU, storage and network speed.
 
@@ -244,7 +276,7 @@ Compare the resulting values with `SHA256SUMS` from the same GitHub release.
 
 - Node.js 22+
 - npm
-- VargaMesh Core Windows x64 runtime
+- matching VargaMesh Core runtime for the target platform/architecture
 
 Local source verification:
 
@@ -278,11 +310,15 @@ dist/VargaMesh-Desktop-v0.4.0-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 
-Detailed build documentation: [`docs/BUILDING-WINDOWS.md`](docs/BUILDING-WINDOWS.md)
+Detailed Windows build documentation: [`docs/BUILDING-WINDOWS.md`](docs/BUILDING-WINDOWS.md)
+
+### macOS build
+
+See [`docs/BUILDING-MACOS.md`](docs/BUILDING-MACOS.md) for Intel and Apple Silicon builds.
 
 ## Automated releases
 
-Tagged `v*` builds run through GitHub Actions on `windows-latest`. The release workflow validates the source, downloads the official Core runtime, builds the Windows artifacts, creates SHA256 checksums and publishes the tagged version as the GitHub **Latest** release.
+Tagged `v*` stable releases currently use the Windows release workflow. The macOS `v0.6.0` development workflow builds Intel and Apple Silicon packages on native macOS runners and uploads them as CI artifacts for testing; it intentionally does not publish a GitHub Release yet.
 
 Maintainer checklist: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md)
 
@@ -300,8 +336,8 @@ When reporting a problem, never attach wallet files, backups, WIF/private keys, 
 
 | Resource | Link |
 | --- | --- |
-| VargaMesh | https://vargacoin.com/ |
-| Explorer | https://mempool.vargacoin.com/ |
+| VargaMesh | https://vargamesh.com/ |
+| Explorer | https://mempool.vargamesh.com/ |
 | VargaMesh Core | https://github.com/ati1993de/vargamesh-core |
 | Desktop releases | https://github.com/ati1993de/vargamesh-desktop/releases |
 | Wallet SDK | https://github.com/ati1993de/vargamesh-wallet-sdk |

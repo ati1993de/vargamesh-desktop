@@ -1,7 +1,7 @@
 {
   "name": "vargamesh-desktop",
-  "version": "0.5.2",
-  "description": "Secure Windows desktop wallet and full-node controller for VargaMesh (VMESH)",
+  "version": "0.6.0",
+  "description": "Secure cross-platform desktop wallet and full-node controller for VargaMesh (VMESH)",
   "productName": "VargaMesh Desktop",
   "main": "src/main.js",
   "author": "Varga-Tech",
@@ -19,7 +19,10 @@
     "dist:installer": "electron-builder --win nsis --x64 --publish never",
     "dist:portable": "electron-builder --win zip --x64 --publish never",
     "build:linux-wine": "bash scripts/build-windows-linux.sh",
-    "lint": "eslint src/main.js src/preload.js src/rpc.js src/core-manager.js src/settings.js src/i18n-native.js src/wallet-import.js src/fee-policy.js src/hd-wallet.js src/vmt.js src/renderer/app.js src/renderer/vmt.js src/renderer/i18n-ru.js src/renderer/i18n-zh.js src/renderer/i18n-extra.js scripts/*.js"
+    "lint": "eslint src/main.js src/preload.js src/rpc.js src/core-manager.js src/settings.js src/i18n-native.js src/wallet-import.js src/fee-policy.js src/hd-wallet.js src/vmt.js src/renderer/app.js src/renderer/vmt.js src/renderer/i18n-ru.js src/renderer/i18n-zh.js src/renderer/i18n-extra.js scripts/*.js",
+    "prepare:macos:icon": "bash scripts/prepare-macos-icon.sh",
+    "dist:mac:x64": "npm run prepare:macos:icon && electron-builder --mac dmg zip --x64 --publish never",
+    "dist:mac:arm64": "npm run prepare:macos:icon && electron-builder --mac dmg zip --arm64 --publish never"
   },
   "devDependencies": {
     "electron": "44.4.3",
@@ -86,6 +89,31 @@
       "shortcutName": "VargaMesh Desktop",
       "deleteAppDataOnUninstall": false,
       "artifactName": "VargaMesh-Desktop-v${version}-Windows-x64-Setup.${ext}"
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.finance",
+      "artifactName": "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "VargaMesh Desktop ${version}",
+      "artifactName": "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}"
     }
   },
   "dependencies": {

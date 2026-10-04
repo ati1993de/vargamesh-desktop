@@ -47,8 +47,14 @@ const EXTERNAL_ALLOWLIST = new Set([
   "https://www.npmjs.com/package/@vargamesh/wallet-sdk"
 ]);
 
-function localBaseDir() {
-  return process.env.LOCALAPPDATA || app.getPath("userData");
+function coreDataDir() {
+  if (process.platform === "win32") {
+    return path.join(process.env.LOCALAPPDATA || app.getPath("userData"), "VargaMesh");
+  }
+  if (process.platform === "darwin") {
+    return path.join(app.getPath("home"), "Library", "Application Support", "VargaMesh");
+  }
+  return path.join(app.getPath("home"), ".vargamesh");
 }
 
 function uiLanguage() {
@@ -60,7 +66,7 @@ function nt(key, vars = {}) {
 }
 
 function paths() {
-  const dataDir = path.join(localBaseDir(), "VargaMesh");
+  const dataDir = coreDataDir();
   const configFile = path.join(dataDir, "vargamesh.conf");
   const coreDir = process.env.VARGAMESH_CORE_DIR || (app.isPackaged
     ? path.join(process.resourcesPath, "core")
@@ -543,7 +549,7 @@ function installHandlers() {
       if (feePolicy.fallback && /fallbackfee is disabled/i.test(message)) {
         throw new Error(
           "VargaMesh Core is running without the Desktop fallback fee. " +
-          "Quit VargaMesh Desktop completely (including the tray/Core process) and start v0.4.0 again."
+          "Quit VargaMesh Desktop completely (including the tray/Core process) and start Desktop again."
         );
       }
       throw err;
@@ -744,13 +750,14 @@ function showMainWindow() {
 function applyNativeSettings() {
   if (!settings) return;
   const current = settings.get();
-  if (process.platform === "win32" && app.isPackaged) {
+  if ((process.platform === "win32" || process.platform === "darwin") && app.isPackaged) {
     try {
-      app.setLoginItemSettings({
+      const loginSettings = {
         openAtLogin: !!current.launchAtLogin,
-        path: process.execPath,
         args: ["--background"]
-      });
+      };
+      if (process.platform === "win32") loginSettings.path = process.execPath;
+      app.setLoginItemSettings(loginSettings);
     } catch (_) {}
   }
 }
