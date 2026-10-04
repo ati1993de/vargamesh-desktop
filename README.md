@@ -34,7 +34,7 @@ The v0.6.0 release includes:
 - native Core data directory at `~/Library/Application Support/VargaMesh`
 - platform-aware Core executable selection (`vargameshd.exe` on Windows, `vargameshd` on macOS)
 - native CI builds on Intel and Apple Silicon GitHub macOS runners
-- packaged Core architecture/runtime verification before test artifacts are uploaded
+- packaged Core architecture/runtime verification before artifacts are published
 
 The first public macOS packages are **unsigned and not Apple-notarized**. They are built and verified on native Intel and Apple Silicon GitHub runners, but macOS Gatekeeper may show a warning or block first launch. Download only from the official GitHub release and verify the published SHA-256 checksum.
 
@@ -325,7 +325,7 @@ See [`docs/BUILDING-MACOS.md`](docs/BUILDING-MACOS.md) for Intel and Apple Silic
 
 ## Automated releases
 
-Public releases use the Windows release workflow to create the release. The macOS `v0.6.0` builds Windows x64 plus native Intel and Apple Silicon macOS packages. The Windows workflow creates the public release and the native macOS jobs attach the verified DMG/ZIP packages and architecture-specific SHA-256 files to the same release.
+Public releases build Windows x64 plus native Intel and Apple Silicon macOS packages. The Windows workflow creates the GitHub Release, and the native macOS jobs attach the verified DMG/ZIP packages and architecture-specific SHA-256 files to the same release.
 
 Maintainer checklist: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md)
 
