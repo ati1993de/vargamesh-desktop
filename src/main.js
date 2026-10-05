@@ -1,6 +1,6 @@
 "use strict";
 
-const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, session, powerMonitor, Tray, Menu, nativeImage } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, session, powerMonitor, Tray, Menu, nativeImage, net } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const { CoreManager } = require("./core-manager");
@@ -216,7 +216,7 @@ function installHandlers() {
   });
   register("core:mempool", async () => core.rpc.call("getmempoolinfo"));
   register("core:mining", async () => core.rpc.call("getmininginfo"));
-  register("market:quote", async () => getNestExQuote());
+  register("market:quote", async () => getNestExQuote({ fetchImpl: net.fetch }));
 
   register("core:peers", async () => {
     const peers = await core.rpc.call("getpeerinfo");
