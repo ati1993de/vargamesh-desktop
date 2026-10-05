@@ -3,14 +3,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const required = [
-  "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js","src/fee-policy.js","src/vmt.js","src/i18n-native.js",
+  "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js","src/market.js","src/fee-policy.js","src/vmt.js","src/i18n-native.js",
   "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/vmt.js","src/renderer/qr.js","src/renderer/i18n-ru.js","src/renderer/i18n-zh.js","src/renderer/i18n-extra.js","src/wallet-import.js",
   "assets/vmesh_coin.png","assets/vmesh_mark.png","build/icon.ico","docs/MSIX-STORE.md","docs/BUILDING-MACOS.md",
-  "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh","scripts/prepare-macos-icon.sh","scripts/test-i18n.js"
+  "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh","scripts/prepare-macos-icon.sh","scripts/test-market.js","scripts/test-i18n.js"
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.6.0") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.6.1") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 if (pkg.build?.mac?.icon !== "build/icon.icns") throw new Error("macOS icon configuration missing");
 if (pkg.build?.mac?.artifactName !== "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}") throw new Error("macOS artifact naming missing");
@@ -98,8 +98,13 @@ for (const token of ["vmtPrepare","vmtBroadcast","prepareCreate","prepareAction"
 if (vmtRenderer.includes("1000.00000000")) throw new Error("CREATE fee must not be hard-coded in VMT renderer");
 if (vmt.includes("rpcpassword=") || vmtRenderer.includes("rpcpassword=")) throw new Error("VMT source must not contain RPC passwords");
 
+const market = fs.readFileSync(path.join(root,"src/market.js"),"utf8");
+for (const token of ["trade.nestex.one/api/cg/tickers/VMESH_USDT","CACHE_MS","STALE_MS","normalizeTicker","getNestExQuote"]) if (!market.includes(token)) throw new Error(`Market data token missing: ${token}`);
+if (!main.includes("market:quote")) throw new Error("Market IPC handler missing");
+if (!preload.includes("marketQuote")) throw new Error("Market preload bridge missing");
+for (const token of ["dashMarketPrice","dashWalletValue","walletBalanceValue","marketDataEnabled"]) if (!html.includes(token)) throw new Error(`Market renderer HTML token missing: ${token}`);
 const settings = fs.readFileSync(path.join(root,"src/settings.js"),"utf8");
-for (const token of ["closeToTray","minimizeToTray","startMinimized","launchAtLogin"]) if (!settings.includes(token)) throw new Error(`Tray setting missing: ${token}`);
+for (const token of ["closeToTray","minimizeToTray","startMinimized","launchAtLogin","marketDataEnabled"]) if (!settings.includes(token)) throw new Error(`Settings token missing: ${token}`);
 const importer = fs.readFileSync(path.join(root,"src/wallet-import.js"),"utf8");
 for (const token of ["wpkh(","pkh(","sh(wpkh(","requireWif","addDescriptorChecksum"]) if (!importer.includes(token)) throw new Error(`Wallet importer token missing: ${token}`);
 const buildScript = fs.readFileSync(path.join(root,"scripts/build-windows-linux.sh"),"utf8");
