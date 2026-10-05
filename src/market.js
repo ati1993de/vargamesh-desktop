@@ -47,9 +47,8 @@ function normalizeTicker(payload, now = Date.now()) {
   };
 }
 
-async function fetchTicker(fetchImpl = globalThis.fetch, now = Date.now()) {
+async function fetchTicker(fetchImpl = globalThis.fetch, now = Date.now(), AbortControllerImpl = globalThis.AbortController) {
   if (typeof fetchImpl !== "function") throw new Error("Fetch API is unavailable.");
-  const AbortControllerImpl = globalThis.AbortController;
   if (typeof AbortControllerImpl !== "function") throw new Error("AbortController is unavailable.");
 
   const controller = new AbortControllerImpl();
@@ -88,7 +87,7 @@ function unavailable(now) {
   };
 }
 
-async function getNestExQuote({ force = false, fetchImpl = globalThis.fetch, now = Date.now() } = {}) {
+async function getNestExQuote({ force = false, fetchImpl = globalThis.fetch, now = Date.now(), abortControllerImpl = globalThis.AbortController } = {}) {
   if (!force && cachedQuote && now - cachedAt < CACHE_MS) {
     return { ...cachedQuote, cached: true };
   }
@@ -96,7 +95,7 @@ async function getNestExQuote({ force = false, fetchImpl = globalThis.fetch, now
 
   const request = (async () => {
     try {
-      const quote = await fetchTicker(fetchImpl, now);
+      const quote = await fetchTicker(fetchImpl, now, abortControllerImpl);
       cachedQuote = quote;
       cachedAt = now;
       return { ...quote, cached: false };
