@@ -13,6 +13,7 @@ const {
   deriveWalletDescriptors
 } = require("./hd-wallet");
 const { resolveFeePolicy } = require("./fee-policy");
+const { getNestExQuote } = require("./market");
 const {
   portfolio: vmtPortfolio,
   tokenDirectory: vmtTokenDirectory,
@@ -215,6 +216,8 @@ function installHandlers() {
   });
   register("core:mempool", async () => core.rpc.call("getmempoolinfo"));
   register("core:mining", async () => core.rpc.call("getmininginfo"));
+  register("market:quote", async payload => getNestExQuote({ force: payload.force === true }));
+
   register("core:peers", async () => {
     const peers = await core.rpc.call("getpeerinfo");
     return peers.map(peer => ({
