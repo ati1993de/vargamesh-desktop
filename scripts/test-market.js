@@ -8,6 +8,11 @@ const {
   resetMarketCacheForTests
 } = require("../src/market");
 
+class TestAbortController {
+  constructor() { this.signal = {}; }
+  abort() {}
+}
+
 const sample = {
   ticker_id: "VMESH_USDT",
   base_currency: "VMESH",
@@ -41,12 +46,12 @@ assert.throws(() => normalizeTicker({ ...sample, last_price: 0 }), /numeric/);
     return { ok: true, status: 200, text: async () => JSON.stringify(sample) };
   };
 
-  const first = await getNestExQuote({ fetchImpl: goodFetch, now: 10_000 });
+  const first = await getNestExQuote({ fetchImpl: goodFetch, abortControllerImpl: TestAbortController, now: 10_000 });
   assert.equal(first.available, true);
   assert.equal(first.cached, false);
   assert.equal(calls, 1);
 
-  const cached = await getNestExQuote({ fetchImpl: goodFetch, now: 20_000 });
+  const cached = await getNestExQuote({ fetchImpl: goodFetch, abortControllerImpl: TestAbortController, now: 20_000 });
   assert.equal(cached.available, true);
   assert.equal(cached.cached, true);
   assert.equal(calls, 1);
@@ -54,6 +59,7 @@ assert.throws(() => normalizeTicker({ ...sample, last_price: 0 }), /numeric/);
   const stale = await getNestExQuote({
     force: true,
     fetchImpl: async () => { throw new Error("offline"); },
+    abortControllerImpl: TestAbortController,
     now: 30_000
   });
   assert.equal(stale.available, true);
@@ -63,6 +69,7 @@ assert.throws(() => normalizeTicker({ ...sample, last_price: 0 }), /numeric/);
   resetMarketCacheForTests();
   const unavailable = await getNestExQuote({
     fetchImpl: async () => { throw new Error("offline"); },
+    abortControllerImpl: TestAbortController,
     now: 40_000
   });
   assert.equal(unavailable.available, false);
