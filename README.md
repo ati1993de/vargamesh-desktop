@@ -17,9 +17,21 @@
 
 VargaMesh Desktop is the graphical full-node client for running a local VargaMesh node and managing a self-custody VMESH wallet on supported desktop platforms. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current public release:** `v0.6.1`
+> **Current public release:** `v0.6.2`
 > **Platforms:** Windows 10/11 x64 · macOS Intel x86_64 · macOS Apple Silicon arm64
 > **Bundled Core:** `VargaMesh Core v0.2.0`
+
+## v0.6.2 – NestEx market-data hotfix
+
+VargaMesh Desktop `v0.6.2` fixes the VMESH/USDT price source used by v0.6.1.
+
+- primary ticker: `https://api.nestex.one/cg/tickers/VMESH_USDT`
+- fallback ticker: `https://trade.nestex.one/api/cg/tickers/VMESH_USDT`
+- Electron main-process `net.fetch` for exchange HTTPS requests
+- supports object, array and `data`-wrapped ticker responses
+- still validates the exact `VMESH_USDT` market
+- wallet USDT estimate remains `trusted VMESH balance × NestEx last_price`
+- Core/wallet operation stays independent from NestEx availability
 
 ## v0.6.1 – NestEx price + wallet USDT estimate
 
@@ -85,12 +97,12 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.6.1-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.6.1-Windows-x64-Portable.zip
-VargaMesh-Desktop-v0.6.1-macOS-x64.dmg
-VargaMesh-Desktop-v0.6.1-macOS-x64.zip
-VargaMesh-Desktop-v0.6.1-macOS-arm64.dmg
-VargaMesh-Desktop-v0.6.1-macOS-arm64.zip
+VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.6.2-macOS-x64.dmg
+VargaMesh-Desktop-v0.6.2-macOS-x64.zip
+VargaMesh-Desktop-v0.6.2-macOS-arm64.dmg
+VargaMesh-Desktop-v0.6.2-macOS-arm64.zip
 
 SHA256SUMS
 SHA256SUMS-macOS-x64
@@ -99,7 +111,7 @@ SHA256SUMS-macOS-arm64
 
 Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
 
-## What v0.6.1 provides
+## What v0.6.2 provides
 
 ### Wallet
 
@@ -129,11 +141,11 @@ Verify the SHA256 checksum before running a downloaded binary. The portable ZIP 
 
 ### Market price and estimated wallet value
 
-- optional public NestEx VMESH/USDT ticker
+- optional public NestEx VMESH/USDT ticker with dedicated API-host primary and trade-site fallback
 - last trade price with bid/ask context
 - active-wallet USDT estimate based on trusted VMESH balance × last trade price
 - external market requests are isolated to the main process
-- one-minute live request limit with timeout/cache fallback
+- one-minute refresh-cycle limit with endpoint fallback, timeout and stale-cache handling
 - wallet and node features do not depend on NestEx availability
 
 ### Full node
@@ -294,8 +306,8 @@ Before importing private keys, restoring wallets or performing legacy migration,
 PowerShell example:
 
 ```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.6.1-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.6.1-Windows-x64-Portable.zip -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip -Algorithm SHA256
 ```
 
 Compare the resulting values with `SHA256SUMS` from the same GitHub release.
@@ -335,8 +347,8 @@ npm run build:linux-wine
 The build script downloads the official VargaMesh Core Windows x64 release, preserves its complete runtime directory, performs project checks and builds:
 
 ```text
-dist/VargaMesh-Desktop-v0.6.1-Windows-x64-Setup.exe
-dist/VargaMesh-Desktop-v0.6.1-Windows-x64-Portable.zip
+dist/VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe
+dist/VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 
