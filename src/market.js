@@ -8,6 +8,8 @@ const MAX_BODY_BYTES = 64 * 1024;
 
 let cachedQuote = null;
 let cachedAt = 0;
+let lastAttemptAt = 0;
+let lastResult = null;
 let inFlight = null;
 
 function numberField(value, { required = false, positive = false } = {}) {
@@ -87,32 +89,38 @@ function unavailable(now) {
   };
 }
 
-async function getNestExQuote({ force = false, fetchImpl = globalThis.fetch, now = Date.now(), abortControllerImpl = globalThis.AbortController } = {}) {
-  if (!force && cachedQuote && now - cachedAt < CACHE_MS) {
-    return { ...cachedQuote, cached: true };
+async function getNestExQuote({ fetchImpl = globalThis.fetch, now = Date.now(), abortControllerImpl = globalThis.AbortController } = {}) {
+  if (lastResult && now - lastAttemptAt < CACHE_MS) {
+    return { ...lastResult, cached: true };
   }
-  if (!force && inFlight) return inFlight;
+  if (inFlight) return inFlight;
+
+  lastAttemptAt = now;
 
   const request = (async () => {
+    let result;
     try {
       const quote = await fetchTicker(fetchImpl, now, abortControllerImpl);
       cachedQuote = quote;
       cachedAt = now;
-      return { ...quote, cached: false };
+      result = { ...quote, cached: false };
     } catch (_) {
       if (cachedQuote && now - cachedAt <= STALE_MS) {
-        return {
+        result = {
           ...cachedQuote,
           stale: true,
           cached: true,
           cacheAgeSeconds: Math.max(0, Math.floor((now - cachedAt) / 1000))
         };
+      } else {
+        result = unavailable(now);
       }
-      return unavailable(now);
     }
+    lastResult = result;
+    return result;
   })();
 
-  if (!force) inFlight = request;
+  inFlight = request;
   try {
     return await request;
   } finally {
@@ -123,6 +131,8 @@ async function getNestExQuote({ force = false, fetchImpl = globalThis.fetch, now
 function resetMarketCacheForTests() {
   cachedQuote = null;
   cachedAt = 0;
+  lastAttemptAt = 0;
+  lastResult = null;
   inFlight = null;
 }
 
