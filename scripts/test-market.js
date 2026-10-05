@@ -57,23 +57,32 @@ assert.throws(() => normalizeTicker({ ...sample, last_price: 0 }), /numeric/);
   assert.equal(calls, 1);
 
   const stale = await getNestExQuote({
-    force: true,
     fetchImpl: async () => { throw new Error("offline"); },
     abortControllerImpl: TestAbortController,
-    now: 30_000
+    now: 80_000
   });
   assert.equal(stale.available, true);
   assert.equal(stale.stale, true);
   assert.equal(stale.price, sample.last_price);
 
   resetMarketCacheForTests();
+  let failures = 0;
+  const failingFetch = async () => { failures += 1; throw new Error("offline"); };
   const unavailable = await getNestExQuote({
-    fetchImpl: async () => { throw new Error("offline"); },
+    fetchImpl: failingFetch,
     abortControllerImpl: TestAbortController,
-    now: 40_000
+    now: 100_000
+  });
+  const throttledFailure = await getNestExQuote({
+    fetchImpl: failingFetch,
+    abortControllerImpl: TestAbortController,
+    now: 110_000
   });
   assert.equal(unavailable.available, false);
   assert.equal(unavailable.source, "NestEx");
+  assert.equal(throttledFailure.available, false);
+  assert.equal(throttledFailure.cached, true);
+  assert.equal(failures, 1);
 
   console.log("NestEx market-data regression tests: PASS");
 })().catch(error => {
