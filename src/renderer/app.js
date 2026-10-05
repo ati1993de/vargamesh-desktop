@@ -170,8 +170,8 @@ for (const lang of ["de","en","ru","zh"]) Object.assign(I18N[lang], window.VARGA
 const LOCALES = Object.freeze({ de:"de-DE", en:"en-US", ru:"ru-RU", zh:"zh-CN" });
 
 const state = {
-  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
-  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, unlockPurpose:"wallet"
+  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, marketDataEnabled:true, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
+  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, marketTimer:null, market:null, marketLastFetch:0, unlockPurpose:"wallet"
 };
 let pendingHdMnemonic="";
 
@@ -184,8 +184,60 @@ function shortHash(value,n=12){ if(!value)return "—"; return value.length>n*2?
 function formatBytes(n){ n=Number(n)||0; const units=["B","KB","MB","GB","TB"]; let i=0; while(n>=1024&&i<units.length-1){n/=1024;i++;} return `${n.toFixed(i?1:0)} ${units[i]}`; }
 function formatNumber(n,max=2){ const v=Number(n); return Number.isFinite(v)?new Intl.NumberFormat(currentLocale(),{maximumFractionDigits:max}).format(v):"—"; }
 function formatVMESH(n){ if(state.settings.hideBalances)return "•••••••• VMESH"; const v=Number(n); return Number.isFinite(v)?`${new Intl.NumberFormat(currentLocale(),{minimumFractionDigits:2,maximumFractionDigits:8}).format(v)} VMESH`:"—"; }
+function formatUSDTValue(n){ if(state.settings.hideBalances)return "•••••••• USDT"; const v=Number(n); return Number.isFinite(v)?`${new Intl.NumberFormat(currentLocale(),{minimumFractionDigits:2,maximumFractionDigits:v<1?6:4}).format(v)} USDT`:"—"; }
+function formatMarketNumber(n){ const v=Number(n); if(!Number.isFinite(v)||v<0)return "—"; const digits=v>=1?6:v>=0.01?8:12; return new Intl.NumberFormat(currentLocale(),{minimumFractionDigits:2,maximumFractionDigits:digits,useGrouping:false}).format(v); }
+function formatMarketPrice(n){ const value=formatMarketNumber(n); return value==="—"?"—":`${value} USDT`; }
 function formatDate(sec){ if(!sec)return "—"; return new Intl.DateTimeFormat(currentLocale(),{dateStyle:"short",timeStyle:"short"}).format(new Date(sec*1000)); }
 function balanceValues(){ const b=state.wallet?.balances; if(b?.mine)return {trusted:Number(b.mine.trusted||0),pending:Number(b.mine.untrusted_pending||0),immature:Number(b.mine.immature||0)}; const i=state.wallet?.info||{}; return {trusted:Number(i.balance||0),pending:Number(i.unconfirmed_balance||0),immature:Number(i.immature_balance||0)}; }
+
+function renderMarket(){
+  const enabled=state.settings.marketDataEnabled!==false;
+  const quote=enabled&&state.market?.available?state.market:null;
+  const priceEl=$("dashMarketPrice"), metaEl=$("dashMarketMeta");
+  if(!enabled){
+    priceEl.textContent="—";
+    metaEl.textContent=tr("market_disabled");
+    metaEl.title="";
+  }else if(!quote){
+    priceEl.textContent="—";
+    metaEl.textContent=tr("market_unavailable");
+    metaEl.title="";
+  }else{
+    priceEl.textContent=formatMarketPrice(quote.price);
+    const parts=["NestEx"];
+    if(quote.stale)parts.push(tr("market_stale"));
+    if(Number.isFinite(Number(quote.bid))&&Number.isFinite(Number(quote.ask))){
+      parts.push(`Bid ${formatMarketNumber(quote.bid)} · Ask ${formatMarketNumber(quote.ask)}`);
+    }else{
+      parts.push(tr("market_last_trade"));
+    }
+    metaEl.textContent=parts.join(" · ");
+    metaEl.title=quote.fetchedAt?`${tr("market_updated")}: ${new Intl.DateTimeFormat(currentLocale(),{dateStyle:"short",timeStyle:"medium"}).format(new Date(quote.fetchedAt))}`:"";
+  }
+
+  const walletValue=state.activeWallet&&quote?balanceValues().trusted*Number(quote.price):null;
+  $("dashWalletValue").textContent=walletValue==null?"—":`≈ ${formatUSDTValue(walletValue)} · NestEx`;
+  $("walletBalanceValue").textContent=walletValue==null?"—":`≈ ${formatUSDTValue(walletValue)} · ${tr("market_estimate_note")}`;
+}
+
+async function refreshMarket(force=false){
+  if(state.settings.marketDataEnabled===false){
+    state.market=null;
+    state.marketLastFetch=0;
+    renderMarket();
+    return;
+  }
+  const now=Date.now();
+  if(!force&&now-state.marketLastFetch<60_000)return;
+  state.marketLastFetch=now;
+  try{
+    const data=unwrap(await api.marketQuote(force));
+    state.market=data?.available?data:null;
+  }catch(_){
+    state.market=null;
+  }
+  renderMarket();
+}
 
 function applyI18n(){
   document.documentElement.lang=state.settings.language;
