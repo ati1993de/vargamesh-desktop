@@ -318,6 +318,7 @@ function renderWallet(){
   $("backupBtn").disabled=!state.activeWallet; $("lockBtn").disabled=!state.activeWallet||!encrypted||!unlocked; $("unlockBtn").disabled=!state.activeWallet||!encrypted||unlocked;
   $("importBtn").disabled=!state.activeWallet; $("rescanBtn").disabled=!state.activeWallet; $("unloadBtn").disabled=!state.activeWallet;
   const descriptor=info.descriptors===true; $("migrateBtn").disabled=!state.activeWallet||descriptor; $("migrateHint").textContent=descriptor?tr('migrate_descriptor_hint'):tr('migrate_hint');
+  renderMarket();
 }
 
 function renderTransactions(target,rows){
@@ -643,7 +644,7 @@ async function saveSettings(patch){try{state.settings=unwrap(await api.updateSet
 
 function bind(){
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view))); $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
-  $("refreshBtn").onclick=async()=>{await refreshCore();await loadNodeExtras();showToast(tr('refresh'));};
+  $("refreshBtn").onclick=async()=>{await refreshCore();await loadNodeExtras();await refreshMarket(true);showToast(tr('refresh'));};
   $("newWalletBtn").onclick=$("walletCreateBtn").onclick=()=>$("walletDialog").showModal(); $("createWalletConfirm").onclick=createWallet; $("loadWalletBtn").onclick=openLoadDialog;
   $("hdWalletBtn").onclick=()=>{clearHdCreate();$("hdWalletDialog").showModal();};
   $("hdRestoreBtn").onclick=()=>{$("hdRestoreName").value="";$("hdRestoreMnemonic").value="";$("hdRestorePass").value="";$("hdRestorePass2").value="";$("hdRestoreDialog").showModal();};
@@ -670,13 +671,13 @@ function bind(){
   $("migrateConfirm").onclick=async()=>{if(!state.activeWallet)return;const passphrase=$("migratePass").value;$("migrateConfirm").disabled=true;try{unwrap(await api.migrateWallet(state.activeWallet,passphrase));$("migratePass").value='';$("migrateDialog").close();showToast(tr('migration_completed'));await refreshWallets();}catch(err){showToast(err.message,true);}finally{$("migrateConfirm").disabled=false;}};
   $("unloadBtn").onclick=async()=>{if(!state.activeWallet)return;const name=state.activeWallet;try{unwrap(await api.unloadWallet(name));state.activeWallet='';await refreshWallets();showToast(tr('wallet_unloaded',{name}));}catch(err){showToast(err.message,true);}};
   $("dataDirBtn").onclick=async()=>{try{unwrap(await api.showDataDir());}catch(err){showToast(err.message,true);}}; $("debugLogBtn").onclick=async()=>{try{unwrap(await api.showDebugLog());}catch(err){showToast(err.message,true);}};
-  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
+  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("marketDataEnabled").onchange=async e=>{await saveSettings({marketDataEnabled:e.target.checked});await refreshMarket(true);}; $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
   $$('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
 }
 
 async function init(){
   bind();
-  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;applyTheme();applyI18n();unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
+  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("marketDataEnabled").checked=state.settings.marketDataEnabled!==false;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;applyTheme();applyI18n();void refreshMarket(true);state.marketTimer=setInterval(()=>{void refreshMarket(false);},60_000);unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
     showToast(err.message,true);
     $("coreDot").className='dot error';
     $("coreText").textContent=tr('core_error');
