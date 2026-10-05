@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.6.1] - 2026-10-05
+
+### Added
+
+- Live VMESH/USDT market price display using the public NestEx ticker API.
+- Estimated active-wallet USDT value calculated from trusted/confirmed VMESH balance × NestEx last trade price.
+- NestEx bid/ask context beside the displayed last price.
+- Optional market-data toggle in Desktop settings.
+- Dedicated market-data regression tests that do not depend on live NestEx availability.
+
+### Reliability & privacy
+
+- Market requests run only in the Electron main process through one allow-listed IPC method; the sandboxed renderer receives normalized quote data only.
+- Requests are rate-limited to at most one live fetch per minute, use an 8-second timeout and retain a short-lived in-memory stale quote for up to 15 minutes.
+- NestEx/API failure never blocks local Core, wallet, send/receive, VMT-1 or node functionality.
+- Wallet valuation is explicitly presented as an estimate based on the last NestEx VMESH/USDT trade, not as a guaranteed execution or liquidation value.
+- External market data can be disabled; when enabled, Desktop connects to `trade.nestex.one`.
+
+### Compatibility
+
+- Bundled Core remains VargaMesh Core v0.2.0.
+- No VargaMesh consensus, wallet format, address, derivation or VMT-1 protocol rules are changed.
+
 ## [0.6.0] - 2026-10-04
 
 ### Added

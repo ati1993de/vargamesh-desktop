@@ -170,8 +170,8 @@ for (const lang of ["de","en","ru","zh"]) Object.assign(I18N[lang], window.VARGA
 const LOCALES = Object.freeze({ de:"de-DE", en:"en-US", ru:"ru-RU", zh:"zh-CN" });
 
 const state = {
-  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
-  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, unlockPurpose:"wallet"
+  settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, marketDataEnabled:true, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
+  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, marketTimer:null, market:null, marketLastFetch:0, unlockPurpose:"wallet"
 };
 let pendingHdMnemonic="";
 
@@ -184,8 +184,60 @@ function shortHash(value,n=12){ if(!value)return "—"; return value.length>n*2?
 function formatBytes(n){ n=Number(n)||0; const units=["B","KB","MB","GB","TB"]; let i=0; while(n>=1024&&i<units.length-1){n/=1024;i++;} return `${n.toFixed(i?1:0)} ${units[i]}`; }
 function formatNumber(n,max=2){ const v=Number(n); return Number.isFinite(v)?new Intl.NumberFormat(currentLocale(),{maximumFractionDigits:max}).format(v):"—"; }
 function formatVMESH(n){ if(state.settings.hideBalances)return "•••••••• VMESH"; const v=Number(n); return Number.isFinite(v)?`${new Intl.NumberFormat(currentLocale(),{minimumFractionDigits:2,maximumFractionDigits:8}).format(v)} VMESH`:"—"; }
+function formatUSDTValue(n){ if(state.settings.hideBalances)return "•••••••• USDT"; const v=Number(n); return Number.isFinite(v)?`${new Intl.NumberFormat(currentLocale(),{minimumFractionDigits:2,maximumFractionDigits:v<1?6:4}).format(v)} USDT`:"—"; }
+function formatMarketNumber(n){ const v=Number(n); if(!Number.isFinite(v)||v<0)return "—"; const digits=v>=1?6:v>=0.01?8:12; return new Intl.NumberFormat(currentLocale(),{minimumFractionDigits:2,maximumFractionDigits:digits,useGrouping:false}).format(v); }
+function formatMarketPrice(n){ const value=formatMarketNumber(n); return value==="—"?"—":`${value} USDT`; }
 function formatDate(sec){ if(!sec)return "—"; return new Intl.DateTimeFormat(currentLocale(),{dateStyle:"short",timeStyle:"short"}).format(new Date(sec*1000)); }
 function balanceValues(){ const b=state.wallet?.balances; if(b?.mine)return {trusted:Number(b.mine.trusted||0),pending:Number(b.mine.untrusted_pending||0),immature:Number(b.mine.immature||0)}; const i=state.wallet?.info||{}; return {trusted:Number(i.balance||0),pending:Number(i.unconfirmed_balance||0),immature:Number(i.immature_balance||0)}; }
+
+function renderMarket(){
+  const enabled=state.settings.marketDataEnabled!==false;
+  const quote=enabled&&state.market?.available?state.market:null;
+  const priceEl=$("dashMarketPrice"), metaEl=$("dashMarketMeta");
+  if(!enabled){
+    priceEl.textContent="—";
+    metaEl.textContent=tr("market_disabled");
+    metaEl.title="";
+  }else if(!quote){
+    priceEl.textContent="—";
+    metaEl.textContent=tr("market_unavailable");
+    metaEl.title="";
+  }else{
+    priceEl.textContent=formatMarketPrice(quote.price);
+    const parts=["NestEx"];
+    if(quote.stale)parts.push(tr("market_stale"));
+    if(Number.isFinite(Number(quote.bid))&&Number.isFinite(Number(quote.ask))){
+      parts.push(`Bid ${formatMarketNumber(quote.bid)} · Ask ${formatMarketNumber(quote.ask)}`);
+    }else{
+      parts.push(tr("market_last_trade"));
+    }
+    metaEl.textContent=parts.join(" · ");
+    metaEl.title=quote.fetchedAt?`${tr("market_updated")}: ${new Intl.DateTimeFormat(currentLocale(),{dateStyle:"short",timeStyle:"medium"}).format(new Date(quote.fetchedAt))}`:"";
+  }
+
+  const walletValue=state.activeWallet&&quote?balanceValues().trusted*Number(quote.price):null;
+  $("dashWalletValue").textContent=walletValue==null?"—":`≈ ${formatUSDTValue(walletValue)} · NestEx`;
+  $("walletBalanceValue").textContent=walletValue==null?"—":`≈ ${formatUSDTValue(walletValue)} · ${tr("market_estimate_note")}`;
+}
+
+async function refreshMarket(force=false){
+  if(state.settings.marketDataEnabled===false){
+    state.market=null;
+    state.marketLastFetch=0;
+    renderMarket();
+    return;
+  }
+  const now=Date.now();
+  if(!force&&now-state.marketLastFetch<60_000)return;
+  state.marketLastFetch=now;
+  try{
+    const data=unwrap(await api.marketQuote());
+    state.market=data?.available?data:null;
+  }catch(_){
+    state.market=null;
+  }
+  renderMarket();
+}
 
 function applyI18n(){
   document.documentElement.lang=state.settings.language;
@@ -266,6 +318,7 @@ function renderWallet(){
   $("backupBtn").disabled=!state.activeWallet; $("lockBtn").disabled=!state.activeWallet||!encrypted||!unlocked; $("unlockBtn").disabled=!state.activeWallet||!encrypted||unlocked;
   $("importBtn").disabled=!state.activeWallet; $("rescanBtn").disabled=!state.activeWallet; $("unloadBtn").disabled=!state.activeWallet;
   const descriptor=info.descriptors===true; $("migrateBtn").disabled=!state.activeWallet||descriptor; $("migrateHint").textContent=descriptor?tr('migrate_descriptor_hint'):tr('migrate_hint');
+  renderMarket();
 }
 
 function renderTransactions(target,rows){
@@ -591,7 +644,7 @@ async function saveSettings(patch){try{state.settings=unwrap(await api.updateSet
 
 function bind(){
   $$('.nav-item').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view))); $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.goto)));
-  $("refreshBtn").onclick=async()=>{await refreshCore();await loadNodeExtras();showToast(tr('refresh'));};
+  $("refreshBtn").onclick=async()=>{await refreshCore();await loadNodeExtras();await refreshMarket(true);showToast(tr('refresh'));};
   $("newWalletBtn").onclick=$("walletCreateBtn").onclick=()=>$("walletDialog").showModal(); $("createWalletConfirm").onclick=createWallet; $("loadWalletBtn").onclick=openLoadDialog;
   $("hdWalletBtn").onclick=()=>{clearHdCreate();$("hdWalletDialog").showModal();};
   $("hdRestoreBtn").onclick=()=>{$("hdRestoreName").value="";$("hdRestoreMnemonic").value="";$("hdRestorePass").value="";$("hdRestorePass2").value="";$("hdRestoreDialog").showModal();};
@@ -618,13 +671,13 @@ function bind(){
   $("migrateConfirm").onclick=async()=>{if(!state.activeWallet)return;const passphrase=$("migratePass").value;$("migrateConfirm").disabled=true;try{unwrap(await api.migrateWallet(state.activeWallet,passphrase));$("migratePass").value='';$("migrateDialog").close();showToast(tr('migration_completed'));await refreshWallets();}catch(err){showToast(err.message,true);}finally{$("migrateConfirm").disabled=false;}};
   $("unloadBtn").onclick=async()=>{if(!state.activeWallet)return;const name=state.activeWallet;try{unwrap(await api.unloadWallet(name));state.activeWallet='';await refreshWallets();showToast(tr('wallet_unloaded',{name}));}catch(err){showToast(err.message,true);}};
   $("dataDirBtn").onclick=async()=>{try{unwrap(await api.showDataDir());}catch(err){showToast(err.message,true);}}; $("debugLogBtn").onclick=async()=>{try{unwrap(await api.showDebugLog());}catch(err){showToast(err.message,true);}};
-  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
+  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("marketDataEnabled").onchange=async e=>{await saveSettings({marketDataEnabled:e.target.checked});await refreshMarket(true);}; $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
   $$('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
 }
 
 async function init(){
   bind();
-  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;applyTheme();applyI18n();unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
+  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("marketDataEnabled").checked=state.settings.marketDataEnabled!==false;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;applyTheme();applyI18n();void refreshMarket(true);state.marketTimer=setInterval(()=>{void refreshMarket(false);},60_000);unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
     showToast(err.message,true);
     $("coreDot").className='dot error';
     $("coreText").textContent=tr('core_error');

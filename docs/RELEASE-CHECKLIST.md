@@ -41,6 +41,17 @@ Use this checklist before publishing a VargaMesh Desktop release.
 - locked-wallet behavior is tested
 - no seed, WIF, private key or RPC cookie reaches the renderer or VMT API
 
+## Market data
+
+- NestEx `VMESH_USDT` quote loads without exposing wallet data
+- displayed price uses the normalized NestEx `last_price`
+- wallet USDT estimate uses trusted/confirmed balance only
+- hide-balances also hides the USDT wallet estimate
+- market-data setting disables external NestEx requests
+- NestEx failure does not block Core or wallet functionality
+- cached/stale quote is visibly identified
+- market regression tests pass without live network access
+
 ## Node
 
 - bundled Core starts automatically

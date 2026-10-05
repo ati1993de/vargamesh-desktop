@@ -8,6 +8,7 @@ module.exports = [
       "src/rpc.js",
       "src/core-manager.js",
       "src/settings.js",
+      "src/market.js",
       "src/wallet-import.js",
       "src/fee-policy.js",
       "src/hd-wallet.js",

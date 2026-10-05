@@ -10,6 +10,7 @@ const DEFAULTS = Object.freeze({
   autoLockSeconds: 90,
   confirmSend: true,
   hideBalances: false,
+  marketDataEnabled: true,
   txPageSize: 50,
   closeToTray: true,
   minimizeToTray: false,
@@ -25,6 +26,7 @@ function clean(input = {}) {
   if (Number.isInteger(input.autoLockSeconds) && input.autoLockSeconds >= 15 && input.autoLockSeconds <= 3600) out.autoLockSeconds = input.autoLockSeconds;
   if (typeof input.confirmSend === "boolean") out.confirmSend = input.confirmSend;
   if (typeof input.hideBalances === "boolean") out.hideBalances = input.hideBalances;
+  if (typeof input.marketDataEnabled === "boolean") out.marketDataEnabled = input.marketDataEnabled;
   if (Number.isInteger(input.txPageSize) && input.txPageSize >= 10 && input.txPageSize <= 200) out.txPageSize = input.txPageSize;
   if (typeof input.closeToTray === "boolean") out.closeToTray = input.closeToTray;
   if (typeof input.minimizeToTray === "boolean") out.minimizeToTray = input.minimizeToTray;

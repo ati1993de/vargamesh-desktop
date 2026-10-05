@@ -1,39 +1,46 @@
-# Publishing VargaMesh Desktop v0.3.3
+# Publishing VargaMesh Desktop
 
-VargaMesh Desktop uses tag-driven GitHub Actions releases.
+VargaMesh Desktop releases are built by GitHub Actions for Windows x64 and native macOS Intel / Apple Silicon.
 
-```bash
-git switch main
-git pull --ff-only origin main
-npm run check
-git diff --check
+## Preferred release path
 
-git add -A
-git commit -m "Release VargaMesh Desktop v0.3.3: Core fallbackfee send fix"
-git tag -a v0.3.3 -m "VargaMesh Desktop v0.3.3"
+1. Prepare the release on a branch.
+2. Update `package.json`, `package-lock.json`, `CHANGELOG.md` and `RELEASE-NOTES.md`.
+3. Open a pull request and require the Windows and macOS checks to pass.
+4. Merge to `main` with a commit message containing `[release]`.
 
-git push origin main
-git push origin v0.3.3
-```
-
-Pushing the tag triggers `.github/workflows/windows-release.yml` and publishes:
+Example squash-merge title:
 
 ```text
-VargaMesh-Desktop-v0.3.3-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.3.3-Windows-x64-Portable.zip
+[release] Publish VargaMesh Desktop v0.6.1
+```
+
+The Windows workflow then creates the GitHub Release for the version in `package.json`, and the macOS workflow uploads Intel x64 and Apple Silicon arm64 DMG/ZIP artifacts to the same release.
+
+## Local verification
+
+Before publishing:
+
+```bash
+npm install
+npm run check
+git diff --check
+```
+
+## Expected v0.6.1 assets
+
+```text
+VargaMesh-Desktop-v0.6.1-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.6.1-Windows-x64-Portable.zip
 SHA256SUMS
+
+VargaMesh-Desktop-v0.6.1-macOS-x64.dmg
+VargaMesh-Desktop-v0.6.1-macOS-x64.zip
+SHA256SUMS-macOS-x64
+
+VargaMesh-Desktop-v0.6.1-macOS-arm64.dmg
+VargaMesh-Desktop-v0.6.1-macOS-arm64.zip
+SHA256SUMS-macOS-arm64
 ```
 
-Monitor:
-
-```bash
-gh run list --repo ati1993de/vargamesh-desktop --limit 5
-```
-
-After success:
-
-```bash
-gh release view v0.3.3 --repo ati1993de/vargamesh-desktop
-```
-
-Do not reuse or move the existing `v0.3.0` tag. v0.3.3 must be a new tag so the old release remains reproducible.
+Do not reuse or move an existing release tag. Every release version must remain reproducible.

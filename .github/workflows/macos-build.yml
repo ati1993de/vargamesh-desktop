@@ -143,7 +143,7 @@ jobs:
             dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}
           if-no-files-found: error
 
-      - name: Publish macOS assets to v0.6.0 release
+      - name: Publish macOS assets to release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
         shell: bash
         run: |
