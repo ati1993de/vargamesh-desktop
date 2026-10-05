@@ -1,0 +1,319 @@
+name: VargaMesh Desktop CI & Release
+
+run-name: ${{ github.event.pull_request.title || github.event.head_commit.message || format('Manual run by {0}', github.actor) }}
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vmesh-desktop-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Source verification
+    if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/v') || contains(github.event.head_commit.message, '[release]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify source
+        run: npm run check
+
+  windows:
+    name: Windows x64
+    needs: verify
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Download VargaMesh Core v0.2.0
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force resources/core | Out-Null
+          gh release download v0.2.0 --repo ati1993de/vargamesh-core --pattern "vargamesh-core-0.2.0-windows-x86_64.zip" --dir "$env:RUNNER_TEMP"
+          Expand-Archive "$env:RUNNER_TEMP/vargamesh-core-0.2.0-windows-x86_64.zip" "$env:RUNNER_TEMP/vmesh-core" -Force
+          $daemon = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargameshd.exe | Select-Object -First 1
+          $cli = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargamesh-cli.exe | Select-Object -First 1
+          if (!$daemon -or !$cli) { throw "Core binaries missing" }
+          if ($daemon.DirectoryName -ne $cli.DirectoryName) { throw "Core daemon and CLI runtime directories differ" }
+          Remove-Item resources/core/* -Recurse -Force -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $daemon.DirectoryName '*') resources/core/ -Recurse -Force
+          if (!(Test-Path resources/core/vargameshd.exe) -or !(Test-Path resources/core/vargamesh-cli.exe)) { throw "Core runtime copy failed" }
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Windows packages
+        env:
+          GH_TOKEN: ""
+        run: npm run dist:win
+
+      - name: Create SHA256SUMS
+        shell: pwsh
+        run: |
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $setup = "dist/VargaMesh-Desktop-v$v-Windows-x64-Setup.exe"
+          $portable = "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip"
+          if (!(Test-Path $setup) -or !(Test-Path $portable)) { throw "Windows artifacts missing" }
+          @(
+            "$( (Get-FileHash $setup -Algorithm SHA256).Hash.ToLower() )  $(Split-Path $setup -Leaf)",
+            "$( (Get-FileHash $portable -Algorithm SHA256).Hash.ToLower() )  $(Split-Path $portable -Leaf)"
+          ) | Set-Content dist/SHA256SUMS -Encoding ascii
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VargaMesh-Desktop-Windows-x64
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            dist/*Setup.exe
+            dist/*Portable.zip
+            dist/SHA256SUMS
+
+  macos:
+    name: macOS ${{ matrix.label }}
+    needs: verify
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Intel x86_64
+            runner: macos-15-intel
+            electron_arch: x64
+            core_arch: x86_64
+          - label: Apple Silicon arm64
+            runner: macos-15
+            electron_arch: arm64
+            core_arch: arm64
+
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Download matching VargaMesh Core v0.2.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="vargamesh-core-0.2.0-macos-${{ matrix.core_arch }}.tar.gz"
+          mkdir -p resources/core "$RUNNER_TEMP/vmesh-core"
+          gh release download v0.2.0 \
+            --repo ati1993de/vargamesh-core \
+            --pattern "$asset" \
+            --dir "$RUNNER_TEMP"
+
+          tar -xzf "$RUNNER_TEMP/$asset" -C "$RUNNER_TEMP/vmesh-core"
+
+          daemon="$(find "$RUNNER_TEMP/vmesh-core" -type f -name vargameshd -print -quit)"
+          cli="$(find "$RUNNER_TEMP/vmesh-core" -type f -name vargamesh-cli -print -quit)"
+          test -n "$daemon"
+          test -n "$cli"
+          test "$(dirname "$daemon")" = "$(dirname "$cli")"
+
+          rm -rf resources/core/*
+          cp -a "$(dirname "$daemon")"/. resources/core/
+          chmod 0755 resources/core/vargamesh*
+
+          test -x resources/core/vargameshd
+          test -x resources/core/vargamesh-cli
+          resources/core/vargameshd --version
+          resources/core/vargamesh-cli --version
+
+          echo "Bundled Core architecture:"
+          file resources/core/vargameshd
+          file resources/core/vargamesh-cli
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify native Core selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const path = require("node:path");
+          const { CoreManager } = require("./src/core-manager");
+          const manager = new CoreManager({
+            dataDir: path.join(process.env.RUNNER_TEMP, "vmesh-desktop-test"),
+            configFile: path.join(process.env.RUNNER_TEMP, "vmesh-desktop-test", "vargamesh.conf"),
+            coreDir: path.resolve("resources/core")
+          });
+          const exe = manager.executable();
+          if (path.basename(exe) !== "vargameshd") {
+            throw new Error(`Unexpected macOS Core executable: ${exe}`);
+          }
+          console.log("CoreManager executable:", exe);
+          NODE
+
+      - name: Build macOS package
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run "dist:mac:${{ matrix.electron_arch }}"
+
+      - name: Verify packaged app and Core
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p 'require("./package.json").version')"
+          app_dir="$(find dist -maxdepth 2 -type d -name 'VargaMesh Desktop.app' -print -quit)"
+          test -n "$app_dir"
+
+          desktop_bin="$app_dir/Contents/MacOS/VargaMesh Desktop"
+          core_bin="$app_dir/Contents/Resources/core/vargameshd"
+          cli_bin="$app_dir/Contents/Resources/core/vargamesh-cli"
+
+          test -x "$desktop_bin"
+          test -x "$core_bin"
+          test -x "$cli_bin"
+
+          file "$desktop_bin"
+          file "$core_bin"
+          "$core_bin" --version
+          "$cli_bin" --version
+
+          dmg="dist/VargaMesh-Desktop-v$version-macOS-${{ matrix.electron_arch }}.dmg"
+          zip="dist/VargaMesh-Desktop-v$version-macOS-${{ matrix.electron_arch }}.zip"
+          test -s "$dmg"
+          test -s "$zip"
+
+          shasum -a 256 "$dmg" "$zip" > "dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}"
+          cat "dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VargaMesh-Desktop-macOS-${{ matrix.electron_arch }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            dist/VargaMesh-Desktop-v*-macOS-${{ matrix.electron_arch }}.dmg
+            dist/VargaMesh-Desktop-v*-macOS-${{ matrix.electron_arch }}.zip
+            dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}
+
+  release:
+    name: Publish GitHub Release
+    needs:
+      - windows
+      - macos
+    if: >-
+      always() &&
+      needs.windows.result == 'success' &&
+      needs.macos.result == 'success' &&
+      (
+        startsWith(github.ref, 'refs/tags/v') ||
+        (github.event_name == 'push' &&
+         github.ref == 'refs/heads/main' &&
+         contains(github.event.head_commit.message, '[release]'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: VargaMesh-Desktop-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Verify complete release asset set
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p 'require("./package.json").version')"
+
+          expected=(
+            "VargaMesh-Desktop-v$version-Windows-x64-Setup.exe"
+            "VargaMesh-Desktop-v$version-Windows-x64-Portable.zip"
+            "SHA256SUMS"
+            "VargaMesh-Desktop-v$version-macOS-x64.dmg"
+            "VargaMesh-Desktop-v$version-macOS-x64.zip"
+            "SHA256SUMS-macOS-x64"
+            "VargaMesh-Desktop-v$version-macOS-arm64.dmg"
+            "VargaMesh-Desktop-v$version-macOS-arm64.zip"
+            "SHA256SUMS-macOS-arm64"
+          )
+
+          for file in "${expected[@]}"; do
+            test -s "release-assets/$file" || {
+              echo "Missing release asset: $file"
+              exit 1
+            }
+          done
+
+          echo "Complete release asset set:"
+          printf ' - %s\n' "${expected[@]}"
+
+      - name: Publish release
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p 'require("./package.json").version')"
+          tag="v$version"
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            [[ "$GITHUB_REF_NAME" == "$tag" ]] || {
+              echo "Tag/version mismatch: $GITHUB_REF_NAME != $tag"
+              exit 1
+            }
+            gh release create "$tag" release-assets/* \
+              --title "VargaMesh Desktop v$version" \
+              --notes-file RELEASE-NOTES.md \
+              --verify-tag \
+              --latest
+          else
+            if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "Release $tag already exists."
+              exit 1
+            fi
+            gh release create "$tag" release-assets/* \
+              --title "VargaMesh Desktop v$version" \
+              --notes-file RELEASE-NOTES.md \
+              --target "$GITHUB_SHA" \
+              --latest
+          fi
