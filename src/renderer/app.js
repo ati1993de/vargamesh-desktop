@@ -231,7 +231,7 @@ async function refreshMarket(force=false){
   if(!force&&now-state.marketLastFetch<60_000)return;
   state.marketLastFetch=now;
   try{
-    const data=unwrap(await api.marketQuote(force));
+    const data=unwrap(await api.marketQuote());
     state.market=data?.available?data:null;
   }catch(_){
     state.market=null;
