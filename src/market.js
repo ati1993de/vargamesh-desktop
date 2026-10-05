@@ -1,10 +1,14 @@
 "use strict";
 
-const NESTEX_TICKER_URL = "https://trade.nestex.one/api/cg/tickers/VMESH_USDT";
+const NESTEX_TICKER_URLS = Object.freeze([
+  "https://api.nestex.one/cg/tickers/VMESH_USDT",
+  "https://trade.nestex.one/api/cg/tickers/VMESH_USDT"
+]);
 const CACHE_MS = 60_000;
 const STALE_MS = 15 * 60_000;
 const TIMEOUT_MS = 8_000;
 const MAX_BODY_BYTES = 64 * 1024;
+const ALLOWED_HOSTS = new Set(["api.nestex.one", "trade.nestex.one"]);
 
 let cachedQuote = null;
 let cachedAt = 0;
@@ -25,11 +29,24 @@ function numberField(value, { required = false, positive = false } = {}) {
   return parsed;
 }
 
-function normalizeTicker(payload, now = Date.now()) {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+function selectTicker(payload) {
+  if (Array.isArray(payload)) {
+    const match = payload.find(item => item?.ticker_id === "VMESH_USDT");
+    if (!match) throw new Error("VMESH_USDT ticker missing.");
+    return match;
+  }
+  if (payload?.data && (Array.isArray(payload.data) || typeof payload.data === "object")) {
+    return selectTicker(payload.data);
+  }
+  if (!payload || typeof payload !== "object") {
     throw new Error("Unexpected NestEx ticker response.");
   }
-  if (payload.ticker_id !== "VMESH_USDT" || payload.base_currency !== "VMESH" || payload.target_currency !== "USDT") {
+  return payload;
+}
+
+function normalizeTicker(payload, now = Date.now(), endpoint = "") {
+  const ticker = selectTicker(payload);
+  if (ticker.ticker_id !== "VMESH_USDT" || ticker.base_currency !== "VMESH" || ticker.target_currency !== "USDT") {
     throw new Error("Unexpected NestEx ticker identity.");
   }
 
@@ -37,30 +54,38 @@ function normalizeTicker(payload, now = Date.now()) {
     available: true,
     source: "NestEx",
     pair: "VMESH/USDT",
-    price: numberField(payload.last_price, { required: true, positive: true }),
-    bid: numberField(payload.bid),
-    ask: numberField(payload.ask),
-    high24h: numberField(payload.high),
-    low24h: numberField(payload.low),
-    baseVolume24h: numberField(payload.base_volume),
-    quoteVolume24h: numberField(payload.target_volume),
+    price: numberField(ticker.last_price, { required: true, positive: true }),
+    bid: numberField(ticker.bid),
+    ask: numberField(ticker.ask),
+    high24h: numberField(ticker.high),
+    low24h: numberField(ticker.low),
+    baseVolume24h: numberField(ticker.base_volume),
+    quoteVolume24h: numberField(ticker.target_volume),
     fetchedAt: new Date(now).toISOString(),
+    endpoint,
     stale: false
   };
 }
 
-async function fetchTicker(fetchImpl = globalThis.fetch, now = Date.now(), AbortControllerImpl = globalThis.AbortController) {
-  if (typeof fetchImpl !== "function") throw new Error("Fetch API is unavailable.");
-  if (typeof AbortControllerImpl !== "function") throw new Error("AbortController is unavailable.");
+function validateResponseUrl(response, requestedUrl) {
+  const finalUrl = response?.url || requestedUrl;
+  const parsed = new URL(finalUrl);
+  if (parsed.protocol !== "https:" || !ALLOWED_HOSTS.has(parsed.hostname)) {
+    throw new Error("Unexpected NestEx redirect target.");
+  }
+}
 
+async function fetchOneTicker(url, fetchImpl, now, AbortControllerImpl) {
   const controller = new AbortControllerImpl();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const response = await fetchImpl(NESTEX_TICKER_URL, {
+    const response = await fetchImpl(url, {
       method: "GET",
-      headers: { Accept: "application/json" },
-      redirect: "error",
+      headers: {
+        Accept: "application/json"
+      },
+      redirect: "follow",
       signal: controller.signal
     });
 
@@ -68,15 +93,32 @@ async function fetchTicker(fetchImpl = globalThis.fetch, now = Date.now(), Abort
       throw new Error(`NestEx ticker HTTP ${response?.status || "error"}.`);
     }
 
+    validateResponseUrl(response, url);
+
     const body = await response.text();
     if (Buffer.byteLength(body, "utf8") > MAX_BODY_BYTES) {
       throw new Error("NestEx ticker response too large.");
     }
 
-    return normalizeTicker(JSON.parse(body), now);
+    return normalizeTicker(JSON.parse(body), now, new URL(url).hostname);
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchTicker(fetchImpl = globalThis.fetch, now = Date.now(), AbortControllerImpl = globalThis.AbortController) {
+  if (typeof fetchImpl !== "function") throw new Error("Fetch API is unavailable.");
+  if (typeof AbortControllerImpl !== "function") throw new Error("AbortController is unavailable.");
+
+  let lastError = null;
+  for (const url of NESTEX_TICKER_URLS) {
+    try {
+      return await fetchOneTicker(url, fetchImpl, now, AbortControllerImpl);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError || new Error("NestEx ticker unavailable.");
 }
 
 function unavailable(now) {
@@ -137,9 +179,10 @@ function resetMarketCacheForTests() {
 }
 
 module.exports = {
-  NESTEX_TICKER_URL,
+  NESTEX_TICKER_URLS,
   CACHE_MS,
   STALE_MS,
+  selectTicker,
   normalizeTicker,
   getNestExQuote,
   resetMarketCacheForTests
