@@ -216,7 +216,7 @@ function installHandlers() {
   });
   register("core:mempool", async () => core.rpc.call("getmempoolinfo"));
   register("core:mining", async () => core.rpc.call("getmininginfo"));
-  register("market:quote", async payload => getNestExQuote({ force: payload.force === true }));
+  register("market:quote", async () => getNestExQuote());
 
   register("core:peers", async () => {
     const peers = await core.rpc.call("getpeerinfo");
