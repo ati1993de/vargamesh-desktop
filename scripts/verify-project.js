@@ -100,7 +100,7 @@ if (vmt.includes("rpcpassword=") || vmtRenderer.includes("rpcpassword=")) throw 
 
 const market = fs.readFileSync(path.join(root,"src/market.js"),"utf8");
 for (const token of ["api.nestex.one/cg/tickers/VMESH_USDT","trade.nestex.one/api/cg/tickers/VMESH_USDT","NESTEX_TICKER_URLS","selectTicker","CACHE_MS","STALE_MS","normalizeTicker","getNestExQuote"]) if (!market.includes(token)) throw new Error(`Market data token missing: ${token}`);
-if (!main.includes("market:quote") || !main.includes("fetchImpl: net.fetch")) throw new Error("Market IPC / Electron net.fetch integration missing");
+if (!main.includes("market:quote") || !main.includes("net.fetch(url, options)")) throw new Error("Market IPC / Electron net.fetch integration missing");
 if (!preload.includes("marketQuote")) throw new Error("Market preload bridge missing");
 for (const token of ["dashMarketPrice","dashWalletValue","walletBalanceValue","marketDataEnabled"]) if (!html.includes(token)) throw new Error(`Market renderer HTML token missing: ${token}`);
 const settings = fs.readFileSync(path.join(root,"src/settings.js"),"utf8");
