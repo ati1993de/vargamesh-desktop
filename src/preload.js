@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld("vmesh", Object.freeze({
   mempool: () => call("core:mempool"),
   mining: () => call("core:mining"),
   peers: () => call("core:peers"),
-  marketQuote: (force = false) => call("market:quote", { force }),
+  marketQuote: () => call("market:quote"),
   listWallets: () => call("wallet:list"),
   createWallet: data => call("wallet:create", data),
   generateHdWallet: (words = 24) => call("wallet:hdGenerate", { words }),
