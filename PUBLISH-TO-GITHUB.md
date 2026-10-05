@@ -12,7 +12,7 @@ VargaMesh Desktop releases are built by GitHub Actions for Windows x64 and nativ
 Example squash-merge title:
 
 ```text
-[release] Publish VargaMesh Desktop v0.6.1
+[release] Publish VargaMesh Desktop v0.6.2
 ```
 
 The Windows workflow then creates the GitHub Release for the version in `package.json`, and the macOS workflow uploads Intel x64 and Apple Silicon arm64 DMG/ZIP artifacts to the same release.
@@ -27,19 +27,19 @@ npm run check
 git diff --check
 ```
 
-## Expected v0.6.1 assets
+## Expected v0.6.2 assets
 
 ```text
-VargaMesh-Desktop-v0.6.1-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.6.1-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip
 SHA256SUMS
 
-VargaMesh-Desktop-v0.6.1-macOS-x64.dmg
-VargaMesh-Desktop-v0.6.1-macOS-x64.zip
+VargaMesh-Desktop-v0.6.2-macOS-x64.dmg
+VargaMesh-Desktop-v0.6.2-macOS-x64.zip
 SHA256SUMS-macOS-x64
 
-VargaMesh-Desktop-v0.6.1-macOS-arm64.dmg
-VargaMesh-Desktop-v0.6.1-macOS-arm64.zip
+VargaMesh-Desktop-v0.6.2-macOS-arm64.dmg
+VargaMesh-Desktop-v0.6.2-macOS-arm64.zip
 SHA256SUMS-macOS-arm64
 ```
 

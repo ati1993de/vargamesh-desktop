@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.2] - 2026-10-05
+
+### Fixed
+
+- Corrected the primary NestEx VMESH/USDT ticker endpoint to `https://api.nestex.one/cg/tickers/VMESH_USDT`.
+- Added the documented `trade.nestex.one/api/cg/tickers/VMESH_USDT` route as a fallback.
+- Market requests now use Electron's `net.fetch` network stack from the main process.
+- NestEx ticker parsing now accepts the single-object response as well as array or `data`-wrapped responses while still requiring the exact `VMESH_USDT` market identity.
+
+### Reliability
+
+- The existing 60-second refresh-cycle throttle, 8-second per-endpoint timeout and 15-minute stale-cache fallback remain in place.
+- A failed primary NestEx host can fall through to the second NestEx endpoint during the same refresh cycle.
+- Wallet, Core, VMT-1 and node functionality remain independent from market-data availability.
+
+### Compatibility
+
+- Bundled Core remains VargaMesh Core v0.2.0.
+- No VargaMesh consensus, wallet, key, address, derivation or VMT-1 protocol rules change.
+
 ## [0.6.1] - 2026-10-05
 
 ### Added

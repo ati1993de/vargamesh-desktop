@@ -10,7 +10,7 @@ const required = [
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.6.1") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.6.2") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 if (pkg.build?.mac?.icon !== "build/icon.icns") throw new Error("macOS icon configuration missing");
 if (pkg.build?.mac?.artifactName !== "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}") throw new Error("macOS artifact naming missing");
@@ -99,8 +99,8 @@ if (vmtRenderer.includes("1000.00000000")) throw new Error("CREATE fee must not 
 if (vmt.includes("rpcpassword=") || vmtRenderer.includes("rpcpassword=")) throw new Error("VMT source must not contain RPC passwords");
 
 const market = fs.readFileSync(path.join(root,"src/market.js"),"utf8");
-for (const token of ["trade.nestex.one/api/cg/tickers/VMESH_USDT","CACHE_MS","STALE_MS","normalizeTicker","getNestExQuote"]) if (!market.includes(token)) throw new Error(`Market data token missing: ${token}`);
-if (!main.includes("market:quote")) throw new Error("Market IPC handler missing");
+for (const token of ["api.nestex.one/cg/tickers/VMESH_USDT","trade.nestex.one/api/cg/tickers/VMESH_USDT","NESTEX_TICKER_URLS","selectTicker","CACHE_MS","STALE_MS","normalizeTicker","getNestExQuote"]) if (!market.includes(token)) throw new Error(`Market data token missing: ${token}`);
+if (!main.includes("market:quote") || !main.includes("net.fetch(url, options)")) throw new Error("Market IPC / Electron net.fetch integration missing");
 if (!preload.includes("marketQuote")) throw new Error("Market preload bridge missing");
 for (const token of ["dashMarketPrice","dashWalletValue","walletBalanceValue","marketDataEnabled"]) if (!html.includes(token)) throw new Error(`Market renderer HTML token missing: ${token}`);
 const settings = fs.readFileSync(path.join(root,"src/settings.js"),"utf8");
