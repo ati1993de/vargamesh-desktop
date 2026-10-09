@@ -17,7 +17,7 @@
 
 VargaMesh Desktop is the graphical full-node client for running a local VargaMesh node and managing a self-custody VMESH wallet on supported desktop platforms. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Next release:** `v0.7.1` (startup hotfix; awaiting release CI)
+> **Current public release:** `v0.7.1` · [GitHub release](https://github.com/ati1993de/vargamesh-desktop/releases/tag/v0.7.1)
 > **Platforms:** Windows 10/11 x64 · macOS Intel x86_64 · macOS Apple Silicon arm64
 > **Bundled Core:** `VargaMesh Core v0.2.0`
 
