@@ -22,13 +22,11 @@ class AddressBook {
     this.contacts = [];
     try {
       const saved = JSON.parse(fs.readFileSync(filename, "utf8"));
-      if (Array.isArray(saved) && saved.length <= 1000) {
-        for (const entry of saved) {
-          try {
-            const id = typeof entry.id === "string" && /^[0-9a-f-]{36}$/.test(entry.id) ? entry.id : randomUUID();
-            this.contacts.push({ id, label: cleanLabel(entry.label), target: normalizeTarget(entry.target) });
-          } catch (_) {}
-        }
+      if (!Array.isArray(saved) || saved.length > 1000) throw new Error("Invalid address book format.");
+      for (const entry of saved) {
+        if (!entry || typeof entry !== "object") throw new Error("Corrupt address book entry.");
+        const id = typeof entry.id === "string" && /^[0-9a-f-]{36}$/.test(entry.id) ? entry.id : randomUUID();
+        this.contacts.push({ id, label: cleanLabel(entry.label), target: normalizeTarget(entry.target) });
       }
     } catch (err) {
       if (err.code !== "ENOENT") throw new Error("Cannot read address book. Existing data was not overwritten.");

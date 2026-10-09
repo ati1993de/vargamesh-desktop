@@ -887,8 +887,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1420,
     height: 900,
-    minWidth: 1080,
-    minHeight: 700,
+    minWidth: 760,
+    minHeight: 580,
     show: false,
     backgroundColor: "#07131c",
     icon: path.join(__dirname, "..", "assets", "vmesh_mark.png"),

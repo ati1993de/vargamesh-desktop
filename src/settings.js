@@ -29,7 +29,7 @@ function clean(input = {}) {
   if (["system", "light", "dark"].includes(input.theme)) out.theme = input.theme;
   if (typeof input.activeWallet === "string" && input.activeWallet.length <= 128) out.activeWallet = input.activeWallet;
   if (Number.isInteger(input.autoLockSeconds) && input.autoLockSeconds >= 15 && input.autoLockSeconds <= 3600) out.autoLockSeconds = input.autoLockSeconds;
-  if (typeof input.confirmSend === "boolean") out.confirmSend = input.confirmSend;
+  // Security: final confirmation is mandatory in Desktop v0.7.0.
   if (typeof input.hideBalances === "boolean") out.hideBalances = input.hideBalances;
   if (typeof input.marketDataEnabled === "boolean") out.marketDataEnabled = input.marketDataEnabled;
   for (const key of ["notificationsEnabled", "notifyReceived", "notifyConfirmed", "notifySync", "notificationShowAmounts"]) {
