@@ -526,6 +526,26 @@ function installHandlers() {
   });
 
   register("wallet:summary", async payload => walletSummary(payload.wallet));
+  register("wallet:exportCsv", async payload => {
+    const wallet = requireWalletName(payload.wallet);
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: "Export VMESH transactions",
+      defaultPath: path.join(app.getPath("documents"), wallet + "-transactions.csv"),
+      filters: [{ name: "CSV", extensions: ["csv"] }]
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    const rows = await walletRpc("listtransactions", ["*", 1000, 0, true], wallet, 30000);
+    const cells = value => {
+      const v = String(value ?? "");
+      const protectedValue = /^[=+@]/.test(v) ? "'" + v : v;
+      return '"' + protectedValue.replace(/"/g, '""') + '"';
+    };
+    const fields = ["time", "category", "txid", "address", "amount", "confirmations", "label", "comment"];
+    const csv = [fields.map(cells).join(","),
+      ...rows.map(row => fields.map(field => cells(row[field])).join(","))].join("\r\n") + "\r\n";
+    fs.writeFileSync(result.filePath, "\ufeff" + csv, { encoding: "utf8", flag: "wx", mode: 0o600 });
+    return { canceled: false, count: rows.length };
+  });
   register("wallet:transactions", async payload => {
     const count = Math.min(200, Math.max(10, Number(payload.count) || settings.get().txPageSize));
     const skip = Math.max(0, Number(payload.skip) || 0);

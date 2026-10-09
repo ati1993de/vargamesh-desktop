@@ -90,3 +90,38 @@
 @media(max-width:900px){.vmt-asset-card{grid-template-columns:1fr}.vmt-holding{text-align:left}.vmt-review,.vmt-detail-grid{grid-template-columns:1fr}.vmt-action-summary{align-items:flex-start;flex-direction:column}.vmt-action-summary code{max-width:100%}}
 
 .vmt-utxo-note{grid-column:1/-1;font-size:11px;color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line));border-radius:9px;padding:8px 10px}
+
+/* v0.7 professional wallet: responsive navigation and contacts */
+.contact-panel{display:flex;flex-direction:column;gap:20px}
+.contact-form{display:grid;grid-template-columns:1fr 1.3fr;align-items:end;gap:12px}
+.contact-form>.row{grid-column:1/-1}
+.contact-list{display:flex;flex-direction:column;gap:9px}
+.contact-entry{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}
+.contact-details{display:flex;flex-direction:column;gap:5px;min-width:0}
+.contact-details code{font-size:12px;overflow-wrap:anywhere}
+.contact-entry .row{flex-wrap:wrap;justify-content:end}
+@media(max-width:1050px){
+  .app-shell{display:grid;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .sidebar{display:flex;flex-direction:row;align-items:center;gap:14px;padding:10px 14px;min-width:0;overflow-x:auto}
+  .brand{padding:0;flex-shrink:0}.brand span,.sidebar-status{display:none}
+  .nav{flex-direction:row;align-items:center;flex-shrink:0}
+  .nav-item{padding:9px;gap:5px}.nav-item b{font-size:12px}
+  .main{padding:0 20px 32px;min-width:0}
+  .topbar{padding:15px 0}
+  .contact-entry{align-items:flex-start}
+}
+@media(max-width:800px){
+  .brand strong{display:none}.nav-item b{display:none}
+  .nav-item span{font-size:20px}
+  .metric-grid,.two-col,.settings-grid,.action-grid{grid-template-columns:1fr}
+  .hero-card{padding:24px;min-height:200px}.hero-coin{display:none}
+  .hero-copy h2{font-size:24px}
+  .section-head,.wallet-overview,.contact-entry{flex-direction:column;align-items:stretch}
+  .wallet-balance{text-align:left}
+  .contact-form{grid-template-columns:1fr}
+  .contact-form>.row{grid-column:auto}
+  .topbar{flex-wrap:wrap;gap:9px}.topbar h1{font-size:21px}
+  .top-actions{flex-wrap:wrap}.top-actions select{min-width:150px}
+  .contact-entry .row{justify-content:flex-start}
+  .form-row,.send-summary{grid-template-columns:1fr}
+}

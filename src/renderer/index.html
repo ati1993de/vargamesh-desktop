@@ -21,6 +21,7 @@
         <button class="nav-item" data-view="send"><span>↗</span><b data-i18n="nav_send">Senden</b></button>
         <button class="nav-item" data-view="receive"><span>↙</span><b data-i18n="nav_receive">Empfangen</b></button>
         <button class="nav-item" data-view="transactions"><span>≡</span><b data-i18n="nav_transactions">Transaktionen</b></button>
+        <button class="nav-item" data-view="contacts"><span>◎</span><b data-i18n="nav_contacts">Adressbuch</b></button>
         <button class="nav-item" data-view="vmt"><span>◈</span><b data-i18n="nav_tokens">Tokens</b></button>
         <button class="nav-item" data-view="node"><span>⧉</span><b data-i18n="nav_node">Node</b></button>
         <button class="nav-item" data-view="settings"><span>⚙</span><b data-i18n="nav_settings">Einstellungen</b></button>
@@ -111,7 +112,8 @@
       <section class="view" id="view-send">
         <div class="section-head"><div><span class="eyebrow">VMESH</span><h2 data-i18n="send_vmesh">VMESH senden</h2><p data-i18n="send_warning">Transaktionen sind nach Bestätigung durch das Netzwerk nicht rückgängig zu machen.</p></div></div>
         <div class="form-panel panel narrow">
-          <label><span data-i18n="destination">Empfängeradresse</span><input id="sendAddress" type="text" spellcheck="false" autocomplete="off" placeholder="vm1…"></label>
+          <label><span data-i18n="contact_target">VMESH-Adresse oder name.vmesh</span><input id="sendAddress" type="text" spellcheck="false" autocomplete="off" placeholder="vm1… / alice.vmesh"></label>
+          <p class="muted small" data-i18n="vns_payment_notice">VNS-Namen werden vor der Zahlung erneut geprüft.</p>
           <div class="field-note" id="addressValidation"></div>
           <div class="form-row"><label><span data-i18n="amount_vmesh">Betrag (VMESH)</span><input id="sendAmount" type="number" min="0" step="0.00000001" inputmode="decimal"></label><label><span data-i18n="fee_target">Gebührenschätzung</span><select id="feeTarget"><option value="2" data-i18n="target_2_blocks">2 Blocks</option><option value="6" selected data-i18n="target_6_blocks">6 Blocks</option><option value="12" data-i18n="target_12_blocks">12 Blocks</option><option value="24" data-i18n="target_24_blocks">24 Blocks</option></select></label></div>
           <label><span data-i18n="comment_optional">Notiz (optional, lokal)</span><input id="sendComment" type="text" maxlength="120"></label>
@@ -132,8 +134,19 @@
         </div>
       </section>
 
+      <section class="view" id="view-contacts">
+        <div class="section-head"><div><span class="eyebrow">VNS / CONTACTS</span><h2 data-i18n="contacts_title">Kontakte & VNS</h2><p data-i18n="contacts_hint">Lokales Adressbuch mit sicherer Namensauflösung.</p></div></div>
+        <section class="panel contact-panel">
+          <div class="contact-form">
+            <label><span data-i18n="contact_name">Kontaktname</span><input id="contactLabel" type="text" maxlength="80" autocomplete="off"></label>
+            <label><span data-i18n="contact_target">VMESH-Adresse oder name.vmesh</span><input id="contactTarget" type="text" maxlength="128" spellcheck="false" autocomplete="off" placeholder="vm1… / alice.vmesh"></label>
+            <div class="row"><button class="btn primary" id="contactSave" type="button" data-i18n="contact_save">Kontakt speichern</button><button class="btn secondary" id="contactCancel" type="button" data-i18n="contact_cancel">Abbrechen</button></div>
+          </div>
+          <div id="contactList" class="contact-list"></div>
+        </section>
+      </section>
       <section class="view" id="view-transactions">
-        <div class="section-head"><div><span class="eyebrow" data-i18n="eyebrow_history">HISTORY</span><h2 data-i18n="transactions">Transaktionen</h2></div><button class="btn secondary" id="reloadTxBtn" data-i18n="refresh">Aktualisieren</button></div>
+        <div class="section-head"><div><span class="eyebrow" data-i18n="eyebrow_history">HISTORY</span><h2 data-i18n="transactions">Transaktionen</h2></div><button class="btn secondary" id="reloadTxBtn" data-i18n="refresh">Aktualisieren</button><button class="btn secondary" id="exportCsvBtn" data-i18n="export_csv">CSV exportieren</button></div>
         <section class="panel"><div class="table-wrap"><table><thead><tr><th data-i18n="date">Datum</th><th data-i18n="type">Typ</th><th>TXID</th><th data-i18n="amount">Betrag</th><th data-i18n="confirmations">Bestätigungen</th></tr></thead><tbody id="txBody"><tr><td colspan="5" class="muted">—</td></tr></tbody></table></div></section>
       </section>
 
@@ -232,6 +245,14 @@
           <section class="panel settings-panel"><h3 data-i18n="appearance">Darstellung</h3><label><span data-i18n="language">Sprache</span><select id="languageSelect"><option value="de">Deutsch</option><option value="en">English</option><option value="ru">Русский</option><option value="zh">简体中文</option></select></label><label><span data-i18n="theme">Theme</span><select id="themeSelect"><option value="system" data-i18n="theme_system">System</option><option value="light" data-i18n="theme_light">Hell</option><option value="dark" data-i18n="theme_dark">Dunkel</option></select></label><label class="check"><input id="hideBalances" type="checkbox"><span data-i18n="hide_balances">Guthaben standardmäßig ausblenden</span></label></section>
           <section class="panel settings-panel"><h3 data-i18n="security">Sicherheit</h3><label><span data-i18n="unlock_time">Wallet-Entsperrdauer</span><select id="autoLock"><option value="30" data-i18n="duration_30s">30 s</option><option value="60" data-i18n="duration_60s">60 s</option><option value="90" data-i18n="duration_90s">90 s</option><option value="300" data-i18n="minutes_5">5 min</option><option value="900" data-i18n="minutes_15">15 min</option></select></label><label class="check"><input id="confirmSend" type="checkbox"><span data-i18n="always_confirm_send">Senden immer bestätigen</span></label><p class="muted small" data-i18n="security_note">Passwörter und WIF-Schlüssel werden nicht in Desktop-Einstellungen gespeichert.</p></section>
           <section class="panel settings-panel"><h3 data-i18n="market_data">Marktdaten</h3><label class="check"><input id="marketDataEnabled" type="checkbox"><span data-i18n="market_data_setting">NestEx-Marktdaten anzeigen</span></label><p class="muted small" data-i18n="market_data_note">Ruft höchstens einmal pro Minute den öffentlichen VMESH/USDT-Ticker von NestEx ab. Bei Ausfall bleiben Wallet und Node vollständig nutzbar.</p></section>
+          <section class="panel settings-panel"><h3 data-i18n="notification_settings">Desktop-Benachrichtigungen</h3>
+            <label class="check"><input id="notificationsEnabled" type="checkbox"><span data-i18n="notifications_enabled">Benachrichtigungen aktivieren</span></label>
+            <label class="check"><input id="notifyReceived" type="checkbox"><span data-i18n="notify_received">Bei VMESH-Eingang benachrichtigen</span></label>
+            <label class="check"><input id="notifyConfirmed" type="checkbox"><span data-i18n="notify_confirmed">Bei erster Bestätigung benachrichtigen</span></label>
+            <label class="check"><input id="notifySync" type="checkbox"><span data-i18n="notify_sync">Bei abgeschlossener Synchronisation benachrichtigen</span></label>
+            <label class="check"><input id="notificationShowAmounts" type="checkbox"><span data-i18n="notification_amounts">Beträge anzeigen</span></label>
+            <p class="muted small" data-i18n="notification_privacy">Beträge bleiben standardmäßig verborgen.</p>
+          </section>
           <section class="panel settings-panel"><h3 data-i18n="background_mode">Hintergrund & Tray</h3><label class="check"><input id="closeToTray" type="checkbox"><span data-i18n="close_to_tray">Beim Schließen im Tray weiterlaufen</span></label><label class="check"><input id="minimizeToTray" type="checkbox"><span data-i18n="minimize_to_tray">Beim Minimieren ins Tray</span></label><label class="check"><input id="startMinimized" type="checkbox"><span data-i18n="start_minimized">VargaMesh Desktop minimiert starten</span></label><label class="check"><input id="launchAtLogin" type="checkbox"><span data-i18n="launch_at_login">Mit Windows starten (im Hintergrund)</span></label><p class="muted small" data-i18n="tray_note">Solange VargaMesh Desktop im Tray läuft, bleibt der lokale Core aktiv. Über „Beenden und Core stoppen“ wird sauber beendet.</p></section>
         </div>
         <section class="panel about-panel"><img src="../../assets/vmesh_mark.png" alt="VargaMesh"><div><span class="eyebrow">VARGAMESH</span><h3>VargaMesh Desktop <span id="aboutVersion"></span></h3><p data-i18n="about_text">Lokale Full-Node-Wallet für Windows x64. Private Schlüssel und Signaturen bleiben in VargaMesh Core.</p><div class="link-row"><button class="text-btn ext" data-url="https://vargacoin.com/"><span data-i18n="website">Website</span> ↗</button><button class="text-btn ext" data-url="https://mempool.vargacoin.com/"><span data-i18n="explorer">Explorer</span> ↗</button><button class="text-btn ext" data-url="https://github.com/ati1993de/vargamesh-desktop">GitHub ↗</button><button class="text-btn ext" data-url="https://www.npmjs.com/package/@vargamesh/wallet-sdk">Wallet SDK ↗</button></div></div></section>
@@ -357,12 +378,13 @@
 
   <dialog id="migrateDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow" data-i18n="eyebrow_migration">MIGRATION</span><h2 data-i18n="migrate_wallet">Legacy-Wallet migrieren</h2><p class="warning-box" data-i18n="migrate_notice">Erstelle vor der Migration ein unabhängiges Backup. Falls die Legacy-Wallet verschlüsselt ist, gib ihre Passphrase ein.</p><label><span data-i18n="passphrase_optional">Passphrase (falls erforderlich)</span><input id="migratePass" type="password" autocomplete="current-password"></label><button type="button" class="btn danger wide" id="migrateConfirm" data-i18n="migrate_wallet">Legacy-Wallet migrieren</button></form></dialog>
 
-  <dialog id="confirmDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow" data-i18n="eyebrow_transaction">TRANSACTION</span><h2 data-i18n="confirm_transaction">Transaktion bestätigen</h2><div class="confirm-box"><div><span data-i18n="destination">Empfängeradresse</span><code id="confirmAddress"></code></div><div><span data-i18n="amount">Betrag</span><strong id="confirmAmount"></strong></div><div><span data-i18n="from_wallet">Von Wallet</span><b id="confirmWallet"></b></div></div><p class="warning-box" data-i18n="irreversible_warning">Prüfe Adresse und Betrag sorgfältig. Netzwerktransaktionen sind endgültig.</p><button type="button" class="btn danger wide" id="sendConfirmBtn" data-i18n="send_now">Jetzt senden</button></form></dialog>
+  <dialog id="confirmDialog" class="modal"><form method="dialog"><button class="modal-close" value="cancel">×</button><span class="eyebrow" data-i18n="eyebrow_transaction">TRANSACTION</span><h2 data-i18n="confirm_transaction">Transaktion bestätigen</h2><div class="confirm-box"><div><span data-i18n="destination">Empfängeradresse</span><code id="confirmAddress"></code></div><div><span data-i18n="recipient_vns">VNS-Name</span><code id="confirmName">—</code></div><div><span data-i18n="amount">Betrag</span><strong id="confirmAmount"></strong></div><div><span data-i18n="from_wallet">Von Wallet</span><b id="confirmWallet"></b></div></div><p class="muted small" id="confirmFeeNote"></p><p class="warning-box" data-i18n="irreversible_warning">Prüfe Adresse und Betrag sorgfältig. Netzwerktransaktionen sind endgültig.</p><button type="button" class="btn danger wide" id="sendConfirmBtn" data-i18n="send_now">Jetzt senden</button></form></dialog>
 
   <script src="i18n-ru.js"></script>
   <script src="i18n-zh.js"></script>
   <script src="i18n-extra.js"></script>
   <script src="qr.js"></script>
+  <script src="professional-i18n.js"></script>
   <script src="app.js"></script>
   <script src="vmt.js"></script>
 </body>

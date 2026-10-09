@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld("vmesh", Object.freeze({
   unloadWallet: name => call("wallet:unload", { name }),
   walletSummary: wallet => call("wallet:summary", { wallet }),
   transactions: (wallet, count = 50, skip = 0) => call("wallet:transactions", { wallet, count, skip }),
+  exportTransactions: wallet => call("wallet:exportCsv", { wallet }),
   unspent: wallet => call("wallet:unspent", { wallet }),
   newAddress: (wallet, label = "") => call("wallet:newaddress", { wallet, label }),
   validateAddress: address => call("wallet:validate", { address }),
