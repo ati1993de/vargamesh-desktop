@@ -9,6 +9,9 @@ module.exports = [
       "src/core-manager.js",
       "src/settings.js",
       "src/market.js",
+      "src/address-book.js",
+      "src/vns.js",
+      "src/wallet-notifications.js",
       "src/wallet-import.js",
       "src/fee-policy.js",
       "src/hd-wallet.js",
@@ -34,7 +37,8 @@ module.exports = [
       "src/renderer/vmt.js",
       "src/renderer/i18n-ru.js",
       "src/renderer/i18n-zh.js",
-      "src/renderer/i18n-extra.js"
+      "src/renderer/i18n-extra.js",
+      "src/renderer/professional-i18n.js"
     ],
 
     languageOptions: {
