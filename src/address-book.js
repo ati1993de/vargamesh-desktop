@@ -20,6 +20,7 @@ class AddressBook {
   constructor(filename) {
     this.filename = filename;
     this.contacts = [];
+    this.readError = null;
     try {
       const saved = JSON.parse(fs.readFileSync(filename, "utf8"));
       if (!Array.isArray(saved) || saved.length > 1000) throw new Error("Invalid address book format.");
@@ -29,10 +30,13 @@ class AddressBook {
         this.contacts.push({ id, label: cleanLabel(entry.label), target: normalizeTarget(entry.target) });
       }
     } catch (err) {
-      if (err.code !== "ENOENT") throw new Error("Cannot read address book. Existing data was not overwritten.");
+      if (err.code !== "ENOENT") this.readError = new Error("Cannot read address book. Existing data was not overwritten.");
     }
   }
-  list() { return this.contacts.map(c => ({ ...c })).sort((a, b) => a.label.localeCompare(b.label)); }
+  list() {
+    if (this.readError) throw this.readError;
+    return this.contacts.map(c => ({ ...c })).sort((a, b) => a.label.localeCompare(b.label));
+  }
   save(entry) {
     const label = cleanLabel(entry?.label);
     const target = normalizeTarget(entry?.target);
@@ -51,6 +55,7 @@ class AddressBook {
     return { removed: true };
   }
   persist(next) {
+    if (this.readError) throw this.readError;
     fs.mkdirSync(path.dirname(this.filename), { recursive: true });
     const tmp = this.filename + "." + process.pid + ".tmp";
     try {
