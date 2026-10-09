@@ -11,6 +11,11 @@ const DEFAULTS = Object.freeze({
   confirmSend: true,
   hideBalances: false,
   marketDataEnabled: true,
+  notificationsEnabled: true,
+  notifyReceived: true,
+  notifyConfirmed: true,
+  notifySync: true,
+  notificationShowAmounts: false,
   txPageSize: 50,
   closeToTray: true,
   minimizeToTray: false,
@@ -27,6 +32,9 @@ function clean(input = {}) {
   if (typeof input.confirmSend === "boolean") out.confirmSend = input.confirmSend;
   if (typeof input.hideBalances === "boolean") out.hideBalances = input.hideBalances;
   if (typeof input.marketDataEnabled === "boolean") out.marketDataEnabled = input.marketDataEnabled;
+  for (const key of ["notificationsEnabled", "notifyReceived", "notifyConfirmed", "notifySync", "notificationShowAmounts"]) {
+    if (typeof input[key] === "boolean") out[key] = input[key];
+  }
   if (Number.isInteger(input.txPageSize) && input.txPageSize >= 10 && input.txPageSize <= 200) out.txPageSize = input.txPageSize;
   if (typeof input.closeToTray === "boolean") out.closeToTray = input.closeToTray;
   if (typeof input.minimizeToTray === "boolean") out.minimizeToTray = input.minimizeToTray;

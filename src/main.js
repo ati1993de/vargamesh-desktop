@@ -1,6 +1,6 @@
 "use strict";
 
-const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, session, powerMonitor, Tray, Menu, nativeImage, net } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, session, powerMonitor, Tray, Menu, nativeImage, net, Notification } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const { CoreManager } = require("./core-manager");
@@ -14,6 +14,9 @@ const {
 } = require("./hd-wallet");
 const { resolveFeePolicy } = require("./fee-policy");
 const { getNestExQuote } = require("./market");
+const { AddressBook, normalizeTarget } = require("./address-book");
+const { resolveVns } = require("./vns");
+const { WalletNotifier } = require("./wallet-notifications");
 const {
   portfolio: vmtPortfolio,
   tokenDirectory: vmtTokenDirectory,
@@ -36,6 +39,9 @@ let tray = null;
 let isQuitting = false;
 let trayHintShown = false;
 let trayStatusTimer = null;
+let addressBook = null;
+let notifier = null;
+let sendInFlight = false;
 
 const EXTERNAL_ALLOWLIST = new Set([
   "https://vargacoin.com/",
@@ -200,6 +206,19 @@ function installHandlers() {
     };
   });
 
+  register("contact:list", async () => addressBook.list());
+  register("contact:save", async payload => {
+    const saved = addressBook.save(payload);
+    return saved;
+  });
+  register("contact:remove", async payload => addressBook.remove(payload.id));
+  register("recipient:resolve", async payload => {
+    const target = normalizeTarget(payload.target);
+    const result = target.endsWith(".vmesh") ? await resolveVns(target) : { name: null, address: target, source: "Address" };
+    const valid = await core.rpc.call("validateaddress", [result.address]);
+    if (!valid?.isvalid) throw new Error("Resolved destination is not valid on VargaMesh Mainnet.");
+    return result;
+  });
   register("settings:get", async () => settings.get());
   register("settings:update", async payload => {
     const updated = settings.update(payload);
@@ -531,11 +550,20 @@ function installHandlers() {
   });
   register("wallet:lock", async payload => walletRpc("walletlock", [], payload.wallet));
   register("wallet:send", async payload => {
+    if (sendInFlight) throw new Error("A wallet send is already in progress.");
+    sendInFlight = true;
+    try {
     const wallet = requireWalletName(payload.wallet);
     const address = requireAddress(payload.address);
     const amount = requireAmount(payload.amount);
     const check = await core.rpc.call("validateaddress", [address]);
     if (!check?.isvalid) throw new Error("Destination address is not valid for VargaMesh.");
+    if (payload.vnsName) {
+      const resolved = await resolveVns(payload.vnsName);
+      if (resolved.address !== address) {
+        throw new Error("VNS destination changed after review. Re-resolve and review the payment.");
+      }
+    }
     const comment = typeof payload.comment === "string" ? payload.comment.slice(0, 120) : "";
     const subtract = !!payload.subtractFee;
     const target = Math.min(1008, Math.max(1, Number(payload.feeTarget) || 6));
@@ -557,6 +585,7 @@ function installHandlers() {
       }
       throw err;
     }
+    } finally { sendInFlight = false; }
   });
   register("vmt:portfolio", async payload => {
     return vmtPortfolio(core.rpc, requireWalletName(payload.wallet));
@@ -825,6 +854,7 @@ async function requestQuit() {
   try {
     await Promise.race([core?.stop?.(), new Promise(resolve => setTimeout(resolve, 6000))]);
   } catch (_) {}
+  notifier?.stop();
   try { tray?.destroy(); } catch (_) {}
   tray = null;
   app.quit();
@@ -884,7 +914,15 @@ app.on("second-instance", () => {
 app.whenReady().then(async () => {
   const p = paths();
   settings = new SettingsStore(path.join(app.getPath("userData"), "settings.json"));
+  addressBook = new AddressBook(path.join(app.getPath("userData"), "contacts.json"));
   core = new CoreManager(p);
+  notifier = new WalletNotifier({
+    rpc: core.rpc,
+    getSettings: () => settings.get(),
+    notify: (title, body) => {
+      if (Notification.isSupported()) new Notification({ title, body }).show();
+    }
+  });
   core.ensureConfig();
 
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
@@ -897,6 +935,7 @@ app.whenReady().then(async () => {
 
   powerMonitor.on("lock-screen", () => { void lockAllWallets(); });
 
+  notifier.start();
   core.start()
     .then(() => refreshTrayStatus())
     .catch(err => core.writeDiagnostic("core-autostart-error", { message: errorText(err) }));
