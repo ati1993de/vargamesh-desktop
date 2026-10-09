@@ -17,9 +17,22 @@
 
 VargaMesh Desktop is the graphical full-node client for running a local VargaMesh node and managing a self-custody VMESH wallet on supported desktop platforms. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current public release:** `v0.6.2`
+> **Target release:** `v0.7.0` (after automated build and publication)
 > **Platforms:** Windows 10/11 x64 · macOS Intel x86_64 · macOS Apple Silicon arm64
 > **Bundled Core:** `VargaMesh Core v0.2.0`
+
+## v0.7.0 – Wallet UX, contacts, VNS and notifications
+
+- Local contacts address book for plain VMESH addresses and `.vmesh` names; private contacts stored in the user's Desktop app-data directory (not on a server).
+- VNS resolver via `https://vargamesh.com/api/vns/v1/resolve/{name}` used for name-to-address resolution with VargaMesh Core address validation.
+- Resolved VNS destination shown in the send review; fresh name resolution immediately before the actual broadcast. If the destination has changed, the send fails and must be reviewed again.
+- Electron native notifications for incoming transactions, first confirmation and completed initial sync, configurable in Settings. Amounts hidden by default; first polling snapshot never triggers old transaction alerts.
+- Transaction CSV export, accessible in transaction history. The local export is unencrypted; store it securely.
+- Responsive contacts navigation and layout changes for smaller windows. Existing wallet storage and Core launch arguments remain unchanged.
+- Entirely local address book; no contacts, wallet IDs or balances are sent to the VNS resolver. Looking up a public name reveals the requested name and your public IP address to the VNS API.
+- SHA-256 checksums are provided with releases. Windows code signing and macOS notarization remain pending and must not be claimed as implemented.
+
+**Important:** The send review still displays an estimated fee rate, not an exact funded-transaction fee. For high-value payments, verify the address and confirm with a small test amount. VNS registration/renewal is not built into the Desktop client.
 
 ## v0.6.2 – NestEx market-data hotfix
 
@@ -97,12 +110,12 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip
-VargaMesh-Desktop-v0.6.2-macOS-x64.dmg
-VargaMesh-Desktop-v0.6.2-macOS-x64.zip
-VargaMesh-Desktop-v0.6.2-macOS-arm64.dmg
-VargaMesh-Desktop-v0.6.2-macOS-arm64.zip
+VargaMesh-Desktop-v0.7.0-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.7.0-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.7.0-macOS-x64.dmg
+VargaMesh-Desktop-v0.7.0-macOS-x64.zip
+VargaMesh-Desktop-v0.7.0-macOS-arm64.dmg
+VargaMesh-Desktop-v0.7.0-macOS-arm64.zip
 
 SHA256SUMS
 SHA256SUMS-macOS-x64
@@ -111,7 +124,17 @@ SHA256SUMS-macOS-arm64
 
 Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
 
-## What v0.6.2 provides
+## What v0.7.0 provides
+
+### Contacts, VNS and notifications
+
+- Open **Contacts** to add an address or a `.vmesh` name.
+- Click **Use** to prefill the recipient, or type a name directly in **Send**.
+- Review the full resolved address. The name must resolve again to the same address immediately before the final send.
+- Enable or disable native notifications under **Settings → Desktop notifications**.
+- Notification bodies hide amounts by default. A notification can be visible on the operating system lock screen.
+- Export the latest 1,000 visible wallet entries as CSV from **Transactions**.
+- The three existing VargaMesh Core bootstrap peer IPs are unchanged.
 
 ### Wallet
 
@@ -306,8 +329,8 @@ Before importing private keys, restoring wallets or performing legacy migration,
 PowerShell example:
 
 ```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.7.0-Windows-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.7.0-Windows-x64-Portable.zip -Algorithm SHA256
 ```
 
 Compare the resulting values with `SHA256SUMS` from the same GitHub release.
@@ -347,8 +370,8 @@ npm run build:linux-wine
 The build script downloads the official VargaMesh Core Windows x64 release, preserves its complete runtime directory, performs project checks and builds:
 
 ```text
-dist/VargaMesh-Desktop-v0.6.2-Windows-x64-Setup.exe
-dist/VargaMesh-Desktop-v0.6.2-Windows-x64-Portable.zip
+dist/VargaMesh-Desktop-v0.7.0-Windows-x64-Setup.exe
+dist/VargaMesh-Desktop-v0.7.0-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 

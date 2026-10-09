@@ -11,6 +11,11 @@ const DEFAULTS = Object.freeze({
   confirmSend: true,
   hideBalances: false,
   marketDataEnabled: true,
+  notificationsEnabled: true,
+  notifyReceived: true,
+  notifyConfirmed: true,
+  notifySync: true,
+  notificationShowAmounts: false,
   txPageSize: 50,
   closeToTray: true,
   minimizeToTray: false,
@@ -24,9 +29,12 @@ function clean(input = {}) {
   if (["system", "light", "dark"].includes(input.theme)) out.theme = input.theme;
   if (typeof input.activeWallet === "string" && input.activeWallet.length <= 128) out.activeWallet = input.activeWallet;
   if (Number.isInteger(input.autoLockSeconds) && input.autoLockSeconds >= 15 && input.autoLockSeconds <= 3600) out.autoLockSeconds = input.autoLockSeconds;
-  if (typeof input.confirmSend === "boolean") out.confirmSend = input.confirmSend;
+  // Security: final confirmation is mandatory in Desktop v0.7.0.
   if (typeof input.hideBalances === "boolean") out.hideBalances = input.hideBalances;
   if (typeof input.marketDataEnabled === "boolean") out.marketDataEnabled = input.marketDataEnabled;
+  for (const key of ["notificationsEnabled", "notifyReceived", "notifyConfirmed", "notifySync", "notificationShowAmounts"]) {
+    if (typeof input[key] === "boolean") out[key] = input[key];
+  }
   if (Number.isInteger(input.txPageSize) && input.txPageSize >= 10 && input.txPageSize <= 200) out.txPageSize = input.txPageSize;
   if (typeof input.closeToTray === "boolean") out.closeToTray = input.closeToTray;
   if (typeof input.minimizeToTray === "boolean") out.minimizeToTray = input.minimizeToTray;

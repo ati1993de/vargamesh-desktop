@@ -41,3 +41,10 @@ Always use the **Expected address** field when recovering a known address if pos
 Closing or minimizing to tray does not terminate the process. Core continues running locally. Use the tray action **Quit and stop Core** when you want a full shutdown.
 
 Use independent backups and test new pre-release builds with small amounts first.
+
+
+## v0.7.0 VNS and address book
+Contacts are stored as a local JSON file in the Desktop user-data directory with restricted file permissions where supported. It is not encrypted; protect operating-system user access. VNS resolution contacts the public HTTPS resolver for the requested public name; the name may change ownership or target at any time. The UI displays the resolved address and the main process re-resolves it immediately before any VNS-based send, rejecting destination changes. Validate the actual address independently for high-value transfers. VNS is an application-layer service, not an authentication guarantee.
+
+## Native notifications and CSV
+Notifications may be visible to other users of the device; VMESH amounts are hidden by default. CSV exports are plaintext and may reveal addresses, wallet history and notes; store them securely. No seed or WIF is included in CSV. This release is not independently audited.

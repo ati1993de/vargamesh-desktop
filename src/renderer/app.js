@@ -165,15 +165,19 @@ Object.assign(I18N.en, {
 
 I18N.ru = { ...window.VARGA_TRANSLATIONS_RU };
 I18N.zh = { ...window.VARGA_TRANSLATIONS_ZH };
-for (const lang of ["de","en","ru","zh"]) Object.assign(I18N[lang], window.VARGA_I18N_EXTRA[lang]);
+for (const lang of ["de","en","ru","zh"]) {
+  Object.assign(I18N[lang], window.VARGA_I18N_EXTRA[lang]);
+  Object.assign(I18N[lang], window.VARGA_PRO_I18N[lang]);
+}
 
 const LOCALES = Object.freeze({ de:"de-DE", en:"en-US", ru:"ru-RU", zh:"zh-CN" });
 
 const state = {
   settings:{ language:"de", theme:"system", activeWallet:"", autoLockSeconds:90, confirmSend:true, hideBalances:false, marketDataEnabled:true, txPageSize:50, closeToTray:true, minimizeToTray:false, startMinimized:false, launchAtLogin:false },
-  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, timer:null, marketTimer:null, market:null, marketLastFetch:0, unlockPurpose:"wallet"
+  appInfo:null, core:null, wallets:[], activeWallet:"", wallet:null, transactions:[], address:"", fee:null, pendingSend:null, resolvedRecipient:null, timer:null, marketTimer:null, market:null, marketLastFetch:0, unlockPurpose:"wallet"
 };
 let pendingHdMnemonic="";
+let editingContactId = null;
 
 function tr(key, vars={}){ let text=I18N[state.settings.language]?.[key] || I18N.en[key] || I18N.de[key] || key; for(const [name,value] of Object.entries(vars)) text=text.replaceAll(`{${name}}`,String(value)); return text; }
 function currentLocale(){ return LOCALES[state.settings.language] || LOCALES.en; }
@@ -256,6 +260,7 @@ function setView(name){
   if(name==='transactions') loadTransactions(true);
   if(name==='node') loadNodeExtras();
   if(name==='wallet') loadUtxos();
+  if(name==='contacts') void loadContacts();
 }
 
 async function refreshCore(){
@@ -349,15 +354,38 @@ function renderPeers(peers){const body=$("peerBody");body.innerHTML='';if(!peers
 function formatHashrate(v){v=Number(v)||0;const units=['H/s','kH/s','MH/s','GH/s','TH/s','PH/s','EH/s'];let i=0;while(v>=1000&&i<units.length-1){v/=1000;i++;}return `${v.toFixed(v>=100?0:v>=10?1:2)} ${units[i]}`;}
 
 async function generateAddress(){ if(!state.activeWallet)return showToast(tr('no_active_wallet'),true); try{const addr=unwrap(await api.newAddress(state.activeWallet,$("receiveLabel").value.trim()));state.address=addr;$("receiveAddress").textContent=addr;window.VargaQR.draw($("qrCanvas"),`vargamesh:${addr}`,6);showToast(tr('new_address_generated'));}catch(err){showToast(err.message,true);} }
-async function validateSendAddress(){const val=$("sendAddress").value.trim(),note=$("addressValidation");if(!val){note.textContent='';note.className='field-note';return false;}try{const v=unwrap(await api.validateAddress(val));note.textContent=v?.isvalid?tr('valid_vargamesh_address'):tr('invalid_address');note.className=`field-note ${v?.isvalid?'ok':'bad'}`;return !!v?.isvalid;}catch(err){note.textContent=err.message;note.className='field-note bad';return false;}}
+async function validateSendAddress(){
+  const val=$("sendAddress").value.trim(), note=$("addressValidation");
+  state.resolvedRecipient=null;
+  if(!val){note.textContent='';note.className='field-note';return null;}
+  note.textContent=tr('recipient_resolving');note.className='field-note';
+  try {
+    const recipient=unwrap(await api.resolveRecipient(val));
+    if($("sendAddress").value.trim()!==val) return null;
+    state.resolvedRecipient=recipient;
+    note.textContent=recipient.name ? recipient.name+' → '+recipient.address : tr('valid_vargamesh_address');
+    note.className='field-note ok';
+    return recipient;
+  } catch(err) {
+    note.textContent=err.message||tr('recipient_invalid');
+    note.className='field-note bad';return null;
+  }
+}
 async function estimateFee(){try{const f=unwrap(await api.estimateFee(Number($("feeTarget").value)));state.fee=f;if(f?.feerate!==undefined){const suffix=f?.fallback?` · ${tr('fee_fallback')}`:'';$("estimatedFee").textContent=`${formatNumber(Number(f.feerate)*100000,2)} sat/vB${suffix}`;}else{$("estimatedFee").textContent=f?.errors?.[0]||'—';}}catch{$("estimatedFee").textContent='—';}}
 
 async function reviewSend(){
   if(!state.activeWallet)return showToast(tr('no_active_wallet'),true);
-  if(!(await validateSendAddress()))return;
-  const amount=Number($("sendAmount").value); if(!Number.isFinite(amount)||amount<=0)return showToast(tr('invalid_amount'),true);
-  state.pendingSend={wallet:state.activeWallet,address:$("sendAddress").value.trim(),amount,comment:$("sendComment").value.trim(),subtractFee:$("subtractFee").checked,feeTarget:Number($("feeTarget").value)||6};
-  $("confirmAddress").textContent=state.pendingSend.address;$("confirmAmount").textContent=formatVMESH(amount);$("confirmWallet").textContent=state.activeWallet;if(state.settings.confirmSend)$("confirmDialog").showModal();else await sendNow();
+  const recipient=await validateSendAddress();
+  if(!recipient)return;
+  const amountText=$("sendAmount").value.trim();
+  if(!/^(?:0|[1-9]\d*)(?:\.\d{1,8})?$/.test(amountText))return showToast(tr('invalid_amount'),true);
+  const amount=Number(amountText); if(!Number.isFinite(amount)||amount<=0||amount>21000000)return showToast(tr('invalid_amount'),true);
+  state.pendingSend={wallet:state.activeWallet,address:recipient.address,vnsName:recipient.name||null,amount:amountText,comment:$("sendComment").value.trim(),subtractFee:$("subtractFee").checked,feeTarget:Number($("feeTarget").value)||6};
+  $("confirmAddress").textContent=recipient.address;
+  $("confirmName").textContent=recipient.name||"—";
+  $("confirmAmount").textContent=formatVMESH(amount);$("confirmWallet").textContent=state.activeWallet;
+  $("confirmFeeNote").textContent=tr('total_approx');
+  $("confirmDialog").showModal();
 }
 async function sendNow(){
   if(!state.pendingSend)return;
@@ -372,6 +400,34 @@ async function sendNow(){
 }
 async function unlockAndContinue(){const pass=$("unlockPass").value;if(!pass)return;$("unlockConfirm").disabled=true;try{unwrap(await api.unlockWallet(state.activeWallet,pass,state.settings.autoLockSeconds));$("unlockPass").value='';$("unlockDialog").close();const purpose=state.unlockPurpose;state.unlockPurpose='wallet';await refreshWallet();if(purpose==='send')await sendNow();else showToast(tr('wallet_unlocked'));}catch(err){showToast(err.message,true);}finally{$("unlockConfirm").disabled=false;}}
 
+async function loadContacts(){
+  try {
+    const contacts=unwrap(await api.contacts()), list=$("contactList");
+    list.replaceChildren();
+    if(!contacts.length){const empty=document.createElement('p');empty.className='muted';empty.textContent=tr('contact_empty');list.appendChild(empty);}
+    for(const contact of contacts){
+      const row=document.createElement('div');row.className='contact-entry';
+      const details=document.createElement('div');details.className='contact-details';
+      const name=document.createElement('strong');name.textContent=contact.label;
+      const target=document.createElement('code');target.textContent=contact.target;details.append(name,target);
+      const actions=document.createElement('div');actions.className='row';
+      for(const [key,fn] of [
+        ['contact_use',()=>{setView('send');$("sendAddress").value=contact.target;void validateSendAddress();}],
+        ['contact_edit',()=>{editingContactId=contact.id;$("contactLabel").value=contact.label;$("contactTarget").value=contact.target;$("contactLabel").focus();}],
+        ['contact_delete',async()=>{if(!confirm(tr('contact_delete')+'?'))return;try{unwrap(await api.deleteContact(contact.id));await loadContacts();}catch(err){showToast(err.message,true);}}]
+      ]){const button=document.createElement('button');button.type='button';button.className='btn secondary';button.textContent=tr(key);button.onclick=fn;actions.appendChild(button);}
+      row.append(details,actions);list.appendChild(row);
+    }
+  }catch(err){showToast(err.message,true);}
+}
+async function saveContact(){
+  const button=$("contactSave");button.disabled=true;
+  try {
+    unwrap(await api.saveContact({id:editingContactId||undefined,label:$("contactLabel").value,target:$("contactTarget").value}));
+    editingContactId=null;$("contactLabel").value='';$("contactTarget").value='';
+    await loadContacts();
+  }catch(err){showToast(err.message,true);}finally{button.disabled=false;}
+}
 function toggleImportMode(){
   const watch=$("importMode").value==='watch';
   $("importWifFields").classList.toggle('hidden',watch);
@@ -656,8 +712,15 @@ function bind(){
   $("hdWalletDialog").addEventListener("close",()=>{pendingHdMnemonic="";$("hdMnemonicWords").textContent="";$("hdWalletPass").value="";$("hdWalletPass2").value="";});
   $("hdRestoreDialog").addEventListener("close",()=>{$("hdRestoreMnemonic").value="";$("hdRestorePass").value="";$("hdRestorePass2").value="";});
   $("walletSelect").onchange=async e=>{state.activeWallet=e.target.value;await refreshWallet();};
+  $("exportCsvBtn").onclick=async()=>{
+    if(!state.activeWallet)return showToast(tr('no_active_wallet'),true);
+    try{const result=unwrap(await api.exportTransactions(state.activeWallet));if(!result.canceled)showToast(tr('export_success'));}
+    catch(err){showToast(err.message,true);}
+  };
   $("reloadTxBtn").onclick=()=>loadTransactions(true); $("reloadUtxoBtn").onclick=loadUtxos; $("reloadPeersBtn").onclick=loadNodeExtras;
   $("newAddressBtn").onclick=generateAddress; $("copyAddressBtn").onclick=async()=>{if(state.address){unwrap(await api.copy(state.address));showToast(tr('copy'));}};
+  $("contactSave").onclick=saveContact;
+  $("contactCancel").onclick=()=>{editingContactId=null;$("contactLabel").value='';$("contactTarget").value='';};
   $("sendAddress").addEventListener('blur',validateSendAddress); $("feeTarget").onchange=estimateFee; $("sendBtn").onclick=reviewSend; $("sendConfirmBtn").onclick=sendNow; $("unlockConfirm").onclick=unlockAndContinue;
   $("backupBtn").onclick=async()=>{if(!state.activeWallet)return;try{const r=unwrap(await api.backupWallet(state.activeWallet));if(!r.canceled)showToast(tr('backup_created'));}catch(err){showToast(err.message,true);}};
   $("restoreBtn").onclick=()=>{$("restoreWalletName").value='';$("restoreDialog").showModal();};
@@ -671,13 +734,19 @@ function bind(){
   $("migrateConfirm").onclick=async()=>{if(!state.activeWallet)return;const passphrase=$("migratePass").value;$("migrateConfirm").disabled=true;try{unwrap(await api.migrateWallet(state.activeWallet,passphrase));$("migratePass").value='';$("migrateDialog").close();showToast(tr('migration_completed'));await refreshWallets();}catch(err){showToast(err.message,true);}finally{$("migrateConfirm").disabled=false;}};
   $("unloadBtn").onclick=async()=>{if(!state.activeWallet)return;const name=state.activeWallet;try{unwrap(await api.unloadWallet(name));state.activeWallet='';await refreshWallets();showToast(tr('wallet_unloaded',{name}));}catch(err){showToast(err.message,true);}};
   $("dataDirBtn").onclick=async()=>{try{unwrap(await api.showDataDir());}catch(err){showToast(err.message,true);}}; $("debugLogBtn").onclick=async()=>{try{unwrap(await api.showDebugLog());}catch(err){showToast(err.message,true);}};
-  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("marketDataEnabled").onchange=async e=>{await saveSettings({marketDataEnabled:e.target.checked});await refreshMarket(true);}; $("confirmSend").onchange=e=>saveSettings({confirmSend:e.target.checked}); $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
-  $$('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
+  $("languageSelect").onchange=e=>saveSettings({language:e.target.value}); $("themeSelect").onchange=e=>saveSettings({theme:e.target.value}); $("hideBalances").onchange=e=>saveSettings({hideBalances:e.target.checked}); $("marketDataEnabled").onchange=async e=>{await saveSettings({marketDataEnabled:e.target.checked});await refreshMarket(true);}; $("autoLock").onchange=e=>saveSettings({autoLockSeconds:Number(e.target.value)}); $("closeToTray").onchange=e=>saveSettings({closeToTray:e.target.checked}); $("minimizeToTray").onchange=e=>saveSettings({minimizeToTray:e.target.checked}); $("startMinimized").onchange=e=>saveSettings({startMinimized:e.target.checked}); $("launchAtLogin").onchange=e=>saveSettings({launchAtLogin:e.target.checked});
+  for(const key of ["notificationsEnabled","notifyReceived","notifyConfirmed","notifySync","notificationShowAmounts"]){
+    $(key).onchange=e=>saveSettings({[key]:e.target.checked});
+  }
+  $('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
 }
 
 async function init(){
   bind();
-  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("marketDataEnabled").checked=state.settings.marketDataEnabled!==false;$("confirmSend").checked=state.settings.confirmSend;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;applyTheme();applyI18n();void refreshMarket(true);state.marketTimer=setInterval(()=>{void refreshMarket(false);},60_000);unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
+  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("marketDataEnabled").checked=state.settings.marketDataEnabled!==false;$("confirmSend").checked=true;$("confirmSend").disabled=true;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;
+    for(const key of ["notificationsEnabled","notifyReceived","notifyConfirmed","notifySync","notificationShowAmounts"])
+      $(key).checked=!!state.settings[key];
+    applyTheme();applyI18n();void refreshMarket(true);state.marketTimer=setInterval(()=>{void refreshMarket(false);},60_000);unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
     showToast(err.message,true);
     $("coreDot").className='dot error';
     $("coreText").textContent=tr('core_error');
