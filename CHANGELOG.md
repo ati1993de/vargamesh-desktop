@@ -1,3 +1,20 @@
+## [0.7.0] - 2026-10-09
+
+### Added
+- Local address book with VMESH address and VNS-name contacts.
+- VNS name resolution at send review and revalidation before send.
+- Native incoming-payment, confirmation and sync-complete notifications.
+- Notification preferences and private-by-default notification bodies.
+- Responsive Contacts UI and transaction CSV export.
+- Strict eight-decimal payment input checks and duplicate-send guard.
+- Regression checks for contact storage, VNS validation and native notifications.
+
+### Security
+- VNS resolution refuses invalid/inactive destinations and mismatched names.
+- Core, P2P bootstrap IP addresses and wallet key formats remain unchanged.
+- Existing send fee display is an estimate, not an exact network fee.
+- No independent security audit or production wallet sign-off has been performed.
+
 # Changelog
 
 ## [0.6.2] - 2026-10-05

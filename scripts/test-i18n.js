@@ -33,11 +33,12 @@ function loadRendererDictionary(file, globalName) {
 const ru = loadRendererDictionary("src/renderer/i18n-ru.js", "VARGA_TRANSLATIONS_RU");
 const zh = loadRendererDictionary("src/renderer/i18n-zh.js", "VARGA_TRANSLATIONS_ZH");
 const extra = loadRendererDictionary("src/renderer/i18n-extra.js", "VARGA_I18N_EXTRA");
+const pro = loadRendererDictionary("src/renderer/professional-i18n.js", "VARGA_PRO_I18N");
 
 const languages = { de: { ...base.de }, en: { ...base.en }, ru: { ...ru }, zh: { ...zh } };
 for (const lang of Object.keys(languages)) {
   if (!extra[lang]) fail("Missing extra dictionary for " + lang);
-  Object.assign(languages[lang], extra[lang]);
+  Object.assign(languages[lang], extra[lang], pro[lang]);
 }
 
 const sorted = value => Object.keys(value).sort();
@@ -47,6 +48,10 @@ if (!equalKeys(base.en, ru)) fail("Russian base translation key set is incomplet
 if (!equalKeys(base.en, zh)) fail("Simplified Chinese base translation key set is incomplete");
 
 const extraKeys = sorted(extra.de);
+const proKeys = sorted(pro.de);
+for (const lang of ["en", "ru", "zh"]) {
+  if (JSON.stringify(proKeys) !== JSON.stringify(sorted(pro[lang]))) fail("Professional translation key set differs for " + lang);
+}
 for (const lang of ["en", "ru", "zh"]) {
   if (JSON.stringify(extraKeys) !== JSON.stringify(sorted(extra[lang]))) {
     fail("Extra translation key set differs for " + lang);
@@ -109,7 +114,7 @@ for (const lang of ["de", "en", "ru", "zh"]) {
   if (!settings.includes('"' + lang + '"')) fail("Settings do not accept language " + lang);
   if (!html.includes('<option value="' + lang + '"')) fail("Language selector missing " + lang);
 }
-for (const file of ["i18n-ru.js", "i18n-zh.js", "i18n-extra.js"]) {
+for (const file of ["i18n-ru.js", "i18n-zh.js", "i18n-extra.js", "professional-i18n.js"]) {
   if (!html.includes('<script src="' + file + '"></script>')) fail("Renderer does not load " + file);
   if (html.indexOf(file) > html.indexOf('<script src="app.js"></script>')) fail(file + " must load before app.js");
 }

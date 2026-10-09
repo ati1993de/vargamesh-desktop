@@ -96,9 +96,12 @@ function requireTxid(txid) {
 }
 
 function requireAmount(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount) || amount <= 0 || amount > 21_000_000) throw new Error("Invalid VMESH amount.");
-  return Number(amount.toFixed(8));
+  const raw = String(value);
+  if (!/^(?:0|[1-9]\d*)(?:\.\d{1,8})?$/.test(raw)) throw new Error("VMESH amount must have at most 8 decimal places.");
+  const [whole, fractional = ""] = raw.split(".");
+  const satoshis = BigInt(whole) * 100000000n + BigInt(fractional.padEnd(8, "0") || "0");
+  if (satoshis <= 0n || satoshis > 21000000n * 100000000n) throw new Error("Invalid VMESH amount.");
+  return Number(whole + "." + fractional.padEnd(8, "0"));
 }
 
 function requireAddress(value) {
@@ -543,7 +546,7 @@ function installHandlers() {
     const fields = ["time", "category", "txid", "address", "amount", "confirmations", "label", "comment"];
     const csv = [fields.map(cells).join(","),
       ...rows.map(row => fields.map(field => cells(row[field])).join(","))].join("\r\n") + "\r\n";
-    fs.writeFileSync(result.filePath, "\ufeff" + csv, { encoding: "utf8", flag: "wx", mode: 0o600 });
+    fs.writeFileSync(result.filePath, "\ufeff" + csv, { encoding: "utf8", flag: "w", mode: 0o600 });
     return { canceled: false, count: rows.length };
   });
   register("wallet:transactions", async payload => {

@@ -75,3 +75,17 @@ Use this checklist before publishing a VargaMesh Desktop release.
 - GitHub Actions build is green
 - release assets include Setup, Portable ZIP and SHA256SUMS
 - release is marked **Latest** and is not marked pre-release
+
+
+## v0.7.0 professional wallet verification
+- Local contacts: add/edit/remove VMESH address and VNS name; reload persistence; malformed input rejected
+- VNS: active name resolves; unavailable, mismatched, expired and malformed responses fail closed
+- Send UI: review shows actual VNS name and full resolved VMESH address; changed name mapping blocks send
+- No VNS sender private data or RPC cookie is sent to the resolver
+- Duplicate send requests are rejected while an earlier send is pending
+- Notifications: initial snapshot silent; one alert per new inbound tx and first confirmation; amounts hidden by default
+- Re-enable notifications and ensure no flood of old alerts
+- CSV export: confirmed transactions, local file, user-selected path, no secrets
+- All four language packs include every new label and button; responsive layout tested at 800/1080/1440 widths
+- Old Core/bootstrap IPs, existing wallets, backup recovery, VMT-1 and NestEx features are regression tested
+- Installer binaries are still **unsigned** unless a separate code-signing and notarization process is configured
