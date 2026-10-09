@@ -10,7 +10,7 @@ const required = [
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.7.0") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.7.1") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 if (pkg.build?.mac?.icon !== "build/icon.icns") throw new Error("macOS icon configuration missing");
 if (pkg.build?.mac?.artifactName !== "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}") throw new Error("macOS artifact naming missing");
@@ -31,6 +31,16 @@ for (const secret of ["rpcpassword=","BEGIN OPENSSH PRIVATE KEY","_authToken="])
 }
 
 const appjs = fs.readFileSync(path.join(root,"src/renderer/app.js"),"utf8");
+// Prevent the crash which blocked initial polling in v0.7.0.
+if (/(?<!\$)\$\(\s*['"](?:\.|#|\[)[^'"]+['"]\s*\)/.test(appjs)) {
+  throw new Error("Renderer uses single-element $ helper for a CSS selector; use $$ instead.");
+}
+if (!appjs.includes("$$('.ext').forEach")) {
+  throw new Error("External-link handlers must use the $$ collection helper.");
+}
+if (!/async function init\(\)\s*\{\s*try\s*\{\s*bind\(\)/.test(appjs)) {
+  throw new Error("Renderer startup must catch binding errors and show diagnostics.");
+}
 if (/(?<!\$)\$\(['"`]\[data-i18n(?:-placeholder|-title|-aria-label)?\]['"`]\)/.test(appjs)) {
   throw new Error("I18N collection selectors must use the $$ querySelectorAll helper");
 }

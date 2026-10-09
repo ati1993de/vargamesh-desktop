@@ -1,3 +1,11 @@
+## [0.7.1] - 2026-10-09
+
+### Fixed
+- Fixed `$('.ext').forEach` renderer initialization crash by using the collection selector `$$('.ext')`.
+- Wrapped binding setup in the startup error handler to avoid silent UI initialization failures.
+- Added regression assertions for incorrectly used CSS selectors.
+- Retained all existing Core bootstrap addresses, blockchain data, wallet and contact file formats.
+
 ## [0.7.0] - 2026-10-09
 
 ### Added

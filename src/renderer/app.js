@@ -738,12 +738,13 @@ function bind(){
   for(const key of ["notificationsEnabled","notifyReceived","notifyConfirmed","notifySync","notificationShowAmounts"]){
     $(key).onchange=e=>saveSettings({[key]:e.target.checked});
   }
-  $('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
+  $$('.ext').forEach(b=>b.onclick=async()=>{try{unwrap(await api.openExternal(b.dataset.url));}catch(err){showToast(err.message,true);}});
 }
 
 async function init(){
-  bind();
-  try{state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("marketDataEnabled").checked=state.settings.marketDataEnabled!==false;$("confirmSend").checked=true;$("confirmSend").disabled=true;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;
+  try{
+    bind();
+    state.appInfo=unwrap(await api.appInfo());state.settings=unwrap(await api.getSettings());state.activeWallet=state.settings.activeWallet;$("versionText").textContent=`VargaMesh Desktop v${state.appInfo.version}`;$("aboutVersion").textContent=`v${state.appInfo.version}`;$("languageSelect").value=state.settings.language;$("themeSelect").value=state.settings.theme;$("hideBalances").checked=state.settings.hideBalances;$("marketDataEnabled").checked=state.settings.marketDataEnabled!==false;$("confirmSend").checked=true;$("confirmSend").disabled=true;$("autoLock").value=String(state.settings.autoLockSeconds);$("closeToTray").checked=state.settings.closeToTray;$("minimizeToTray").checked=state.settings.minimizeToTray;$("startMinimized").checked=state.settings.startMinimized;$("launchAtLogin").checked=state.settings.launchAtLogin;
     for(const key of ["notificationsEnabled","notifyReceived","notifyConfirmed","notifySync","notificationShowAmounts"])
       $(key).checked=!!state.settings[key];
     applyTheme();applyI18n();void refreshMarket(true);state.marketTimer=setInterval(()=>{void refreshMarket(false);},60_000);unwrap(await api.startCore());await refreshCore();await estimateFee();state.timer=setInterval(refreshCore,5000);}catch(err){
