@@ -4,18 +4,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="$ROOT/resources/core"
 REPO="ati1993de/vargamesh-core"
-TAG="${VMESH_CORE_TAG:-v0.2.0}"
-ASSET="${VMESH_CORE_ASSET:-vargamesh-core-0.2.0-windows-x86_64.zip}"
+TAG="v0.3.0"
+ASSET="vargamesh-core-0.3.0-windows-x86_64.zip"
 
 mkdir -p "$DEST"
 
-if [[ -f "$DEST/vargameshd.exe" && -f "$DEST/vargamesh-cli.exe" ]]; then
-  echo "VargaMesh Core already present in resources/core"
-  file "$DEST/vargameshd.exe" "$DEST/vargamesh-cli.exe" || true
-  sha256sum "$DEST/vargameshd.exe" "$DEST/vargamesh-cli.exe" | tee "$DEST/CORE-BINARIES.sha256"
-  exit 0
-fi
-
+# Never silently reuse a pre-existing older Core runtime.
 command -v gh >/dev/null 2>&1 || {
   echo "ERROR: gh CLI is required to download Core automatically."
   echo "Alternative: place vargameshd.exe and vargamesh-cli.exe in $DEST"
@@ -31,6 +25,7 @@ gh release download "$TAG" --repo "$REPO" --pattern "$ASSET" --dir "$tmp"
 zip="$tmp/$ASSET"
 [[ -f "$zip" ]] || { echo "ERROR: release asset not downloaded: $ASSET"; exit 1; }
 
+node "$ROOT/scripts/verify-core-archive.js" "$zip"
 actual="$(sha256sum "$zip" | awk '{print $1}')"
 echo "$actual  $ASSET" | tee "$DEST/CORE-PACKAGE.sha256"
 
