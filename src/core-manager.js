@@ -7,8 +7,10 @@ const { VargaRpc } = require("./rpc");
 
 const KNOWN_NODES = Object.freeze([
   "217.154.93.20:29666",
-  "212.132.80.39:29666",
-  "31.70.81.5:29666"
+  "217.217.78.186:29666",
+  "31.70.81.5:29666",
+  "37.221.211.210:29666",
+  "212.132.80.39:29666"
 ]);
 const CORE_ARGS = Object.freeze(["-printtoconsole=0", "-fallbackfee=0.00001000"]);
 
