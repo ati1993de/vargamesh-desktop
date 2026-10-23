@@ -1,3 +1,24 @@
+# Changelog
+
+## [0.7.2] - 2026-10-23
+
+### Changed
+- Upgrade bundled Windows and macOS VargaMesh Core from official v0.2.0 to v0.3.0.
+- Installer/portable ZIP and native Intel/Apple Silicon DMG/ZIP packages bundle architecture-matched Core v0.3.0 binaries and runtime files.
+- Fresh Desktop Core configurations include the five current Mainnet bootstrap peers; user-edited configuration remains intact.
+
+### Reliability / release integrity
+- Pin and verify SHA-256 values of official v0.3.0 archives before extracting them.
+- Prevent Linux/Wine Windows packaging from silently reusing a stale Core v0.2.0 runtime.
+- Verify Core daemon/CLI version during Windows/macOS build jobs and Core daemon presence/version inside Windows Portable ZIP.
+- Validate release SHA256SUMS for Windows and both macOS architectures before publishing.
+- Synchronize package, lockfile, Windows/macOS build instructions and release documentation to Desktop v0.7.2.
+
+### Core v0.3.0 details / compatibility
+- Adds fixed P2P seeds, read-only mining status RPC, AuxPoW diagnostic RPC, ASERT/AuxPoW test hardening.
+- No VMESH consensus rule changes, chain reset, wallet address changes, RPC/P2P port changes or Desktop signing changes.
+- Existing wallet and blockchain data, settings, contacts and user configuration preserved. Wallet backup before upgrade recommended.
+
 ## [0.7.1] - 2026-10-09
 
 ### Fixed
@@ -22,8 +43,6 @@
 - Core, P2P bootstrap IP addresses and wallet key formats remain unchanged.
 - Existing send fee display is an estimate, not an exact network fee.
 - No independent security audit or production wallet sign-off has been performed.
-
-# Changelog
 
 ## [0.6.2] - 2026-10-05
 
