@@ -1,10 +1,10 @@
-VargaMesh Core Windows x64 binaries are intentionally not bundled in this source ZIP.
+VargaMesh Core v0.3.0 is downloaded during packaging, not committed as binaries.
+SHA-256 of every official platform archive is pinned in resources/core-release.json.
 
-Run:
+For Windows x64 packaging from Linux/Wine:
   npm run prepare:core:linux
 
-or place:
-  vargameshd.exe
-  vargamesh-cli.exe
+For native macOS builds: see docs/BUILDING-MACOS.md.
 
-in this folder before packaging.
+Release packages include the matching native Core daemon, CLI and runtime files.
+Source archives do not include prebuilt Core binaries.
