@@ -1,7 +1,7 @@
 # Building VargaMesh Desktop on macOS
 
-VargaMesh Desktop v0.6.0 adds native macOS packaging for both supported Mac
-CPU families while continuing to use the official VargaMesh Core v0.2.0
+VargaMesh Desktop v0.7.2 adds native macOS packaging for both supported Mac
+CPU families while continuing to use the official VargaMesh Core v0.3.0
 runtime.
 
 ## Architectures
@@ -18,7 +18,7 @@ architecture.
 - Node.js 22+
 - npm
 - Xcode Command Line Tools
-- official VargaMesh Core v0.2.0 macOS archive for the target architecture
+- official VargaMesh Core v0.3.0 macOS archive for the target architecture
 
 Install Xcode Command Line Tools when needed:
 
@@ -28,8 +28,7 @@ xcode-select --install
 
 ## Prepare VargaMesh Core
 
-Create `resources/core` and copy the binaries from the matching official Core
-archive into it.
+Verify the matching official Core archive with `node scripts/verify-core-archive.js <archive-path>` against the pinned SHA-256 manifest `resources/core-release.json`, then create `resources/core` and copy the complete runtime directory from the archive.
 
 Required files include:
 
@@ -72,8 +71,8 @@ npm run dist:mac:x64
 Expected release artifacts:
 
 ```text
-VargaMesh-Desktop-v0.6.0-macOS-x64.dmg
-VargaMesh-Desktop-v0.6.0-macOS-x64.zip
+VargaMesh-Desktop-v0.7.2-macOS-x64.dmg
+VargaMesh-Desktop-v0.7.2-macOS-x64.zip
 ```
 
 ## Build Apple Silicon
@@ -87,8 +86,8 @@ npm run dist:mac:arm64
 Expected release artifacts:
 
 ```text
-VargaMesh-Desktop-v0.6.0-macOS-arm64.dmg
-VargaMesh-Desktop-v0.6.0-macOS-arm64.zip
+VargaMesh-Desktop-v0.7.2-macOS-arm64.dmg
+VargaMesh-Desktop-v0.7.2-macOS-arm64.zip
 ```
 
 ## Core data directory
@@ -104,7 +103,7 @@ separate from Core wallet/blockchain data.
 
 ## Signing and notarization
 
-The initial public macOS v0.6.0 builds are unsigned and not Apple-notarized.
+The initial public macOS v0.7.2 builds are unsigned and not Apple-notarized.
 macOS Gatekeeper may therefore warn or block a first launch.
 
 A polished public macOS release should be signed with an Apple Developer ID
@@ -113,11 +112,9 @@ step and does not change VargaMesh consensus or wallet formats.
 
 ## CI
 
-`.github/workflows/macos-build.yml` builds both architectures on native GitHub
-macOS runners, downloads the matching official VargaMesh Core v0.2.0 runtime,
+`.github/workflows/desktop-ci-release.yml` builds both architectures on native GitHub
+macOS runners, downloads the matching official VargaMesh Core v0.3.0 runtime,
 runs source checks, builds DMG/ZIP artifacts and verifies that the packaged Core
 binary has the expected architecture.
 
-For a release-marked main commit, the macOS workflow waits for the Windows
-release workflow to create the matching GitHub Release and then uploads the
-verified Intel/Apple-Silicon DMG, ZIP and SHA-256 assets to that same release.
+The final release job waits for Windows plus native Intel and Apple Silicon builds to complete, checks all release checksums, then publishes the complete asset set together.
