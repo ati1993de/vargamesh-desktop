@@ -6,11 +6,11 @@ const required = [
   "package.json","src/main.js","src/preload.js","src/rpc.js","src/core-manager.js","src/settings.js","src/market.js","src/fee-policy.js","src/vmt.js","src/i18n-native.js",
   "src/renderer/index.html","src/renderer/styles.css","src/renderer/app.js","src/renderer/vmt.js","src/renderer/qr.js","src/renderer/i18n-ru.js","src/renderer/i18n-zh.js","src/renderer/i18n-extra.js","src/wallet-import.js",
   "assets/vmesh_coin.png","assets/vmesh_mark.png","build/icon.ico","docs/MSIX-STORE.md","docs/BUILDING-MACOS.md",
-  "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh","scripts/prepare-macos-icon.sh","scripts/test-market.js","scripts/test-i18n.js","scripts/test-desktop-professional.js","src/address-book.js","src/vns.js","src/wallet-notifications.js","src/renderer/professional-i18n.js"
+  "scripts/build-windows-linux.sh","scripts/prepare-core-linux.sh","scripts/verify-core-archive.js","resources/core-release.json","scripts/prepare-macos-icon.sh","scripts/test-market.js","scripts/test-i18n.js","scripts/test-desktop-professional.js","src/address-book.js","src/vns.js","src/wallet-notifications.js","src/renderer/professional-i18n.js"
 ];
 for (const rel of required) if (!fs.existsSync(path.join(root, rel))) throw new Error(`Missing required file: ${rel}`);
 const pkg = JSON.parse(fs.readFileSync(path.join(root,"package.json"),"utf8"));
-if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.7.1") throw new Error("Unexpected package identity/version");
+if (pkg.name !== "vargamesh-desktop" || pkg.version !== "0.7.2") throw new Error("Unexpected package identity/version");
 if (pkg.build?.appId !== "net.vargatech.vargamesh.desktop") throw new Error("Stable appId missing");
 if (pkg.build?.mac?.icon !== "build/icon.icns") throw new Error("macOS icon configuration missing");
 if (pkg.build?.mac?.artifactName !== "VargaMesh-Desktop-v${version}-macOS-${arch}.${ext}") throw new Error("macOS artifact naming missing");
@@ -126,4 +126,17 @@ for (const token of ["contact:list", "contact:save", "contact:remove", "recipien
 for (const token of ["notificationsEnabled", "notifyReceived", "notifyConfirmed", "notifySync", "notificationShowAmounts"]) {
   if (!settings.includes(token) || !html.includes('id="' + token + '"')) throw new Error("Notification setting missing: " + token);
 }
+const coreManifest = JSON.parse(fs.readFileSync(path.join(root, "resources/core-release.json"), "utf8"));
+if (coreManifest.coreTag !== "v0.3.0" || coreManifest.coreVersion !== "0.3.0") throw new Error("Wrong Core release");
+for (const [name, digest] of Object.entries(coreManifest.assets)) {
+  if (!name.includes("0.3.0") || !/^[a-f0-9]{64}$/.test(digest)) throw new Error("Invalid SHA256 for " + name);
+}
+for (const platform of ["windows-x86_64.zip","macos-x86_64.tar.gz","macos-arm64.tar.gz"]) {
+  if (!Object.keys(coreManifest.assets).some(name => name.endsWith(platform))) throw new Error("Core release asset missing " + platform);
+}
+const workflow = fs.readFileSync(path.join(root, ".github/workflows/desktop-ci-release.yml"), "utf8");
+if (/vargamesh-core-0\.2\.0|gh release download v0\.2\.0/.test(workflow)) throw new Error("Stale Core version in CI workflow");
+if (!workflow.includes("node scripts/verify-core-archive.js")) throw new Error("Missing pinned Core checksum verification");
+const nodes = require("../src/core-manager").KNOWN_NODES;
+if (nodes.length !== 5 || new Set(nodes).size !== 5) throw new Error("Bootstrap peers must contain five v0.3.0 nodes");
 console.log("VargaMesh Desktop source verification: PASS");
