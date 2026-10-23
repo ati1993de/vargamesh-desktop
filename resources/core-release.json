@@ -1,0 +1,11 @@
+{
+  "coreVersion": "0.3.0",
+  "coreTag": "v0.3.0",
+  "repository": "ati1993de/vargamesh-core",
+  "assets": {
+    "vargamesh-core-0.3.0-windows-x86_64.zip": "ec1eb8163eea589d5ae456ef12a5ffd1c440f02706d35c32025e3f458c961ab0",
+    "vargamesh-core-0.3.0-macos-x86_64.tar.gz": "b02b71b229e6d1b6b91cb7d4c6102270653184b2648b429c31326438aa02d972",
+    "vargamesh-core-0.3.0-macos-arm64.tar.gz": "baa380c93158afd25048824d1c608faef55d270dfe1ee096fc5ab32e83bc8b42",
+    "vargamesh-core-0.3.0-linux-x86_64.tar.gz": "6fa54d58710cd68e1e4571038941b2e0cc8097c315bdc652163af63bf28deb57"
+  }
+}
