@@ -57,12 +57,13 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Download VargaMesh Core v0.2.0
+      - name: Download VargaMesh Core v0.3.0
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force resources/core | Out-Null
-          gh release download v0.2.0 --repo ati1993de/vargamesh-core --pattern "vargamesh-core-0.2.0-windows-x86_64.zip" --dir "$env:RUNNER_TEMP"
-          Expand-Archive "$env:RUNNER_TEMP/vargamesh-core-0.2.0-windows-x86_64.zip" "$env:RUNNER_TEMP/vmesh-core" -Force
+          gh release download v0.3.0 --repo ati1993de/vargamesh-core --pattern "vargamesh-core-0.3.0-windows-x86_64.zip" --dir "$env:RUNNER_TEMP"
+          node scripts/verify-core-archive.js "$env:RUNNER_TEMP/vargamesh-core-0.3.0-windows-x86_64.zip"
+          Expand-Archive "$env:RUNNER_TEMP/vargamesh-core-0.3.0-windows-x86_64.zip" "$env:RUNNER_TEMP/vmesh-core" -Force
           $daemon = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargameshd.exe | Select-Object -First 1
           $cli = Get-ChildItem "$env:RUNNER_TEMP/vmesh-core" -Recurse -Filter vargamesh-cli.exe | Select-Object -First 1
           if (!$daemon -or !$cli) { throw "Core binaries missing" }
@@ -70,6 +71,8 @@ jobs:
           Remove-Item resources/core/* -Recurse -Force -ErrorAction SilentlyContinue
           Copy-Item (Join-Path $daemon.DirectoryName '*') resources/core/ -Recurse -Force
           if (!(Test-Path resources/core/vargameshd.exe) -or !(Test-Path resources/core/vargamesh-cli.exe)) { throw "Core runtime copy failed" }
+          $coreVersion = (& resources/core/vargameshd.exe --version 2>&1 | Out-String)
+          if ($LASTEXITCODE -ne 0 -or $coreVersion -notmatch '0\.3\.0') { throw "Incorrect bundled Core version: $coreVersion" }
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
@@ -90,6 +93,18 @@ jobs:
             "$( (Get-FileHash $setup -Algorithm SHA256).Hash.ToLower() )  $(Split-Path $setup -Leaf)",
             "$( (Get-FileHash $portable -Algorithm SHA256).Hash.ToLower() )  $(Split-Path $portable -Leaf)"
           ) | Set-Content dist/SHA256SUMS -Encoding ascii
+
+      - name: Check Windows portable ZIP contains Core v0.3.0
+        shell: pwsh
+        run: |
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $extract = Join-Path $env:RUNNER_TEMP "vmesh-portable"
+          Expand-Archive "dist/VargaMesh-Desktop-v$v-Windows-x64-Portable.zip" $extract -Force
+          $daemon = Get-ChildItem $extract -Recurse -File -Filter vargameshd.exe | Select-Object -First 1
+          $cli = Get-ChildItem $extract -Recurse -File -Filter vargamesh-cli.exe | Select-Object -First 1
+          if (!$daemon -or !$cli) { throw "Portable archive missing Core daemon or CLI" }
+          $coreVersion = (& $daemon.FullName --version 2>&1 | Out-String)
+          if ($LASTEXITCODE -ne 0 -or $coreVersion -notmatch '0\.3\.0') { throw "Portable ZIP contains wrong Core version: $coreVersion" }
 
       - uses: actions/upload-artifact@v4
         with:
@@ -131,17 +146,18 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Download matching VargaMesh Core v0.2.0
+      - name: Download matching VargaMesh Core v0.3.0
         shell: bash
         run: |
           set -euo pipefail
-          asset="vargamesh-core-0.2.0-macos-${{ matrix.core_arch }}.tar.gz"
+          asset="vargamesh-core-0.3.0-macos-${{ matrix.core_arch }}.tar.gz"
           mkdir -p resources/core "$RUNNER_TEMP/vmesh-core"
-          gh release download v0.2.0 \
+          gh release download v0.3.0 \
             --repo ati1993de/vargamesh-core \
             --pattern "$asset" \
             --dir "$RUNNER_TEMP"
 
+          node scripts/verify-core-archive.js "$RUNNER_TEMP/$asset"
           tar -xzf "$RUNNER_TEMP/$asset" -C "$RUNNER_TEMP/vmesh-core"
 
           daemon="$(find "$RUNNER_TEMP/vmesh-core" -type f -name vargameshd -print -quit)"
@@ -156,8 +172,8 @@ jobs:
 
           test -x resources/core/vargameshd
           test -x resources/core/vargamesh-cli
-          resources/core/vargameshd --version
-          resources/core/vargamesh-cli --version
+          resources/core/vargameshd --version | grep -F "0.3.0"
+          resources/core/vargamesh-cli --version | grep -F "0.3.0"
 
           echo "Bundled Core architecture:"
           file resources/core/vargameshd
@@ -209,15 +225,15 @@ jobs:
 
           file "$desktop_bin"
           file "$core_bin"
-          "$core_bin" --version
-          "$cli_bin" --version
+          "$core_bin" --version | grep -F "0.3.0"
+          "$cli_bin" --version | grep -F "0.3.0"
 
           dmg="dist/VargaMesh-Desktop-v$version-macOS-${{ matrix.electron_arch }}.dmg"
           zip="dist/VargaMesh-Desktop-v$version-macOS-${{ matrix.electron_arch }}.zip"
           test -s "$dmg"
           test -s "$zip"
 
-          shasum -a 256 "$dmg" "$zip" > "dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}"
+          (cd dist && shasum -a 256 "$(basename "$dmg")" "$(basename "$zip")" > "SHA256SUMS-macOS-${{ matrix.electron_arch }}")
           cat "dist/SHA256SUMS-macOS-${{ matrix.electron_arch }}"
 
       - uses: actions/upload-artifact@v4
@@ -285,6 +301,11 @@ jobs:
               exit 1
             }
           done
+
+          (cd release-assets &&
+             sha256sum --check SHA256SUMS &&
+             sha256sum --check SHA256SUMS-macOS-x64 &&
+             sha256sum --check SHA256SUMS-macOS-arm64)
 
           echo "Complete release asset set:"
           printf ' - %s\n' "${expected[@]}"
