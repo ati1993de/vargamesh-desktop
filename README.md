@@ -12,14 +12,24 @@
   <a href="https://github.com/ati1993de/vargamesh-desktop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/ati1993de/vargamesh-desktop?display_name=tag&sort=semver"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%20x64%20%7C%20macOS-0078D6">
-  <img alt="Core" src="https://img.shields.io/badge/VargaMesh%20Core-v0.2.0-00bfe8">
+  <img alt="Core" src="https://img.shields.io/badge/VargaMesh%20Core-v0.3.0-00bfe8">
 </p>
 
 VargaMesh Desktop is the graphical full-node client for running a local VargaMesh node and managing a self-custody VMESH wallet on supported desktop platforms. It is an Electron interface around the real **VargaMesh Core** daemon: private keys, signing, blockchain validation and P2P networking remain inside Core.
 
-> **Current public release:** `v0.7.1` · [GitHub release](https://github.com/ati1993de/vargamesh-desktop/releases/tag/v0.7.1)
+> **Release target:** `v0.7.2` · [Official GitHub releases](https://github.com/ati1993de/vargamesh-desktop/releases) (downloads publish after successful CI)
 > **Platforms:** Windows 10/11 x64 · macOS Intel x86_64 · macOS Apple Silicon arm64
-> **Bundled Core:** `VargaMesh Core v0.2.0`
+> **Bundled Core:** `VargaMesh Core v0.3.0`
+
+## v0.7.2 – VargaMesh Core v0.3.0 integration (23 October 2026)
+
+- Windows x64 Setup installer and extracted Portable ZIP now ship the official **VargaMesh Core v0.3.0** runtime. Native macOS Intel x64 and Apple Silicon arm64 DMG/ZIP packages ship their matching Core v0.3.0 archives.
+- Release builds verify pinned Core archive SHA-256 values before extraction, check the binary version and verify packaged runtime/checksums before publication.
+- Core v0.3.0 includes **five Mainnet fixed-seed P2P fallback peers**, the read-only `getvmeshminingstatus` RPC, diagnostic `checkvmeshauxpow` RPC, and ASERT/AuxPoW hardening. These Core RPCs are not new Desktop UI buttons.
+- This is a **non-consensus update**: no hard fork, no Mainnet reset, no address or port changes, no wallet conversion and no changes to signing or Desktop key handling.
+- Existing `vargamesh.conf` is not overwritten. Fresh Desktop configurations include five documented bootstrap addresses. Existing wallets, chainstate, contacts and preferences remain in their normal user data directories.
+
+See [Core v0.3.0 release notes](https://github.com/ati1993de/vargamesh-core/releases/tag/v0.3.0). Back up your wallet before upgrading; if you independently run an older daemon against the same data directory, stop it cleanly first.
 
 ## v0.7.1 – Startup refresh hotfix
 
@@ -118,21 +128,21 @@ Use the official GitHub Releases page:
 Release assets:
 
 ```text
-VargaMesh-Desktop-v0.7.1-Windows-x64-Setup.exe
-VargaMesh-Desktop-v0.7.1-Windows-x64-Portable.zip
-VargaMesh-Desktop-v0.7.1-macOS-x64.dmg
-VargaMesh-Desktop-v0.7.1-macOS-x64.zip
-VargaMesh-Desktop-v0.7.1-macOS-arm64.dmg
-VargaMesh-Desktop-v0.7.1-macOS-arm64.zip
+VargaMesh-Desktop-v0.7.2-Windows-x64-Setup.exe
+VargaMesh-Desktop-v0.7.2-Windows-x64-Portable.zip
+VargaMesh-Desktop-v0.7.2-macOS-x64.dmg
+VargaMesh-Desktop-v0.7.2-macOS-x64.zip
+VargaMesh-Desktop-v0.7.2-macOS-arm64.dmg
+VargaMesh-Desktop-v0.7.2-macOS-arm64.zip
 
 SHA256SUMS
 SHA256SUMS-macOS-x64
 SHA256SUMS-macOS-arm64
 ```
 
-Verify the SHA256 checksum before running a downloaded binary. The portable ZIP must be extracted before starting `VargaMesh Desktop.exe`.
+Verify the published SHA-256 checksum before running downloads. Extract the Windows portable ZIP before launching `VargaMesh Desktop.exe`; the Windows Setup.exe is the installed alternative. Both preserve the same existing Core blockchain and wallet data.
 
-## What v0.7.1 provides
+## Desktop features
 
 ### Contacts, VNS and notifications
 
@@ -142,7 +152,7 @@ Verify the SHA256 checksum before running a downloaded binary. The portable ZIP 
 - Enable or disable native notifications under **Settings → Desktop notifications**.
 - Notification bodies hide amounts by default. A notification can be visible on the operating system lock screen.
 - Export the latest 1,000 visible wallet entries as CSV from **Transactions**.
-- The three existing VargaMesh Core bootstrap peer IPs are unchanged.
+- Freshly generated Core configurations include five Mainnet bootstrap addresses. Existing user Core configurations remain unchanged.
 
 ### Wallet
 
@@ -207,7 +217,7 @@ Verify the SHA256 checksum before running a downloaded binary. The portable ZIP 
 
 - Intel x86_64 DMG and ZIP packages
 - Apple Silicon arm64 DMG and ZIP packages
-- native macOS VargaMesh Core v0.2.0 runtime
+- native macOS VargaMesh Core v0.3.0 runtime
 - native Core data directory under `~/Library/Application Support/VargaMesh`
 - menu-bar/tray-compatible background behavior through Electron
 - macOS builds verified separately for Intel and Apple Silicon
@@ -337,8 +347,8 @@ Before importing private keys, restoring wallets or performing legacy migration,
 PowerShell example:
 
 ```powershell
-Get-FileHash .\VargaMesh-Desktop-v0.7.1-Windows-x64-Setup.exe -Algorithm SHA256
-Get-FileHash .\VargaMesh-Desktop-v0.7.1-Windows-x64-Portable.zip -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.7.2-Windows-x64-Setup.exe -Algorithm SHA256
+Get-FileHash .\VargaMesh-Desktop-v0.7.2-Windows-x64-Portable.zip -Algorithm SHA256
 ```
 
 Compare the resulting values with `SHA256SUMS` from the same GitHub release.
@@ -378,8 +388,8 @@ npm run build:linux-wine
 The build script downloads the official VargaMesh Core Windows x64 release, preserves its complete runtime directory, performs project checks and builds:
 
 ```text
-dist/VargaMesh-Desktop-v0.7.1-Windows-x64-Setup.exe
-dist/VargaMesh-Desktop-v0.7.1-Windows-x64-Portable.zip
+dist/VargaMesh-Desktop-v0.7.2-Windows-x64-Setup.exe
+dist/VargaMesh-Desktop-v0.7.2-Windows-x64-Portable.zip
 dist/SHA256SUMS
 ```
 
@@ -391,7 +401,7 @@ See [`docs/BUILDING-MACOS.md`](docs/BUILDING-MACOS.md) for Intel and Apple Silic
 
 ## Automated releases
 
-Public releases build Windows x64 plus native Intel and Apple Silicon macOS packages. The Windows workflow creates the GitHub Release, and the native macOS jobs attach the verified DMG/ZIP packages and architecture-specific SHA-256 files to the same release.
+Public releases build Windows x64 Setup.exe and Portable.zip, plus native Intel and Apple Silicon macOS DMG/ZIP packages. A single release job publishes all verified assets together only after all platform jobs succeed.
 
 Maintainer checklist: [`docs/RELEASE-CHECKLIST.md`](docs/RELEASE-CHECKLIST.md)
 
