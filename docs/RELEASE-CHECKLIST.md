@@ -52,6 +52,16 @@ Use this checklist before publishing a VargaMesh Desktop release.
 - cached/stale quote is visibly identified
 - market regression tests pass without live network access
 
+## Core v0.3.0 packaging
+
+- correct Windows x64, macOS Intel and macOS ARM Core artifacts are downloaded
+- release archives pass the pinned SHA-256 validation in `resources/core-release.json`
+- bundled node and CLI versions are verified as v0.3.0
+- Windows portable ZIP contains the official v0.3.0 daemon/CLI
+- stale v0.2.0 binaries never get reused
+- pre-existing wallet data, blockchain files and user configuration remain untouched
+- Windows and macOS checksum manifests validate the complete package set
+
 ## Node
 
 - bundled Core starts automatically
@@ -69,11 +79,9 @@ Use this checklist before publishing a VargaMesh Desktop release.
 
 ## GitHub
 
-- push `main`
-- create annotated `vX.Y.Z` tag
-- push tag
+- trigger publication using a final `main` commit containing `[release]`, or push a matching version tag (not both)
 - GitHub Actions build is green
-- release assets include Setup, Portable ZIP and SHA256SUMS
+- release assets include Windows Setup/Portable, Intel/ARM macOS DMG/ZIP and three SHA256SUMS files
 - release is marked **Latest** and is not marked pre-release
 
 
